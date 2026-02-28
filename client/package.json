@@ -19,6 +19,8 @@
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "crypto-js": "^4.2.0",
+    "element-plus": "^2.13.2",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
     "vue-axios": "^3.5.2",
@@ -29,6 +31,7 @@
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.17",
     "@tsconfig/node22": "^22.0.2",
+    "@types/crypto-js": "^4.2.2",
     "@types/jsdom": "^27.0.0",
     "@types/node": "^22.18.11",
     "@vitejs/plugin-vue": "^6.0.1",
