@@ -26,11 +26,20 @@ server/*.sqlite3
 
 *.log
 npm-debug.log*
-*.mp3
-*.wav
-*.flac
-*.aac
 __pycache__/
 node_modules/
 .DS_Store
 dist/
+
+
+*.mp3
+*.wav
+*.flac
+*.jpg
+*.jpeg
+*.png
+*.gif
+
+**/static/uploader/
+**/node_modules/
+**/__pycache__/
