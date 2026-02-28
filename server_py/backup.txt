@@ -1,0 +1,3682 @@
+import os
+from sqlalchemy import text
+import uuid
+import traceback
+from mutagen.easyid3 import EasyID3
+from flask import current_app
+from sqlalchemy.orm import joinedload
+from werkzeug.utils import secure_filename
+from collections import defaultdict
+import logging
+from flask import Flask, request, session, jsonify, send_file, render_template
+from functools import wraps
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+from mutagen.mp3 import MP3
+from datetime import datetime, timedelta, timezone
+import mutagen
+from db_model import db, User, Song, PlayQueue, PlaylistSong, UserPlayState, PlaylistTag, Tag,  PlayQueueItem,  PlaylistLike,Playlist, UserSession
+import redis
+import json
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app=Flask(__name__)
+
+
+class Config:
+
+
+    #SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+    # 'mysql+pymysql://music_user:password@localhost/music_player'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
+                              'sqlite:///music_player.db'
+
+    SQLALCHEMY_TRACK_MODIFICATIONS=False
+    SQLALCHEMY_ENGINE_OPTIONS = {
+        'pool_size': 5,
+        'max_overflow': 10,
+        'pool_recycle': 3600,
+        'pool_pre_ping': True,
+        'pool_timeout': 30,
+        'isolation_level':None,
+        #'isolation_level': 'READ COMMITTED'
+    }
+
+    REDIS_URL = os.environ.get('REDIS_URL') or 'redis://localhost:6379/0'
+
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'your-secret-key-change-in-production'
+    UPLOAD_FOLDER = 'static/uploader/songs'
+    COVERS_FOLDER = 'static/uploader/covers'
+
+    os.makedirs(UPLOAD_FOLDER,exist_ok=True)
+    os.makedirs(COVERS_FOLDER,exist_ok=True)
+
+
+app.config.from_object(Config)
+
+SESSION_COOKIE_SECURE = False
+SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_COOKIE_PATH = '/'
+
+#反向代理的配置没写
+
+db.init_app(app)
+CORS(app, supports_credentials=True)
+
+redis_client=redis.Redis.from_url(app.config['REDIS_URL'], decode_responses=True)
+
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    storage_uri=app.config['REDIS_URL'],
+    #default_limits=["200 per day", "50 per hour"],
+    strategy='moving-window'
+)
+
+login_manager=LoginManager()
+
+
+@login_manager.unauthorized_handler
+def unauthorized():
+    # 覆盖默认的重定向行为，直接返回 JSON 错误
+    return jsonify({"error": "用户未登录或会话已过期，请重新登录"}), 401
+
+
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+login_manager.session_protection = 'strong'
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    cache_key=f"user:{user_id}"
+    user_data = redis_client.get(cache_key)
+    if user_data:
+        user_dict = json.loads(user_data)
+        user = User()
+        user.id = user_dict['id']
+        user.user_name = user_dict['user_name']
+        user.email = user_dict['email']
+        user.is_active = user_dict['is_active']
+
+        return user
+    user = db.session.get(User, int(user_id))
+    if user:
+        redis_client.setex(
+            cache_key,
+            300,
+            json.dumps(
+                {
+                    'id': user.id,
+                    'user_name': user.user_name,
+                    'email': user.email,
+                    'is_active': user.is_active
+                 }
+            )
+        )
+    return user
+
+
+ALLOWED_EXTENSIONS = {'mp3', 'wav', 'flac', 'm4a', 'ogg'}
+IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+
+
+def allowed_file(filename, file_type='audio'):
+    if '.' not in filename:
+        return False
+    ex=filename.rsplit('.', 1)[1].lower()
+    if file_type=='audio':
+        return ex in ALLOWED_EXTENSIONS
+    elif file_type=='cover':
+        return ex in IMAGE_EXTENSIONS
+    return False
+
+
+def extract_metadata(file_path):
+    try:
+        audio=mutagen.File(file_path,easy=True)
+        info=audio.info
+        filename_without_ext=os.path.splitext(os.path.basename(file_path))[0]
+        metadata={
+            'title': audio.get('title',[filename_without_ext])[0] if audio.get('title') else
+            filename_without_ext,
+            'artist': audio.get('artist', ['Unknown Artist'])[0] if audio.get('artist') else 'Unknown Artist',
+            'album': audio.get('album', ['Unknown Album'])[0] if audio.get('album') else 'Unknown Album',
+            'duration': int(info.length) if info else 0,
+            'file_size': os.path.getsize(file_path),
+            'file_format': os.path.splitext(file_path)[1][1:].upper(),
+            'bitrate': getattr(info, 'bitrate', 0) // 1000 if info else 0,
+            'genre': audio.get('genre', [''])[0] if audio.get('genre') else '',
+            'year': audio.get('date', [''])[0] if audio.get('date') else '',
+            'track_number': 0
+        }
+        return metadata
+    except Exception as e:
+        logger.error(f"Error extracting metadata from {file_path}: {e}")
+        return None
+
+
+def cache_response(time_out=300, key_prefix='view'):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            cache_key = f"{key_prefix}:{request.path}:{hash(frozenset(request.args.items()))}"
+            cached = redis_client.get(cache_key)
+
+            if cached:
+                # 直接返回缓存的响应对象
+                response_data = json.loads(cached)
+                print("缓存命中，采用缓存内容")
+                return jsonify(response_data)
+
+            response = f(*args, **kwargs)
+
+            if response.status_code == 200 and response.is_json:
+                # 存储整个响应，而不是JSON数据
+                redis_client.setex(
+                    cache_key,
+                    time_out,
+                    response.get_data(as_text=True)  # 获取原始响应文本
+                )
+            return response
+
+        return decorated_function
+
+    return decorator
+
+
+def concurrent_control(key_func,limit=1,time_out=10):
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args,**kwargs):
+            if key_func:
+                lock_key = f"lock:{key_func(*args,**kwargs)}"
+            else:
+                lock_key=f"lock:{request.endpoint}:{current_user.id if current_user.is_authenticated \
+                else get_remote_address()}"
+            acquired=redis_client.set(lock_key,'1',nx=True,ex=time_out)
+            if not acquired:
+                return jsonify({"error":"操作正在进行中，请稍后再试"}),429
+            try:
+                return f(*args,**kwargs)
+            finally:
+                redis_client.delete(lock_key)
+        return decorated_function
+    return decorator
+
+
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/playlists')
+def playlists_page():
+    return render_template('playlists.html')
+
+
+@app.route('/api/register', methods=['POST'])
+
+def register():
+    # ========== 1. 接收并打印原始请求数据 ==========
+    print("\n" + "=" * 50)
+    print("[DEBUG] 1. 接收到新的注册请求")
+
+    # 重要：使用 request.get_data() 查看原始数据
+    raw_data = request.get_data(as_text=True)
+    print(f"[DEBUG] 原始请求体: {raw_data}")
+
+    data = request.get_json()  # 尝试解析JSON
+    print(f"[DEBUG] 解析后的JSON数据: {data}")
+    print(f"[DEBUG] JSON数据类型: {type(data)}")
+    print(f"[DEBUG] JSON数据所有键: {list(data.keys()) if data else 'None'}")
+    # =============================================
+
+    # ========== 2. 详细检查每个字段 ==========
+    if not data:
+        print("[ERROR] 数据解析失败或为空")
+        return jsonify({'error': '请求数据无效'}), 400
+
+    # 逐个检查字段
+    required_fields = ['user_name', 'email', 'password']
+    for field in required_fields:
+        if field not in data:
+            print(f"[ERROR] 缺失字段: {field}")
+            return jsonify({'error': f'缺少必要字段: {field}'}), 400
+
+    # 提取并打印字段值
+    username = data.get('user_name', '')
+    email = data.get('email', '')
+    password = data.get('password', '')
+
+    print(f"[DEBUG] 2. 字段提取结果:")
+    print(f"  - user_name: '{username}' (类型: {type(username)}, 长度: {len(username)})")
+    print(f"  - email: '{email}'")
+    print(f"  - password: '{password}' (长度: {len(password)})")
+    # =========================================
+
+    # ========== 3. 验证字段内容 ==========
+    if not username or not username.strip():
+        print("[ERROR] 用户名为空或仅为空白字符")
+        return jsonify({'error': '用户名不能为空'}), 400
+
+    username = username.strip()
+    email = email.strip()
+
+    if not email:
+        print("[ERROR] 邮箱为空")
+        return jsonify({'error': '邮箱不能为空'}), 400
+
+    if not password:
+        print("[ERROR] 密码为空")
+        return jsonify({'error': '密码不能为空'}), 400
+    # =========================================
+
+    # ========== 4. 检查数据库唯一性 ==========
+    print(f"[DEBUG] 3. 开始数据库检查...")
+
+    existing_user = User.query.filter_by(user_name=username).first()
+    if existing_user:
+        print(f"[ERROR] 用户名已存在: '{username}'")
+        return jsonify({'error': '用户名已存在'})
+
+    existing_email = User.query.filter_by(email=email).first()
+    if existing_email:
+        print(f"[ERROR] 邮箱已存在: '{email}'")
+        return jsonify({'error': '邮箱已存在'})
+    # =========================================
+
+    # ========== 5. 创建用户对象并打印 ==========
+    print(f"[DEBUG] 4. 开始创建用户对象...")
+    try:
+        user = User()
+        user.user_name = username  # 关键行：再次确认赋值
+        user.email = email
+
+        print(f"[DEBUG] 创建User对象:")
+        print(f"  - id (before commit): {user.id}")
+        print(f"  - user_name属性: '{user.user_name}'")
+        print(f"  - email属性: '{user.email}'")
+
+        user.set_password(password)
+        print(f"[DEBUG] 密码已哈希")
+        # =========================================
+
+        # ========== 6. 数据库操作 ==========
+        db.session.add(user)
+        print(f"[DEBUG] 5. 执行数据库提交...")
+        db.session.commit()
+        print(f"[DEBUG] 提交成功! 新用户ID: {user.id}")
+        # =========================================
+
+        # 提交后再次确认
+        committed_user = User.query.get(user.id)
+        print(f"[DEBUG] 6. 从数据库重新查询验证:")
+        print(f"  - 用户名: '{committed_user.user_name}'")
+        print(f"  - 邮箱: '{committed_user.email}'")
+
+        redis_client.delete('users:count')
+
+        print(f"[SUCCESS] 用户注册完成: ID={user.id}, 用户名='{user.user_name}'")
+        print("=" * 50 + "\n")
+
+        return jsonify({
+            'message': '用户注册成功',
+            'user_id': user.id,
+            'user_name': user.user_name,
+            'email': user.email
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"[CRITICAL ERROR] 数据库操作失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': '服务器内部错误'}), 500
+
+
+@app.route('/api/login', methods=['POST'])
+
+def login():
+    # ========== 1. 接收并打印原始请求数据 ==========
+    print("\n" + "=" * 50)
+    print("[LOGIN DEBUG] 1. 接收到登录请求")
+
+    raw_data = request.get_data(as_text=True)
+    print(f"[LOGIN DEBUG] 原始请求体: {raw_data}")
+
+    data = request.get_json()
+    print(f"[LOGIN DEBUG] 解析后的JSON数据: {data}")
+
+    if not data:
+        print("[LOGIN ERROR] 请求数据为空")
+        return jsonify({"error": "请求数据无效"}), 400
+
+    # 检查必要字段
+    required_fields = ['user_name', 'password']
+    for field in required_fields:
+        if field not in data:
+            print(f"[LOGIN ERROR] 缺失字段: {field}")
+            return jsonify({"error": f"缺少必要字段: {field}"}), 400
+
+    username = data.get('user_name', '').strip()
+    password = data.get('password', '')
+
+    print(f"[LOGIN DEBUG] 2. 提取的登录凭证:")
+    print(f"  - 用户名: '{username}'")
+    print(f"  - 密码长度: {len(password)}")
+    # =============================================
+
+    # ========== 2. 查询用户 ==========
+    print(f"[LOGIN DEBUG] 3. 开始查询用户...")
+
+    # 先检查用户名是否为空
+    if not username:
+        print("[LOGIN ERROR] 用户名为空")
+        return jsonify({"error": "用户名不能为空"}), 401
+
+    # 查询用户
+    user = User.query.filter_by(user_name=username).first()
+
+    if user:
+        print(f"[LOGIN DEBUG] 找到用户: ID={user.id}, 用户名='{user.user_name}'")
+        print(f"[LOGIN DEBUG] 用户状态: last_login={user.last_login}, 是否激活={user.is_active}")
+
+        # 检查密码哈希是否正常
+        if not user.password_hash:
+            print("[LOGIN ERROR] 用户密码哈希为空")
+            return jsonify({"error": "用户密码配置错误"}), 500
+    else:
+        print(f"[LOGIN ERROR] 用户不存在: '{username}'")
+        return jsonify({"error": "用户名或密码错误"}), 401
+    # =================================
+
+    # ========== 3. 验证密码 ==========
+    print(f"[LOGIN DEBUG] 4. 开始验证密码...")
+
+    password_correct = False
+    try:
+        password_correct = user.check_password(password)
+        print(f"[LOGIN DEBUG] 密码验证结果: {password_correct}")
+    except Exception as e:
+        print(f"[LOGIN ERROR] 密码验证过程出错: {str(e)}")
+        return jsonify({"error": "登录验证过程出错"}), 500
+
+    if not password_correct:
+        print("[LOGIN ERROR] 密码不正确")
+        return jsonify({"error": "用户名或密码错误"}), 401
+    # =================================
+
+    # ========== 4. 登录流程 ==========
+    print(f"[LOGIN DEBUG] 5. 开始执行登录流程...")
+
+    try:
+        # 1. Flask-Login登录
+        print(f"[LOGIN DEBUG] 正在调用 login_user()...")
+        login_user(user, remember=True)
+        print(f"[LOGIN DEBUG] login_user() 调用成功")
+
+        # 2. 设置session为永久性
+        session.permanent = True
+        print(f"[LOGIN DEBUG] session设置为永久性")
+
+        # 3. 生成UserSession的ID
+        user_session_id = str(uuid.uuid4())
+        print(f"[LOGIN DEBUG] 生成的UserSession ID: {user_session_id}")
+
+        # 4. 将UserSession ID存入Flask session
+        session['user_session_id'] = user_session_id
+        print(f"[LOGIN DEBUG] UserSession ID已存入session")
+
+        # 5. 更新用户最后登录时间
+        current_time = datetime.now(timezone.utc)
+        user.last_login = current_time
+        print(f"[LOGIN DEBUG] 更新用户最后登录时间: {current_time}")
+
+        # 6. 创建UserSession记录
+        user_session = UserSession(
+            id=user_session_id,
+            user_id=user.id,
+            ip_address=request.remote_addr,
+            user_agent=request.headers.get('User-Agent', ''),
+            last_activity=current_time
+        )
+        db.session.add(user_session)
+        print(f"[LOGIN DEBUG] UserSession记录已创建")
+
+        # 提交所有数据库更改
+        db.session.commit()
+        print(f"[LOGIN DEBUG] 数据库提交成功")
+
+        # 验证登录状态
+        if current_user.is_authenticated:
+            print(f"[LOGIN DEBUG] 当前用户认证状态: 已认证, user_id={current_user.id}")
+        else:
+            print(f"[LOGIN DEBUG] 警告: 当前用户认证状态: 未认证")
+
+        print(f"[LOGIN SUCCESS] 登录成功: 用户ID={user.id}, 用户名='{user.user_name}'")
+        print("=" * 50 + "\n")
+
+        return jsonify({
+            "message": "登录成功",
+            "user_id": user.id,
+            "user_name": user.user_name,
+            "email": user.email
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"[LOGIN CRITICAL ERROR] 登录过程出错: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "登录过程出错"}), 500
+    # =================================
+
+
+@app.route('/api/logout', methods=['POST'])
+@login_required
+def logout():
+    try:
+        # 1. 【关键】在登出之前，先获取并保存用户名
+        # 因为调用 logout_user() 之后，current_user 就会变成匿名用户，就没有 user_name 了
+        target_user_name = current_user.user_name
+
+        print("=" * 50)
+        print(f"[DEBUG] 开始登出流程")
+        print(f"[DEBUG] 当前用户: {target_user_name} (ID: {current_user.id})")
+
+        # 2. 执行登出 (这一步之后，current_user 变为 AnonymousUser)
+        logout_user()
+
+        # 3. 清理 Session
+        session.clear()
+
+        # 4. 设置响应
+        response = jsonify({'message': "退出成功"})
+
+        # 删除客户端 Cookie
+        response.set_cookie('session', '', expires=0, path='/')
+        response.set_cookie('remember_token', '', expires=0, path='/')  # 如果有记住我功能，也要删这个
+
+        # 5. 【修正】这里使用刚才保存的变量 target_user_name，而不是 current_user.user_name
+        print(f"[DEBUG] 用户 {target_user_name} 登出成功")
+        print("=" * 50)
+
+        return response
+
+    except Exception as e:
+        import traceback
+        print(f"[ERROR] 登出过程中发生错误: {e}")
+        print(f"[ERROR] 详细错误信息:\n{traceback.format_exc()}")
+        return jsonify({'error': '退出时发生错误'}), 500
+
+
+@app.route('/api/getuser')
+@login_required
+def get_user():
+    return jsonify({
+        'id':current_user.id,
+        'user_name':current_user.user_name,
+        'email':current_user.email
+    })
+
+
+@app.after_request
+def update_user_last_activity(response):
+    """
+    在每次请求后更新用户的最后活动时间
+    """
+    # 只在成功响应且用户已认证时更新
+    if (response.status_code < 400 and
+            current_user.is_authenticated):
+
+        try:
+            # 从Flask session获取我们存储的UserSession ID
+            user_session_id = session.get('user_session_id')
+
+            if user_session_id:
+                # 查找并更新UserSession
+                user_session = UserSession.query.filter_by(
+                    id=user_session_id,
+                    user_id=current_user.id
+                ).first()
+
+                if user_session:
+                    user_session.last_activity = datetime.now(timezone.utc)
+                    db.session.commit()
+                    logger.debug(f"Updated last_activity for session {user_session_id}")
+                else:
+                    # UserSession记录不存在，重新创建
+                    logger.warning(f"UserSession not found, creating new one: {user_session_id}")
+                    new_session = UserSession(
+                        id=user_session_id,
+                        user_id=current_user.id,
+                        ip_address=request.remote_addr,
+                        user_agent=request.headers.get('User-Agent'),
+                        last_activity=datetime.now(timezone.utc)
+                    )
+                    db.session.add(new_session)
+                    db.session.commit()
+
+        except Exception as e:
+            logger.error(f"Error updating last_activity: {e}")
+            db.session.rollback()
+        finally:
+            db.session.remove()
+    return response
+
+
+@app.route('/api/songs')
+@cache_response(time_out=60)
+def get_songs():
+    # 获取请求参数
+    page = request.args.get('page', 1, type=int)
+    per_page = request.args.get('per_page', 20, type=int)
+    search = request.args.get('search', '')
+
+    # 打印请求信息
+    print(f"[DEBUG] API请求 - page={page}, per_page={per_page}, search='{search}'")
+
+    # 构建查询
+    query = Song.query.filter_by(is_public=True)
+
+    if search:
+        print(f"[DEBUG] 应用搜索过滤器: '{search}'")
+        query = query.filter(
+            db.or_(
+                Song.title.ilike(f"%{search}%"),
+                Song.artist.ilike(f"%{search}%"),
+                Song.album.ilike(f"%{search}%")
+            )
+        )
+
+    # 执行分页查询
+    try:
+        print(f"[DEBUG] 执行分页查询 - page={page}, per_page={per_page}")
+        pagination = query.order_by(Song.date_added.desc()).paginate(
+            page=page, per_page=per_page, error_out=False
+        )
+
+        songs = pagination.items
+        print(f"[DEBUG] 查询结果 - 总数: {pagination.total}, 页数: {pagination.pages}, 当前页歌曲数: {len(songs)}")
+
+        # 打印前几首歌曲的详细信息（调试用）
+        if songs:
+            print(f"[DEBUG] 前3首歌曲:")
+            for i, song in enumerate(songs[:3]):
+                print(f"  {i + 1}. ID:{song.id} - {song.title} by {song.artist}")
+
+    except Exception as e:
+        print(f"[ERROR] 分页查询出错: {str(e)}")
+        return jsonify({
+            'error': 'Internal server error',
+            'message': str(e)
+        }), 500
+
+    # 构建响应
+    response_data = {
+        'songs': [{
+            'id': song.id,
+            'title': song.title,
+            'artist': song.artist,
+            'album': song.album,
+            'duration': song.duration,
+            'file_format': song.file_format,
+            'file_size': song.file_size,
+            'play_count': song.play_count,
+            'uploader': song.uploader.user_name if song.uploader else 'Unknown',
+            'date_added': song.date_added.isoformat() if song.date_added else None,
+            'cover_url': song.cover_url,
+            'lyrics': song.lyrics
+        } for song in songs],
+        'total': pagination.total,
+        'pages': pagination.pages,
+        'current_page': page,
+        'per_page': per_page
+    }
+
+    print(f"[DEBUG] 响应已准备，包含 {len(response_data['songs'])} 首歌曲")
+
+    return jsonify(response_data)
+
+
+@app.route('/api/songs/refresh_server_songs', methods=["POST"])
+@login_required
+@concurrent_control(lambda: f"{current_user.id}:refresh_server_songs")
+def refresh_server_songs():
+    """
+    扫描服务器歌曲文件夹，将新歌曲添加到数据库
+    同时添加cover_url和album信息
+    """
+    print(f"[DEBUG] refresh_server_songs 开始执行，用户ID: {current_user.id}")
+
+    try:
+        folder_path = Config.UPLOAD_FOLDER  # 歌曲文件夹
+
+        # 直接使用硬编码的封面文件夹路径
+        covers_folder = r"Z:\python_code\musicplayer_improved\static\uploader\covers"
+
+        print(f"[DEBUG] 扫描歌曲文件夹: {folder_path}")
+        print(f"[DEBUG] 封面文件夹: {covers_folder}")
+
+        added_count = 0
+        error_files = []
+        skipped_files = 0
+
+        # 检查文件夹是否存在
+        if not os.path.exists(folder_path):
+            print(f"[ERROR] 歌曲文件夹不存在: {folder_path}")
+            return jsonify({
+                "status": "error",
+                "message": f"歌曲文件夹不存在: {folder_path}"
+            }), 404
+
+        # 检查封面文件夹是否存在，如果不存在则创建
+        if not os.path.exists(covers_folder):
+            os.makedirs(covers_folder, exist_ok=True)
+            print(f"[INFO] 创建封面文件夹: {covers_folder}")
+
+        # 获取所有文件
+        files = os.listdir(folder_path)
+        print(f"[DEBUG] 文件夹中包含 {len(files)} 个文件/目录")
+
+        for index, filename in enumerate(files, 1):
+            file_path = os.path.join(folder_path, filename)
+            print(f"[DEBUG] 处理第 {index}/{len(files)} 个: {filename}")
+
+            # 跳过目录，只处理文件
+            if not os.path.isfile(file_path):
+                print(f"[DEBUG] 跳过目录: {filename}")
+                continue
+
+            # 检查是否为音频文件（根据扩展名）
+            if not filename.lower().endswith(('.mp3', '.wav', '.flac', '.m4a')):
+                print(f"[DEBUG] 跳过非音频文件: {filename}")
+                skipped_files += 1
+                continue
+
+            try:
+                # 检查歌曲是否已存在 - 使用文件路径检查
+                existing_song = Song.query.filter_by(file_path=file_path).first()
+                if existing_song:
+                    print(f"[DEBUG] 歌曲已存在，跳过: {filename}")
+                    skipped_files += 1
+                    continue  # 跳过已存在的歌曲
+
+                print(f"[DEBUG] 开始处理新歌曲: {filename}")
+
+                # 解析文件名（更安全的方式）
+                if '_' in filename:
+                    # 按第一个下划线分割：标题_艺术家.扩展名
+                    name_part = os.path.splitext(filename)[0]  # 移除扩展名
+                    parts = name_part.split('_', 1)
+                    title = parts[0].strip()
+                    artist = parts[1].strip() if len(parts) > 1 else "未知艺术家"
+                    print(f"[DEBUG] 文件名解析结果 - 标题: '{title}', 艺术家: '{artist}'")
+                else:
+                    # 如果没有下划线，整个文件名作为标题
+                    title = os.path.splitext(filename)[0].strip()
+                    artist = "未知艺术家"
+                    print(f"[DEBUG] 文件名没有下划线，标题: '{title}', 艺术家: '{artist}'")
+
+                # 初始化album和cover_url
+                album = "未知专辑"
+                cover_url = None
+
+                # 尝试读取音频文件的元数据
+                try:
+                    print(f"[DEBUG] 尝试读取音频文件元数据: {filename}")
+
+                    # 获取文件元数据
+                    if filename.lower().endswith('.mp3'):
+                        try:
+                            audio = MP3(file_path, ID3=EasyID3)
+                            # 获取专辑信息
+                            if 'album' in audio:
+                                album = audio['album'][0]
+                                print(f"[DEBUG] 从MP3文件读取专辑信息: '{album}'")
+                        except:
+                            print(f"[WARNING] 无法读取MP3元数据，尝试其他方法")
+                            audio = MP3(file_path)
+                    else:
+                        audio = mutagen.File(file_path, easy=True)
+                        # 获取专辑信息
+                        if audio and 'album' in audio:
+                            album = audio['album'][0]
+                            print(f"[DEBUG] 从音频文件读取专辑信息: '{album}'")
+
+                    # 获取时长
+                    duration = audio.info.length if audio else 0
+                    print(f"[DEBUG] 音频时长: {duration} 秒")
+
+                except Exception as audio_error:
+                    print(f"[WARNING] 无法读取音频文件元数据 {filename}: {audio_error}")
+                    duration = 0
+
+                # 获取文件大小
+                file_size = os.path.getsize(file_path)
+                print(f"[DEBUG] 文件大小: {file_size} 字节")
+
+                # 确定cover_url
+                # 先尝试根据文件名在covers文件夹中查找封面
+                cover_filename_base = os.path.splitext(filename)[0]
+                cover_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp']
+
+                found_cover = False
+                for ext in cover_extensions:
+                    # 尝试小写和大写扩展名
+                    for case_ext in [ext, ext.upper()]:
+                        potential_cover = f"{cover_filename_base}{case_ext}"
+                        cover_path = os.path.join(covers_folder, potential_cover)
+
+                        if os.path.exists(cover_path):
+                            # 构建cover_url - 使用HTTP地址格式
+                            # 直接使用你的本地服务器地址
+                            server_url = "http://127.0.0.1:5000"  # 或者从Config获取
+                            cover_url = f"{server_url}/static/uploader/covers/{potential_cover}"
+                            found_cover = True
+                            print(f"[DEBUG] 找到封面文件: {potential_cover}")
+                            break
+
+                    if found_cover:
+                        break
+
+                # 如果没有找到封面，检查是否有默认封面
+                if not found_cover:
+                    default_cover = "default_cover.jpg"
+                    default_cover_path = os.path.join(covers_folder, default_cover)
+
+                    # 检查默认封面是否存在
+                    if os.path.exists(default_cover_path):
+                        server_url = "http://127.0.0.1:5000"  # 或者从Config获取
+                        cover_url = f"{server_url}/static/uploader/covers/{default_cover}"
+                        print(f"[DEBUG] 使用默认封面")
+                    else:
+                        print(f"[DEBUG] 无封面可用，cover_url将为空")
+
+                print(f"[DEBUG] 最终封面URL: {cover_url}")
+                print(f"[DEBUG] 专辑信息: {album}")
+
+                # 创建歌曲记录
+                song = Song(
+                    file_path=file_path,
+                    title=title,
+                    artist=artist,
+                    album=album,  # 添加专辑信息
+                    cover_url=cover_url,  # 添加封面URL
+                    duration=duration,
+                    file_size=file_size,
+                    file_name=filename,
+                    uploader_id=current_user.id if current_user.is_authenticated else None
+                )
+
+                db.session.add(song)
+                added_count += 1
+                print(f"[DEBUG] 成功添加到数据库: {filename}, 当前已添加: {added_count} 首")
+
+            except Exception as e:
+                import traceback
+                error_msg = f"处理文件 {filename} 时出错: {str(e)}"
+                print(f"[ERROR] {error_msg}")
+                print(f"[ERROR] 详细错误: {traceback.format_exc()}")
+
+                error_files.append({
+                    'filename': filename,
+                    'error': str(e),
+                    'traceback': traceback.format_exc()
+                })
+                continue
+
+        print(f"[DEBUG] 准备提交数据库，共添加 {added_count} 首歌曲")
+        print(f"[DEBUG] 跳过文件统计 - 已存在: {skipped_files}, 错误: {len(error_files)}")
+
+        # 批量提交到数据库
+        db.session.commit()
+        print(f"[DEBUG] 数据库提交成功")
+
+        try:
+            redis_client.delete("stats:global")
+            print(f"[DEBUG] 已清除Redis缓存")
+        except Exception as e:
+            logger.error(f"清除缓存失败: {e}")
+            print(f"[ERROR] 清除缓存失败: {e}")
+
+        print(f"[INFO] 刷新完成: 成功添加 {added_count} 首新歌曲, 错误文件: {len(error_files)}")
+
+        return jsonify({
+            "status": "success",
+            "message": f"成功添加 {added_count} 首新歌曲",
+            "added_count": added_count,
+            "errors": error_files,
+            "error_count": len(error_files),
+            "skipped_count": skipped_files
+        })
+
+    except Exception as e:
+        print(f"[CRITICAL] 扫描过程中发生错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+        db.session.rollback()
+        print(f"[DEBUG] 数据库回滚完成")
+
+        return jsonify({
+            "status": "error",
+            "message": f"扫描过程中发生错误: {str(e)}"
+        }), 500
+
+
+@app.route('/api/songs/upload', methods=['POST'])
+@login_required
+
+@concurrent_control(lambda: f"upload:{current_user.id}")
+def upload_songs():
+    if 'file' not in request.files:
+        return jsonify({'error':"没有选择文件"})
+    file=request.files['file']
+    if file.filename=='':
+        return jsonify({'error':"没有选择文件"})
+    if file and allowed_file(file.filename):
+        # 提取原始文件名（用于数据库存储）
+        original_filename = file.filename
+
+        # 使用UUID作为实际存储的文件名
+        ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else ''
+        uuid_filename = f"{uuid.uuid4().hex}.{ext}" if ext else uuid.uuid4().hex
+
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], uuid_filename)
+        file.save(file_path)
+
+        metadata = extract_metadata(file_path)
+        if not metadata:
+            os.remove(file_path)
+            return jsonify({"error": "无法提取音频元数据"}), 400
+
+        song = Song(
+            title=original_filename,  # 使用元数据标题或原始文件名
+            artist=metadata['artist'],
+            album=metadata['album'],
+            duration=metadata['duration'],
+            file_path=file_path,
+            file_name=uuid_filename,  # 存储UUID文件名
+            file_size=metadata['file_size'],
+            file_format=metadata['file_format'],
+            bitrate=metadata['bitrate'],
+            genre=metadata['genre'],
+            year=metadata['year'],
+            track_number=metadata['track_number'],
+            uploader_id=current_user.id,
+            is_public=True
+        )
+        db.session.add(song)
+        db.session.commit()
+
+        # 清除歌曲相关的缓存
+        redis_client.delete("songs:popular")
+        redis_client.delete("stats:global")
+
+        return jsonify({
+            "message": "文件上传成功",
+            "song_id": song.id,
+            "song_title": song.title
+        })
+    return jsonify({"error": "不支持的文件类型"}), 400
+
+
+# @app.route('/api/songs/<int:song_id>')
+# def get_song(song_id):
+#     song=Song.query.get_or_404(song_id)
+#     return jsonify({
+#         'id': song.id,
+#         'title': song.title,
+#         'artist': song.artist,
+#         'album': song.album,
+#         'duration': song.duration,
+#         'file_format': song.file_format,
+#         'file_size': song.file_size,
+#         'bitrate': song.bitrate,
+#         'genre': song.genre,
+#         'year': song.year,
+#         'play_count': song.play_count,
+#         'uploader': song.uploader.user_name if song.uploader else 'Unknown',
+#         'date_added': song.date_added.isoformat() if song.date_added else None
+#     })
+
+
+@app.route('/api/songs/<int:song_id>/stream')
+# @limiter.exempt  <-- 强烈建议加上这个，防止切歌被封禁
+def stream_song(song_id):
+    # 1. 消除 Legacy 警告，改用 db.session.get
+    song = db.session.get(Song, song_id)
+
+    if not song:
+        return jsonify({"error": "歌曲不存在"}), 404
+
+    # 2. 获取真实的 app 对象 (代理对象 current_app 不能直接跨线程)
+    app_instance = current_app._get_current_object()
+
+    def update_play_count(app_obj):
+        # 3. 在子线程中手动推入应用上下文
+        with app_obj.app_context():
+            try:
+                # 4. 【关键】在当前线程的 session 中重新查询对象
+                # 不要直接用外面的 'song' 变量，因为它属于主线程的 session
+                target_song = db.session.get(Song, song_id)
+
+                if target_song:
+                    target_song.play_count += 1
+                    target_song.last_played = datetime.now(timezone.utc)
+                    db.session.commit()
+
+                    # 尝试清理缓存
+                    try:
+                        redis_client.delete("songs:popular")
+                    except Exception:
+                        pass
+                    # print(f"[DEBUG] 歌曲 {song_id} 播放数 +1")
+            except Exception as e:
+                logger.error(f"Error updating play count for song {song_id}: {e}")
+
+    # 5. 启动线程，把 app 实例传进去
+    import threading
+    thread = threading.Thread(target=update_play_count, args=(app_instance,))
+    thread.start()
+
+    # 6. 发送文件逻辑
+    range_header = request.headers.get('Range', None)
+    if range_header:
+        return send_file(song.file_path, as_attachment=False, conditional=True)
+    else:
+        return send_file(song.file_path, as_attachment=False)
+
+
+# @app.route('/api/playlists')
+# @cache_response(time_out=120)  # 缓存2分钟
+# def get_playlists():
+#     page = request.args.get('page', 1, type=int)
+#     per_page = request.args.get('per_page', 20, type=int)
+#     user_id = request.args.get('user_id', type=int)
+#     tag = request.args.get('tag')
+#     sort = request.args.get('sort', 'created_date')
+#
+#     if user_id:
+#         query = Playlist.query.filter_by(user_id=user_id)
+#     else:
+#         query = Playlist.query.filter_by(is_public=True)
+#
+#     if tag:
+#         query = query.join(Playlist.tags).filter(Tag.name == tag)
+#
+#     if sort == 'play_count':
+#         query = query.order_by(Playlist.play_count.desc())
+#     elif sort == 'like_count':
+#         query = query.order_by(Playlist.like_count.desc())
+#     else:
+#         query = query.order_by(Playlist.created_date.desc())
+#
+#     pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+#     playlists = pagination.items
+#
+#     user_liked_playlists = set()
+#     if current_user.is_authenticated:
+#         liked = PlaylistLike.query.filter_by(user_id=current_user.id).all()
+#         user_liked_playlists = {like.playlist_id for like in liked}
+#
+#     return jsonify({
+#         'playlists': [{
+#             'id': playlist.id,
+#             'name': playlist.name,
+#             'description': playlist.description,
+#             'cover_image': playlist.cover_image,
+#             'user': {
+#                 'id': playlist.user.id,
+#                 'user_name': playlist.user.user_name
+#             },
+#             'song_count': playlist.songs.count(),
+#             'play_count': playlist.play_count,
+#             'like_count': playlist.like_count,
+#             'is_liked': playlist.id in user_liked_playlists,
+#             'created_date': playlist.created_date.isoformat() if playlist.created_date else None,
+#             'updated_date': playlist.updated_date.isoformat() if playlist.updated_date else None,
+#             'tags': [tag.name for tag in playlist.tags]
+#         } for playlist in playlists],
+#         'total': pagination.total,
+#         'pages': pagination.pages,
+#         'current_page': page
+#     })
+
+
+@app.route('/api/playlists/my')
+@login_required
+def get_my_playlists():
+    playlists = Playlist.query.filter_by(user_id=current_user.id).all()
+
+    return jsonify([{
+        'id': playlist.id,
+        'name': playlist.name,
+        'description': playlist.description,
+        'cover_image': playlist.cover_image,
+        'song_count': playlist.songs.count(),
+        'play_count': playlist.play_count,
+        'like_count': playlist.like_count,
+        'is_public': playlist.is_public,
+        'created_date': playlist.created_date.isoformat() if playlist.created_date else None,
+        'updated_date': playlist.updated_date.isoformat() if playlist.updated_date else None,
+        'tags': [tag.name for tag in playlist.tags]
+    } for playlist in playlists])
+
+
+@app.route('/api/playlists/<int:playlist_id>')
+def get_playlist(playlist_id):
+    # 1. 获取歌单 (使用 db.session.get 消除 Legacy 警告)
+    # 这里不需要 options(joinedload)，因为下面访问属性时会自动加载，
+    # 且对于单个对象查询，性能影响可忽略
+    playlist = db.session.get(Playlist, playlist_id)
+
+    if not playlist:
+        return jsonify({"error": "歌单不存在"}), 404
+
+    # 2. 权限检查
+    if not playlist.is_public and (not current_user.is_authenticated or playlist.user_id != current_user.id):
+        return jsonify({"error": "无权访问此歌单"}), 403
+
+    # 3. 获取关联数据
+    # 查询歌曲并预加载 song 对象，防止 N+1 查询问题
+    playlist_songs = PlaylistSong.query.options(
+        joinedload(PlaylistSong.song)
+    ).filter(
+        PlaylistSong.playlist_id == playlist_id
+    ).order_by(PlaylistSong.position).all()
+
+    # 4. 检查点赞状态
+    is_liked = False
+    if current_user.is_authenticated:
+        # 使用 count() 比取出对象稍微快一点点，也可以用 first()
+        count = PlaylistLike.query.filter_by(
+            user_id=current_user.id,
+            playlist_id=playlist_id
+        ).count()
+        is_liked = count > 0
+
+    # 5. 【核心修复】异步更新播放计数
+    # 获取真实的 app 实例
+    app_instance = current_app._get_current_object()
+
+    def update_playlist_play_count(app_obj):
+        # 手动推入应用上下文
+        with app_obj.app_context():
+            try:
+                # 在新线程中重新获取对象，防止 Session 冲突
+                p = db.session.get(Playlist, playlist_id)
+                if p:
+                    p.play_count += 1
+                    db.session.commit()
+            except Exception as e:
+                logger.error(f"Error updating playlist play count: {e}")
+
+    import threading
+    thread = threading.Thread(target=update_playlist_play_count, args=(app_instance,))
+    thread.start()
+
+    # 6. 辅助函数：处理 URL 拼接
+    # 确保返回完整的 http://127.0.0.1:5000/... 路径
+    base_url = "http://127.0.0.1:5000"
+
+    def process_url(path):
+        if not path: return None
+        if path.startswith('http'): return path
+        clean_path = path if path.startswith('/') else f"/{path}"
+        return f"{base_url}{clean_path}"
+
+    # 7. 返回数据
+    return jsonify({
+        'id': playlist.id,
+        'name': playlist.name,
+        'description': playlist.description,
+        # 处理歌单封面
+        'cover_image': process_url(playlist.cover_image),
+        'user': {
+            'id': playlist.user.id,
+            'user_name': playlist.user.user_name
+        },
+        'is_public': playlist.is_public,
+        'play_count': playlist.play_count,
+        'like_count': playlist.like_count,
+        # 直接使用已查询到的列表长度，比再次查询数据库 count() 更快
+        'song_count': len(playlist_songs),
+        'is_liked': is_liked,
+        'created_date': playlist.created_date.isoformat() if playlist.created_date else None,
+        'updated_date': playlist.updated_date.isoformat() if playlist.updated_date else None,
+        'tags': [tag.name for tag in playlist.tags],
+        'songs': [{
+            'id': ps.song.id,
+            'title': ps.song.title,
+            'artist': ps.song.artist,
+            'album': ps.song.album,
+            'duration': ps.song.duration,
+            'file_format': ps.song.file_format,
+            'play_count': ps.song.play_count,
+            # 处理歌曲封面
+            'cover_url': process_url(ps.song.cover_url),
+            'position': ps.position
+        } for ps in playlist_songs]
+    })
+
+
+@app.route('/api/playlists', methods=['POST'])
+@login_required
+@concurrent_control(lambda: f"create_playlist:{current_user.id}")
+def create_playlist():
+    try:
+        print(f"=== 开始创建歌单 (Multipart/Form-Data) ===")
+        print(f"用户ID: {current_user.id}")
+
+        # 1. 获取文本数据 (不再是 request.json)
+        name = request.form.get('name')
+        description = request.form.get('description', '')
+        # FormData 传过来的布尔值通常是字符串 'true'/'false'，需要转换
+        is_public_str = request.form.get('is_public', 'false')
+        is_public = is_public_str.lower() == 'true'
+
+        # 检查必要字段
+        if not name:
+            return jsonify({"error": "歌单名称是必填项"}), 400
+
+        # 2. 处理封面图片上传
+        cover_db_path = ""  # 默认空字符串或默认图片路径
+
+        if 'cover_image' in request.files:
+            file = request.files['cover_image']
+            # 检查用户是否真的选了文件（还是只传了个空字段）
+            if file and file.filename != '':
+                # 获取扩展名
+                original_filename = secure_filename(file.filename)
+                if '.' in original_filename:
+                    ext = original_filename.rsplit('.', 1)[1].lower()
+                else:
+                    ext = 'jpg'  # 默认后缀
+
+                # 使用 UUID 生成唯一文件名，防止覆盖歌曲封面
+                unique_filename = f"{uuid.uuid4().hex}.{ext}"
+
+                # 物理保存路径 (确保 app.config['COVERS_FOLDER'] 已配置)
+                # 假设 COVERS_FOLDER = 'static/uploader/covers'
+                save_path = os.path.join(app.config['COVERS_FOLDER'], unique_filename)
+
+                print(f"保存封面到: {save_path}")
+                file.save(save_path)
+
+                # 数据库存储路径 (Web 访问路径)
+                # 统一存为 /static/... 格式，方便前端直接使用或拼接
+                cover_db_path = f"/static/uploader/covers/{unique_filename}"
+
+        # 3. 创建歌单对象
+        playlist = Playlist(
+            name=name,
+            description=description,
+            user_id=current_user.id,
+            is_public=is_public,
+            cover_image=cover_db_path  # 存入生成的路径
+        )
+
+        # 4. 处理标签 (Tags)
+        # FormData 中的数组通常会被转为 JSON 字符串，或者同名 key
+        # 假设前端是 JSON.stringify(tags) 传过来的
+        tags_str = request.form.get('tags')
+        if tags_str:
+            try:
+                # 尝试解析 JSON 字符串
+                tags_list = json.loads(tags_str)
+                if isinstance(tags_list, list):
+                    for tag_name in tags_list:
+                        tag = Tag.query.filter_by(name=tag_name).first()
+                        if not tag:
+                            tag = Tag(name=tag_name)
+                            db.session.add(tag)
+                        playlist.tags.append(tag)
+            except json.JSONDecodeError:
+                print("Tags 解析失败，忽略标签")
+
+        # 5. 数据库提交
+        db.session.add(playlist)
+        db.session.commit()
+
+        print(f"歌单创建成功，ID: {playlist.id}")
+
+        # 清除缓存
+        redis_client.delete("playlists:recent")
+        # 也要清除该用户的歌单列表缓存
+        redis_client.delete(f"user:{current_user.id}:playlists")
+
+        return jsonify({
+            "message": "歌单创建成功",
+            "playlist_id": playlist.id,
+            "cover_image": cover_db_path
+        })
+
+    except Exception as e:
+        print(f"创建歌单时发生错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        db.session.rollback()
+        return jsonify({"error": "创建歌单失败", "details": str(e)}), 500
+
+
+@app.route('/api/playlists/<int:playlist_id>/songs', methods=['POST'])
+@login_required
+@concurrent_control(lambda playlist_id: f"playlist:{playlist_id}")
+def add_song_to_playlist(playlist_id):
+    """添加歌曲到歌单 - 添加调试信息"""
+    try:
+        print(f"[DEBUG] ====== 开始添加歌曲到歌单流程 ======")
+        print(f"[DEBUG] 请求参数: 用户ID={current_user.id}, 歌单ID={playlist_id}")
+        print(f"[DEBUG] 请求方法: {request.method}, 内容类型: {request.content_type}")
+        print(f"[DEBUG] 请求体原始数据: {request.get_data(as_text=True)[:500]}")
+
+        # 1. 查询歌单
+        print(f"[DEBUG] 正在查询歌单 {playlist_id}...")
+        playlist = Playlist.query.get_or_404(playlist_id)
+        print(f"[DEBUG] 歌单查询成功: id={playlist.id}, name={playlist.name}, 创建者={playlist.user_id}")
+        print(f"[DEBUG] 歌单当前歌曲数量: {playlist.song_count if hasattr(playlist, 'song_count') else '未知'}")
+
+        # 2. 权限检查
+        print(f"[DEBUG] 检查权限: 当前用户ID={current_user.id}, 歌单创建者ID={playlist.user_id}")
+        if playlist.user_id != current_user.id:
+            print(f"[ERROR] 权限不足: 用户{current_user.id}尝试修改他人歌单{playlist_id}")
+            print(f"[ERROR] 歌单实际属于用户{playlist.user_id}")
+            return jsonify({"error": "无权修改此歌单"}), 403
+        print(f"[DEBUG] 权限检查通过")
+
+        # 3. 解析请求数据
+        print(f"[DEBUG] 解析请求JSON数据...")
+        if not request.is_json:
+            print(f"[ERROR] 请求不是JSON格式")
+            return jsonify({"error": "请求必须是JSON格式"}), 400
+
+        data = request.json
+        print(f"[DEBUG] 请求JSON数据: {data}")
+
+        if 'song_id' not in data:
+            print(f"[ERROR] 缺少必要字段: song_id")
+            return jsonify({"error": "缺少song_id字段"}), 400
+
+        song_id = data['song_id']
+        print(f"[DEBUG] 要添加的歌曲ID: {song_id}")
+
+        # 4. 查询歌曲
+        print(f"[DEBUG] 正在查询歌曲 {song_id}...")
+        song = Song.query.get(song_id)
+        if not song:
+            print(f"[ERROR] 歌曲不存在: song_id={song_id}")
+            return jsonify({"error": "歌曲不存在"}), 404
+        print(
+            f"[DEBUG] 歌曲查询成功: id={song.id}, title={song.title}, artist={song.artist if hasattr(song, 'artist') else '未知'}")
+
+        # 5. 检查歌曲是否已在歌单中
+        print(f"[DEBUG] 检查歌曲是否已在歌单中...")
+        existing = PlaylistSong.query.filter_by(
+            playlist_id=playlist_id, song_id=song_id
+        ).first()
+
+        if existing:
+            print(f"[WARN] 歌曲已存在于歌单中: song_id={song_id}, playlist_id={playlist_id}")
+            print(f"[WARN] 现有记录ID: song_id={existing.song_id}, playlist_id={existing.playlist_id}, 位置: {existing.position}")
+            return jsonify({"error": "歌曲已在歌单中"}), 400
+        print(f"[DEBUG] 歌曲未存在于歌单中，可以添加")
+
+        # 6. 计算最大位置
+        print(f"[DEBUG] 正在计算歌单中的最大位置...")
+        max_position_result = db.session.query(db.func.max(PlaylistSong.position)).filter_by(
+            playlist_id=playlist_id
+        ).scalar()
+        print(f"[DEBUG] 最大位置查询结果: {max_position_result}")
+
+        max_position = max_position_result or 0
+        new_position = max_position + 1
+        print(f"[DEBUG] 计算新位置: 最大位置={max_position}, 新位置={new_position}")
+
+        # 7. 创建歌单歌曲记录
+        print(f"[DEBUG] 正在创建PlaylistSong记录...")
+        playlist_song = PlaylistSong(
+            playlist_id=playlist_id,
+            song_id=song_id,
+            position=new_position,
+            added_by=current_user.id
+        )
+        print(f"[DEBUG] PlaylistSong对象创建成功:")
+        print(f"  - playlist_id: {playlist_song.playlist_id}")
+        print(f"  - song_id: {playlist_song.song_id}")
+        print(f"  - position: {playlist_song.position}")
+        print(f"  - added_by: {playlist_song.added_by}")
+
+        # 8. 数据库操作
+        print(
+            f"[DEBUG] Session状态: new={len(db.session.new)}, dirty={len(db.session.dirty)}, deleted={len(db.session.deleted)}")
+
+        print(f"[DEBUG] 正在添加到Session...")
+        db.session.add(playlist_song)
+
+        print(f"[DEBUG] 更新歌单修改时间...")
+        old_updated_date = playlist.updated_date
+        playlist.updated_date = datetime.now(timezone.utc)
+        print(f"[DEBUG] 歌单更新时间: {old_updated_date} -> {playlist.updated_date}")
+
+        # 如果歌单有歌曲计数，也更新它
+        if hasattr(playlist, 'song_count'):
+            old_song_count = playlist.song_count
+            playlist.song_count = playlist.song_count + 1 if playlist.song_count else 1
+            print(f"[DEBUG] 更新歌曲计数: {old_song_count} -> {playlist.song_count}")
+
+        print(f"[DEBUG] Session状态更新后: new={len(db.session.new)}, dirty={len(db.session.dirty)}")
+
+        # 提交事务
+        try:
+            print(f"[DEBUG] 正在提交数据库事务...")
+            db.session.commit()
+            print(f"[DEBUG] 数据库提交成功")
+            print(f"[DEBUG] 歌单信息: id={playlist_song.playlist_id},song={playlist_song.song_id}")
+        except Exception as e:
+            print(f"[ERROR] 数据库提交失败: {type(e).__name__}: {str(e)}")
+            print(f"[ERROR] 异常详情: {traceback.format_exc()}")
+            db.session.rollback()
+            logger.error(f"提交添加歌曲事务失败: {e}")
+            return jsonify({"error": "添加歌曲时发生数据库错误"}), 500
+
+        # 9. 清除缓存
+        cache_key = f"playlist:{playlist_id}"
+        print(f"[DEBUG] 清理缓存键: {cache_key}")
+        try:
+            result = redis_client.delete(cache_key)
+            if result:
+                print(f"[DEBUG] 缓存清理成功: {cache_key}")
+            else:
+                print(f"[DEBUG] 缓存键不存在: {cache_key}")
+        except Exception as e:
+            print(f"[WARN] 缓存清理失败 {cache_key}: {e}")
+
+        # 10. 记录操作日志
+        logger.info(f"用户 {current_user.id} 将歌曲 {song_id} 添加到歌单 {playlist_id}")
+        print(f"[INFO] 操作完成: 用户 {current_user.id} 将歌曲 '{song.title}' 添加到歌单 '{playlist.name}'")
+
+        # 11. 返回响应
+        response_data = {
+            "message": "歌曲已添加到歌单",
+            "playlist_id": playlist_id,
+            "playlist_name": playlist.name,
+            "song_id": song_id,
+            "song_title": song.title,
+            "position": new_position,
+            "added_by": current_user.id
+        }
+        print(f"[DEBUG] 返回响应数据: {response_data}")
+        print(f"[DEBUG] ====== 添加歌曲到歌单流程完成 ======\n")
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        # 全局异常处理
+        print(f"[CRITICAL] 全局异常捕获: {type(e).__name__}: {str(e)}")
+        print(f"[CRITICAL] 完整堆栈跟踪:\n{traceback.format_exc()}")
+
+        try:
+            db.session.rollback()
+            print(f"[DEBUG] 数据库事务已回滚")
+        except Exception as rollback_error:
+            print(f"[WARN] 数据库回滚失败: {rollback_error}")
+
+        logger.error(f"添加歌曲到歌单时发生错误: {e}")
+        return jsonify({"error": "添加歌曲到歌单时发生错误"}), 500
+
+
+@app.route('/api/playlists/<int:playlist_id>/songs/<int:song_id>', methods=['DELETE'])
+@login_required
+@concurrent_control(lambda playlist_id, song_id: f"playlist:{playlist_id}:song:{song_id}")
+def remove_song_from_playlist(playlist_id, song_id):
+    """从播放列表中移除歌曲 - 添加调试信息"""
+    try:
+        print(f"[DEBUG] ====== 开始从歌单删除歌曲流程 ======")
+        print(f"[DEBUG] 请求参数: 用户ID={current_user.id}, 歌单ID={playlist_id}, 歌曲ID={song_id}")
+        print(f"[DEBUG] 请求方法: {request.method}, 端点: {request.endpoint}")
+        print(f"[DEBUG] 并发控制键: playlist:{playlist_id}:song:{song_id}")
+
+        # 1. 获取播放列表
+        print(f"[DEBUG] 正在查询歌单 {playlist_id}...")
+        playlist = db.session.get(Playlist, playlist_id)
+        if not playlist:
+            print(f"[ERROR] 歌单不存在: playlist_id={playlist_id}")
+            return jsonify({"error": "歌单不存在"}), 404
+        print(f"[DEBUG] 歌单查询成功: id={playlist.id}, name={playlist.name}, 创建者={playlist.user_id}")
+        print(f"[DEBUG] 歌单当前歌曲数量: {playlist.song_count if hasattr(playlist, 'song_count') else '未知'}")
+
+        # 2. 检查权限
+        print(f"[DEBUG] 检查权限: 当前用户ID={current_user.id}, 歌单创建者ID={playlist.user_id}")
+        if playlist.user_id != current_user.id:
+            print(f"[ERROR] 权限不足: 用户{current_user.id}尝试修改他人歌单{playlist_id}")
+            print(f"[ERROR] 歌单实际属于用户{playlist.user_id}")
+            return jsonify({"error": "无权修改此歌单"}), 403
+        print(f"[DEBUG] 权限检查通过")
+
+        # 3. 查找要删除的歌曲在播放列表中的记录
+        print(f"[DEBUG] 正在查询歌单歌曲记录: playlist_id={playlist_id}, song_id={song_id}")
+        playlist_song = PlaylistSong.query.filter_by(
+            playlist_id=playlist_id,
+            song_id=song_id
+        ).first()
+
+        if not playlist_song:
+            print(f"[DEBUG] 歌单信息: song_id={song_id}")
+            return jsonify({"error": "歌曲不存在于此歌单中"}), 404
+
+        print(f"[DEBUG] 歌单信息: id={playlist_song.playlist_id},song_id={playlist_song.song_id}")
+        print(f"[DEBUG] 歌曲在歌单中的位置: {playlist_song.position}")
+        print(f"[DEBUG] 添加者: {playlist_song.added_by}")
+        print(f"[DEBUG] 添加时间: {playlist_song.created_at if hasattr(playlist_song, 'created_at') else '未知'}")
+
+        # 4. 记录被删除歌曲的位置
+        removed_position = playlist_song.position
+        print(f"[DEBUG] 被删除歌曲的位置: {removed_position}")
+
+        # 5. 查询歌曲详细信息（用于日志和调试）
+        print(f"[DEBUG] 查询歌曲详细信息...")
+        song = db.session.get(Song, song_id)
+        song_title = song.title if song else "未知歌曲"
+        print(f"[DEBUG] 歌曲信息: id={song_id}, title={song_title}")
+
+        # 6. 开始数据库操作
+        print(
+            f"[DEBUG] Session状态: new={len(db.session.new)}, dirty={len(db.session.dirty)}, deleted={len(db.session.deleted)}")
+
+        # 删除歌曲
+        print(f"[DEBUG] 正在删除歌单歌曲记录...")
+        db.session.delete(playlist_song)
+        print(f"[DEBUG] 删除操作已添加到Session")
+
+        # 7. 更新剩余歌曲的位置（将后面的歌曲位置前移）
+        print(f"[DEBUG] 开始更新剩余歌曲的位置...")
+        later_songs = PlaylistSong.query.filter(
+            PlaylistSong.playlist_id == playlist_id,
+            PlaylistSong.position > removed_position
+        ).order_by(PlaylistSong.position).all()
+
+        print(f"[DEBUG] 找到 {len(later_songs)} 首位置在被删除歌曲之后的歌曲")
+
+        for i, song in enumerate(later_songs):
+            old_position = song.position
+            song.position -= 1
+            print(f"[DEBUG] 更新歌曲 {i + 1}: 歌曲ID={song.song_id}, 位置 {old_position} -> {song.position}")
+
+        # 8. 更新播放列表的修改时间
+        old_updated_date = playlist.updated_date
+        playlist.updated_date = datetime.now(timezone.utc)
+        print(f"[DEBUG] 更新歌单修改时间: {old_updated_date} -> {playlist.updated_date}")
+
+        # 9. 更新歌曲计数（如果存在）
+        if hasattr(playlist, 'song_count') and playlist.song_count > 0:
+            old_song_count = playlist.song_count
+            playlist.song_count -= 1
+            print(f"[DEBUG] 更新歌曲计数: {old_song_count} -> {playlist.song_count}")
+
+        print(
+            f"[DEBUG] Session状态更新后: new={len(db.session.new)}, dirty={len(db.session.dirty)}, deleted={len(db.session.deleted)}")
+
+        # 10. 提交事务
+        try:
+            print(f"[DEBUG] 正在提交数据库事务...")
+            db.session.commit()
+            print(f"[DEBUG] 数据库提交成功")
+            print(f"[DEBUG] 被删除歌曲信息: id={playlist_song.playlist_id},song_id={playlist_song.song_id}")
+        except Exception as e:
+            print(f"[ERROR] 数据库提交失败: {type(e).__name__}: {str(e)}")
+            print(f"[ERROR] 异常详情: {traceback.format_exc()}")
+            db.session.rollback()
+            logger.error(f"提交删除歌曲事务失败: {e}")
+            return jsonify({"error": "删除歌曲时发生数据库错误"}), 500
+
+        # 11. 清除缓存
+        cache_key = f"playlist:{playlist_id}"
+        print(f"[DEBUG] 清理缓存键: {cache_key}")
+        try:
+            result = redis_client.delete(cache_key)
+            if result:
+                print(f"[DEBUG] 缓存清理成功: {cache_key}")
+            else:
+                print(f"[DEBUG] 缓存键不存在: {cache_key}")
+        except Exception as e:
+            print(f"[WARN] 缓存清理失败 {cache_key}: {e}")
+
+        # 12. 记录操作日志
+        logger.info(f"用户 {current_user.id} 从歌单 {playlist_id} 中移除歌曲 {song_id}")
+        print(f"[INFO] 操作完成: 用户 {current_user.id} 从歌单 '{playlist.name}' 中移除歌曲 '{song_title}'")
+        print(f"[INFO] 删除位置: {removed_position}, 影响了 {len(later_songs)} 首歌曲的位置")
+
+        # 13. 返回响应
+        response_data = {
+            "message": "歌曲已从播放列表中移除",
+            "playlist_id": playlist_id,
+            "playlist_name": playlist.name,
+            "song_id": song_id,
+            "song_title": song_title,
+            "removed_position": removed_position,
+            "songs_affected": len(later_songs),
+            "action": "song_removed"
+        }
+        print(f"[DEBUG] 返回响应数据: {response_data}")
+        print(f"[DEBUG] ====== 从歌单删除歌曲流程完成 ======\n")
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        # 全局异常处理
+        print(f"[CRITICAL] 全局异常捕获: {type(e).__name__}: {str(e)}")
+        print(f"[CRITICAL] 完整堆栈跟踪:\n{traceback.format_exc()}")
+
+        try:
+            db.session.rollback()
+            print(f"[DEBUG] 数据库事务已回滚")
+        except Exception as rollback_error:
+            print(f"[WARN] 数据库回滚失败: {rollback_error}")
+
+        logger.error(f"从歌单删除歌曲时发生错误: {e}")
+        return jsonify({"error": "从歌单删除歌曲时发生错误"}), 500
+
+
+@app.route('/api/playlists/<int:playlist_id>', methods=['DELETE'])
+@login_required
+@concurrent_control(lambda playlist_id: f"delete_playlist:{playlist_id}")
+def delete_playlist(playlist_id):
+    print(f"=== 开始删除歌单 ===")
+    print(f"请求用户ID: {current_user.id}, 用户名: {current_user.user_name}")
+    print(f"要删除的歌单ID: {playlist_id}")
+
+    try:
+        # 1. 获取播放列表
+        print(f"查询歌单ID {playlist_id}...")
+        playlist = Playlist.query.get(playlist_id)
+        if not playlist:
+            print(f"错误: 歌单 {playlist_id} 不存在")
+            return jsonify({"error": "歌单不存在"}), 404
+
+        print(f"找到歌单: ID={playlist.id}, 名称='{playlist.name}', 创建者ID={playlist.user_id}")
+
+        # 2. 检查权限
+        print(f"检查权限: 歌单创建者ID={playlist.user_id}, 当前用户ID={current_user.id}")
+        if playlist.user_id != current_user.id:
+            print(f"权限拒绝: 用户 {current_user.id} 无权删除歌单 {playlist_id}")
+            return jsonify({"error": "无权删除此歌单"}), 403
+
+        print("权限检查通过")
+
+        # 3. 记录删除前的信息（用于响应和日志）
+        playlist_name = playlist.name
+        song_count = playlist.songs.count()
+        like_count = playlist.like_count
+
+        # 【新增】记录封面路径以便稍后删除
+        cover_image_path = playlist.cover_image
+
+        print(
+            f"歌单信息: 名称='{playlist_name}', 歌曲数量={song_count}, 点赞数={like_count}, 封面='{cover_image_path}'")
+
+        # 4. 开始事务
+        print("开始数据库事务...")
+        db.session.begin_nested()
+
+        # 5. 手动清理相关数据
+        try:
+            print("开始清理关联数据...")
+
+            # 删除歌单歌曲关联
+            songs_deleted = PlaylistSong.query.filter_by(playlist_id=playlist_id).delete()
+            print(f"已删除 {songs_deleted} 条歌单-歌曲关联记录")
+
+            # 删除歌单标签关联
+            tags_deleted = PlaylistTag.query.filter_by(playlist_id=playlist_id).delete()
+            print(f"已删除 {tags_deleted} 条歌单-标签关联记录")
+
+            # 删除歌单点赞记录
+            likes_deleted = PlaylistLike.query.filter_by(playlist_id=playlist_id).delete()
+            print(f"已删除 {likes_deleted} 条点赞记录")
+
+            print("所有关联数据清理完成")
+
+            # 最后删除歌单本身
+            print(f"删除歌单本体 (ID: {playlist_id})...")
+            db.session.delete(playlist)
+            print("歌单对象已标记为删除")
+
+        except Exception as e:
+            print(f"清理关联数据时发生错误: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            print("正在回滚数据库事务...")
+            db.session.rollback()
+            logger.error(f"删除歌单 {playlist_id} 时发生错误: {e}")
+            return jsonify({"error": "删除过程中发生错误", "details": str(e)}), 500
+
+        # 6. 提交事务
+        print("提交数据库事务...")
+        db.session.commit()
+        print("数据库事务已提交")
+
+        # =================================================================
+        # 【新增逻辑】: 删除数据库记录成功后，清理服务器硬盘上的封面文件
+        # =================================================================
+        if cover_image_path:
+            try:
+                print(f"准备删除封面文件: {cover_image_path}")
+                # 数据库存的是 Web 路径: /static/uploader/covers/xxx.jpg
+                # 我们需要提取文件名: xxx.jpg
+                filename = os.path.basename(cover_image_path)
+
+                # 拼接物理绝对路径 (假设 Config 中已配置 COVERS_FOLDER)
+                # COVERS_FOLDER 应该是类似 'Z:/project/static/uploader/covers'
+                file_abs_path = os.path.join(app.config['COVERS_FOLDER'], filename)
+
+                print(f"计算出的物理路径: {file_abs_path}")
+
+                # 检查文件是否存在，存在则删除
+                if os.path.exists(file_abs_path) and os.path.isfile(file_abs_path):
+                    os.remove(file_abs_path)
+                    print(f"✅ 已成功从硬盘删除封面文件")
+                else:
+                    print(f"⚠️ 文件不存在或路径错误，跳过物理删除")
+
+            except Exception as file_error:
+                # 注意：文件删除失败不应该报错给前端（因为数据库已经删了），只记录日志
+                print(f"❌ 删除封面文件失败: {file_error}")
+                logger.error(f"清理垃圾文件失败: {file_error}")
+        else:
+            print("该歌单没有封面，无需清理文件")
+        # =================================================================
+
+        # 7. 清理缓存
+        print("开始清理缓存...")
+        cache_keys_to_delete = [
+            f"playlist:{playlist_id}",
+            "playlists:recent",
+            "playlists:popular",
+            f"user:{current_user.id}:playlists"
+        ]
+
+        deleted_count = 0
+        for key in cache_keys_to_delete:
+            result = redis_client.delete(key)
+            if result > 0:
+                deleted_count += result
+
+        print(f"总计删除了 {deleted_count} 个缓存键")
+
+        # 8. 记录日志
+        logger.info(f"用户 {current_user.id} 删除了歌单 {playlist_id} ({playlist_name})")
+
+        # 9. 返回成功响应
+        print("=== 歌单删除成功 ===")
+
+        return jsonify({
+            "message": "歌单已成功删除",
+            "deleted_playlist_id": playlist_id,
+            "playlist_name": playlist_name,
+            "stats": {
+                "songs_removed": song_count,
+                "likes_removed": like_count
+            }
+        })
+
+    except Exception as e:
+        # 全局异常处理
+        print(f"删除歌单时发生未预期错误: {str(e)}")
+        import traceback
+        traceback.print_exc()
+
+        print("正在回滚数据库事务...")
+        db.session.rollback()
+
+        logger.error(f"删除歌单时发生未预期错误: {e}")
+        return jsonify({"error": "服务器内部错误", "details": str(e)}), 500
+
+
+# @app.route('/api/playlist/get_like_playlist/<int:user_id>')
+# @login_required
+# @concurrent_control(lambda user_id: f"user.id:get_like_playlist")
+# def get_like_playlist(user_id):
+#     """
+#     获取用户喜欢的播放列表
+#     """
+#     if user_id != current_user.id:
+#         return jsonify({"message": "权限错误"}), 403
+#
+#     try:
+#         page = request.args.get('page', 1, type=int)
+#         per_page = request.args.get('per_page', 20, type=int)
+#
+#         # 使用 JOIN 优化查询，避免 N+1 问题
+#         like_playlists_pagination = (
+#             PlaylistLike.query
+#             .options(joinedload(PlaylistLike.playlist))
+#             .filter_by(user_id=user_id)
+#             .paginate(
+#                         page=page,
+#                         per_page=per_page,
+#                         error_out=False
+#                     ))
+#
+#         playlists_info = []
+#         for like in like_playlists_pagination.items:
+#             # like.playlist 是通过关系访问的单个 Playlist 对象
+#             if like.playlist:
+#                 # 获取歌曲数量 - 注意：songs 是 dynamic 关系，需要使用 count()
+#                 song_count = like.playlist.songs.count()
+#
+#                 playlists_info.append({
+#                     'playlist_id': like.playlist.id,
+#                     'name': like.playlist.name,
+#                     'description': like.playlist.description,
+#                     'song_count': song_count,
+#                     'is_public': like.playlist.is_public,
+#                     'cover_image': like.playlist.cover_image,
+#                     'play_count': like.playlist.play_count,
+#                     'like_count': like.playlist.like_count,
+#                     'created_by': like.playlist.user_id,
+#                     'liked_at': like.created_date.isoformat() if like.created_date else None
+#                 })
+#
+#         return jsonify({
+#             "status": "success",
+#             "count": len(playlists_info),
+#             "total": like_playlists_pagination.total,
+#             "page": page,
+#             "per_page": per_page,
+#             "pages": like_playlists_pagination.pages,
+#             "playlists": playlists_info
+#         })
+#
+#     except Exception as e:
+#         return jsonify({
+#             "status": "error",
+#             "message": f"获取喜欢的播放列表失败: {str(e)}"
+#         }), 500
+
+
+@app.route('/api/playlists/<int:playlist_id>/like', methods=['POST'])
+@login_required
+@concurrent_control(lambda playlist_id: f"like:{current_user.id}:{playlist_id}")
+def like_playlist(playlist_id):
+    """点赞歌单 - 改进版本"""
+    try:
+        print(f"[DEBUG] ====== 开始点赞流程 ======")
+        print(f"[DEBUG] 请求参数: 用户ID={current_user.id}, 歌单ID={playlist_id}")
+        print(f"[DEBUG] 当前用户信息: username={current_user.user_name}, email={current_user.email}")
+
+        # 1. 查询歌单
+        print(f"[DEBUG] 正在查询歌单信息...")
+        playlist = Playlist.query.get(playlist_id)
+        print(f"[DEBUG] 歌单查询结果: {'找到' if playlist else '未找到'}")
+
+        if not playlist:
+            print(f"[ERROR] 歌单不存在: {playlist_id}")
+            return jsonify({"error": "歌单不存在"}), 404
+
+        print(f"[DEBUG] 歌单信息: id={playlist.id}, name={playlist.name}, 创建者={playlist.user_id}")
+        print(f"[DEBUG] 歌单当前点赞数: {playlist.like_count}")
+
+        # 2. 检查是否已经点赞
+        print(f"[DEBUG] 正在检查用户是否已点赞...")
+        existing_like = PlaylistLike.query.filter_by(
+            user_id=current_user.id,
+            playlist_id=playlist_id
+        ).first()
+
+        print(f"[DEBUG] 已存在的点赞记录: {'找到' if existing_like else '未找到'}")
+        if existing_like:
+            print(f"[WARN] 用户已点赞: 用户{current_user.id} 已点赞歌单{playlist_id}")
+            return jsonify({"error": "已经点赞过此歌单"}), 400
+
+        # 3. 创建点赞记录
+        print(f"[DEBUG] 正在创建点赞记录...")
+        like = PlaylistLike(
+            user_id=current_user.id,
+            playlist_id=playlist_id,
+        )
+
+        print(f"[DEBUG] 新点赞记录对象: id={like.id if hasattr(like, 'id') else '未生成'}")
+
+        # 4. 更新点赞计数
+        old_like_count = playlist.like_count
+        playlist.like_count += 1
+        playlist.updated_date = datetime.now(timezone.utc)
+
+        print(f"[DEBUG] 点赞数更新: {old_like_count} -> {playlist.like_count}")
+        print(f"[DEBUG] 更新时间: {playlist.updated_date}")
+
+        # 5. 数据库操作
+        print(f"[DEBUG] 开始数据库操作...")
+        print(
+            f"[DEBUG] Session状态: new={len(db.session.new)}, dirty={len(db.session.dirty)}, deleted={len(db.session.deleted)}")
+
+        db.session.add(like)
+        print(f"[DEBUG] 点赞记录已添加到Session")
+
+        try:
+            db.session.commit()
+            print(f"[DEBUG] 数据库提交成功")
+            print(f"[DEBUG] 点赞成功: 用户 {like.user_id} -> 歌单 {like.playlist_id}")
+            print(f"[DEBUG] 提交后点赞数: {playlist.like_count}")
+        except Exception as e:
+            print(f"[ERROR] 数据库提交失败: {type(e).__name__}: {str(e)}")
+            print(f"[ERROR] 提交异常详情: {traceback.format_exc()}")
+            db.session.rollback()
+            logger.error(f"提交点赞事务失败: {e}")
+            return jsonify({"error": "保存点赞记录时发生错误"}), 500
+
+        # 6. 清除缓存
+        print(f"[DEBUG] 开始清理缓存...")
+        cache_keys = [
+            f"playlist:{playlist_id}",
+            "playlists:popular",
+            f"user:{current_user.id}:liked_playlists"
+        ]
+
+        print(f"[DEBUG] 需要清理的缓存键: {cache_keys}")
+        deleted_count = 0
+
+        for key in cache_keys:
+            try:
+                result = redis_client.delete(key)
+                if result:
+                    deleted_count += 1
+                    print(f"[DEBUG] 缓存键已删除: {key}")
+                else:
+                    print(f"[DEBUG] 缓存键不存在: {key}")
+            except Exception as e:
+                print(f"[WARN] 删除缓存键失败 {key}: {e}")
+
+        print(f"[DEBUG] 缓存清理完成，总共删除 {deleted_count} 个键")
+
+        # 7. 记录操作日志
+        logger.info(f"用户 {current_user.id} 点赞了歌单 {playlist_id} ({playlist.name})")
+        print(f"[INFO] 操作完成: 用户 {current_user.id} 点赞歌单 {playlist_id} ({playlist.name})")
+
+        # 8. 返回响应
+        response_data = {
+            "message": "点赞成功",
+            "like_count": playlist.like_count,
+            "action": "liked",
+            "playlist_id": playlist_id,
+            "playlist_name": playlist.name,
+            "cache_cleaned": deleted_count
+        }
+
+        print(f"[DEBUG] 返回响应数据: {response_data}")
+        print(f"[DEBUG] ====== 点赞流程完成 ======\n")
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        # 全局异常处理
+        print(f"[CRITICAL] 全局异常捕获: {type(e).__name__}: {str(e)}")
+        print(f"[CRITICAL] 完整堆栈跟踪:\n{traceback.format_exc()}")
+
+        try:
+            db.session.rollback()
+            print(f"[DEBUG] 数据库事务已回滚")
+        except:
+            print(f"[WARN] 数据库回滚失败或不需要回滚")
+
+        logger.error(f"点赞歌单时发生错误: {e}")
+        return jsonify({"error": "点赞过程中发生错误"}), 500
+
+
+@app.route('/api/playlists/<int:playlist_id>/unlike', methods=['POST'])
+@login_required
+@concurrent_control(lambda playlist_id: f"unlike:{current_user.id}:{playlist_id}")
+def unlike_playlist(playlist_id):
+    """取消点赞歌单"""
+    try:
+        print(f"[DEBUG] 开始取消点赞流程 - 用户ID: {current_user.id}, 歌单ID: {playlist_id}")
+        print(f"[DEBUG] 用户信息: username={current_user.user_name}, email={current_user.email}")
+
+        playlist = Playlist.query.get(playlist_id)
+        print(f"[DEBUG] 查询歌单结果: playlist={playlist}")
+        if not playlist:
+            print(f"[ERROR] 歌单不存在: {playlist_id}")
+            return jsonify({"error": "歌单不存在"}), 404
+
+        # 2. 查找点赞记录
+        like_record = PlaylistLike.query.filter_by(
+            user_id=current_user.id,
+            playlist_id=playlist_id
+        ).first()
+
+        print(f"[DEBUG] 查询点赞记录: like_record={like_record}")
+        print(f"[DEBUG] 查询条件: user_id={current_user.id}, playlist_id={playlist_id}")
+
+        if not like_record:
+            print(f"[WARN] 用户尚未点赞此歌单: 用户{current_user.id} 未点赞歌单{playlist_id}")
+            return jsonify({"error": "您尚未点赞此歌单"}), 400
+
+        # 3. 记录取消点赞前的信息
+        playlist_name = playlist.name
+        current_like_count = playlist.like_count
+        print(f"[DEBUG] 取消点赞前信息: 歌单名={playlist_name}, 当前点赞数={current_like_count}")
+        print(f"[DEBUG] 歌单创建者: user_id={playlist.user_id}")
+
+        # 4. 开始事务
+        db.session.begin_nested()
+        print(f"[DEBUG] 开始数据库事务")
+
+        try:
+            print(f"[WARN] 用户已取消点赞: 用户{current_user.id} 已点赞歌单{playlist_id}")
+            # 删除点赞记录
+            db.session.delete(like_record)
+            print(f"[DEBUG] 点赞记录已标记为删除")
+
+            # 更新歌单点赞计数（确保不小于0）
+            print(f"[DEBUG] 当前歌单点赞数: before={playlist.like_count}")
+            if playlist.like_count > 0:
+                playlist.like_count -= 1
+                print(f"[DEBUG] 点赞数减1: after={playlist.like_count}")
+            else:
+                print(f"[DEBUG] 点赞数已经是0，不再减少")
+
+            # 更新歌单的修改时间
+            old_updated_time = playlist.updated_date
+            playlist.updated_date = datetime.now(timezone.utc)
+            print(f"[DEBUG] 更新时间: old={old_updated_time}, new={playlist.updated_date}")
+
+            # 打印当前session中的状态
+            print(
+                f"[DEBUG] Session状态: new={len(db.session.new)}, dirty={len(db.session.dirty)}, deleted={len(db.session.deleted)}")
+
+        except Exception as e:
+            print(f"[ERROR] 数据库操作异常: {type(e).__name__}: {str(e)}")
+            print(f"[ERROR] 详细异常信息: {traceback.format_exc()}")
+            db.session.rollback()
+            logger.error(f"取消点赞歌单 {playlist_id} 时发生错误: {e}")
+            return jsonify({"error": "取消点赞过程中发生错误"}), 500
+
+        # 5. 提交事务
+        try:
+            db.session.commit()
+            print(f"[DEBUG] 数据库事务提交成功")
+            print(f"[DEBUG] 提交后点赞记录状态: 应被删除")
+            print(f"[DEBUG] 提交后歌单点赞数: {playlist.like_count}")
+        except Exception as e:
+            print(f"[ERROR] 数据库提交失败: {type(e).__name__}: {str(e)}")
+            print(f"[ERROR] 提交异常详情: {traceback.format_exc()}")
+            db.session.rollback()
+            logger.error(f"提交取消点赞事务失败: {e}")
+            return jsonify({"error": "保存更改时发生错误"}), 500
+
+        # 6. 清理缓存
+        cache_keys_to_delete = [
+            f"playlist:{playlist_id}",
+            "playlists:popular",
+            f"user:{current_user.id}:liked_playlists"
+        ]
+
+        print(f"[DEBUG] 开始清理缓存，键列表: {cache_keys_to_delete}")
+
+        deleted_count = 0
+        for key in cache_keys_to_delete:
+            try:
+                result = redis_client.delete(key)
+                if result:
+                    deleted_count += 1
+                    print(f"[DEBUG] 缓存键已删除: {key}")
+                else:
+                    print(f"[DEBUG] 缓存键不存在: {key}")
+            except Exception as e:
+                print(f"[WARN] 删除缓存键失败 {key}: {e}")
+
+        print(f"[DEBUG] 总共删除了 {deleted_count} 个缓存键")
+
+        # 7. 记录操作日志
+        logger.info(f"用户 {current_user.id} 取消点赞了歌单 {playlist_id} ({playlist_name})")
+        print(f"[INFO] 操作完成: 用户 {current_user.id} 取消点赞歌单 {playlist_id}")
+
+        # 8. 返回成功响应
+        response_data = {
+            "message": "已取消点赞",
+            "playlist_id": playlist_id,
+            "playlist_name": playlist_name,
+            "current_like_count": playlist.like_count,
+            "action": "unliked",
+            "cache_cleaned": deleted_count
+        }
+        print(f"[DEBUG] 返回响应数据: {response_data}")
+        return jsonify(response_data)
+
+    except Exception as e:
+        # 全局异常处理
+        print(f"[CRITICAL] 全局异常捕获: {type(e).__name__}: {str(e)}")
+        print(f"[CRITICAL] 完整堆栈跟踪:\n{traceback.format_exc()}")
+        db.session.rollback()
+        logger.error(f"取消点赞时发生未预期错误: {e}")
+        return jsonify({"error": "服务器内部错误"}), 500
+
+
+@app.route('/api/stats')
+@cache_response(time_out=300)  # 缓存5分钟
+def get_stats():
+    # 尝试从缓存获取
+    cache_key = "stats:global"
+    cached_stats = redis_client.get(cache_key)
+    if cached_stats:
+        return jsonify(json.loads(cached_stats))
+
+    total_songs = Song.query.filter_by(is_public=True).count()
+    total_plays = db.session.query(db.func.sum(Song.play_count)).scalar() or 0
+    total_users = User.query.count()
+
+    # 获取在线用户数（最近5分钟有活动的用户）
+    online_threshold = datetime.now(timezone.utc) - timedelta(minutes=5)
+    online_users = UserSession.query.filter(
+        UserSession.last_activity >= online_threshold
+    ).distinct(UserSession.user_id).count()
+
+    # 热门歌曲（缓存这个查询结果）
+    popular_songs_cache = redis_client.get("songs:popular")
+    if popular_songs_cache:
+        popular_songs = json.loads(popular_songs_cache)
+    else:
+        popular_songs = Song.query.filter_by(is_public=True).order_by(
+            Song.play_count.desc()
+        ).limit(10).all()
+        popular_songs = [{
+            'id': song.id,
+            'title': song.title,
+            'artist': song.artist,
+            'play_count': song.play_count
+        } for song in popular_songs]
+        redis_client.setex("songs:popular", 600, json.dumps(popular_songs))  # 缓存10分钟
+
+    stats = {
+        'total_songs': total_songs,
+        'total_plays': total_plays,
+        'total_users': total_users,
+        'online_users': online_users,
+        'popular_songs': popular_songs
+    }
+
+    # 缓存统计结果
+    redis_client.setex(cache_key, 300, json.dumps(stats))
+
+    return jsonify(stats)
+
+
+# @app.route('/api/tags')
+# @cache_response(time_out=3600)  # 缓存1小时
+# def get_tags():
+#     tags = Tag.query.all()
+#
+#     return jsonify([{
+#         'id': tag.id,
+#         'name': tag.name,
+#         'playlist_count': len(tag.playlists)
+#     } for tag in tags])
+
+
+@app.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"error": "请求过于频繁，请稍后再试"}), 429
+
+@app.errorhandler(500)
+def internal_error(error):
+    db.session.rollback()
+    logger.error(f"Server Error: {error}")
+    return jsonify({"error": "服务器内部错误"}), 500
+
+@app.errorhandler(404)
+def not_found_error(error):
+    return jsonify({"error": "资源未找到"}), 404
+
+
+@app.route('/health')
+def health_check():
+    try:
+        # 检查数据库连接
+        db.session.execute(text('SELECT 1'))
+        # 检查Redis连接
+        redis_client.ping()
+        return jsonify({"status": "healthy", "database": "connected", "cache": "connected"})
+    except Exception as e:
+        logger.error(f"Health check failed: {e}")
+        return jsonify({"status": "unhealthy", "error": str(e)}), 503
+
+
+def init_db():
+    with app.app_context():
+        try:
+            db.create_all()
+            logger.info("Database tables created successfully")
+        except Exception as e:
+            logger.error(f"Error creating database tables: {e}")
+
+
+def get_or_create_user_play_state_and_queue(user_id):
+    """统一获取或创建用户播放状态和当前队列"""
+    # 使用事务确保原子性
+    try:
+        # 尝试获取现有的播放状态
+        play_state = UserPlayState.query.options(
+            joinedload(UserPlayState.current_queue),
+            joinedload(UserPlayState.current_song)
+        ).filter_by(user_id=user_id).first()
+
+        if play_state:
+            # 如果播放状态存在，检查当前队列
+            if play_state.current_queue_id:
+                current_queue = PlayQueue.query.filter_by(
+                    id=play_state.current_queue_id,
+                    user_id=user_id
+                ).first()
+                if current_queue:
+                    return play_state, current_queue
+
+            # 播放状态存在但没有当前队列，创建新队列
+            current_queue = PlayQueue(
+                user_id=user_id,
+                name='音乐队列',
+                is_saved=False
+            )
+            db.session.add(current_queue)
+            db.session.flush()  # 获取队列ID但不提交
+
+            play_state.current_queue_id = current_queue.id
+            db.session.commit()
+
+            return play_state, current_queue
+        else:
+            # 播放状态不存在，创建播放状态和队列
+            current_queue = PlayQueue(
+                user_id=user_id,
+                name='音乐队列',
+                is_saved=False
+            )
+            db.session.add(current_queue)
+            db.session.flush()  # 获取队列ID但不提交
+
+            play_state = UserPlayState(
+                user_id=user_id,
+                current_queue_id=current_queue.id
+            )
+            db.session.add(play_state)
+            db.session.commit()
+
+            return play_state, current_queue
+
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"创建用户播放状态和队列时发生错误: {e}")
+        raise
+
+
+def get_or_create_user_play_state(user_id):
+    """获取或创建用户播放状态（向后兼容）"""
+    play_state, _ = get_or_create_user_play_state_and_queue(user_id)
+    return play_state
+
+
+def get_user_current_queue(user_id):
+    """获取用户当前队列（向后兼容）"""
+    _, current_queue = get_or_create_user_play_state_and_queue(user_id)
+    return current_queue
+
+
+def set_user_current_queue(user_id, queue_id):
+    """设置用户的当前队列"""
+    # 验证队列存在且属于用户
+    queue = PlayQueue.query.filter_by(id=queue_id, user_id=user_id).first()
+    if not queue:
+        return False
+
+    play_state = get_or_create_user_play_state(user_id)
+    play_state.current_queue_id = queue_id
+    play_state.current_position = 0  # 重置播放位置
+    play_state.progress = 0  # 重置进度
+
+    db.session.commit()
+    return True
+
+
+from functools import wraps
+from flask_login import current_user
+
+
+def max_queues_limit(max_queues=5):
+    """
+    装饰器：确保用户最多只有指定数量的队列
+    如果超过限制，会自动删除最旧的队列
+
+    Args:
+        max_queues: 最大队列数量限制
+    """
+
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # 检查用户是否已登录
+            if not current_user.is_authenticated:
+                raise ValueError("用户未登录")
+
+            user_id = current_user.id
+
+            # 检查用户当前的队列数量
+            user_queues = PlayQueue.query.filter_by(user_id=user_id).all()
+
+            # 如果已经达到或超过限制，删除最旧的队列
+            if len(user_queues) >= max_queues:
+                # 按创建时间排序，删除最旧的
+                oldest_queue = PlayQueue.query.filter_by(user_id=user_id) \
+                    .order_by(PlayQueue.created_date.asc()) \
+                    .first()
+
+                if oldest_queue:
+                    # 如果删除的队列是当前播放队列，需要更新播放状态
+                    play_state = UserPlayState.query.filter_by(user_id=user_id).first()
+                    if play_state and play_state.current_queue_id == oldest_queue.id:
+                        play_state.current_queue_id = None
+                        play_state.current_song_id = None
+                        play_state.current_position = 0
+                        play_state.progress = 0
+
+                    db.session.delete(oldest_queue)
+                    db.session.commit()
+                    print(f"已删除用户 {user_id} 的最旧队列: {oldest_queue.name}")
+
+            # 执行原始函数
+            return f(*args, **kwargs)
+
+        return decorated_function
+
+    return decorator
+
+
+def queue_to_dict(queue, include_items=True):
+    """将队列对象转换为字典"""
+    result = {
+        'id': queue.id,
+        'name': queue.name,
+        'is_saved': queue.is_saved,
+        'user_id': queue.user_id,
+        'item_count': len(queue.queue_items) if queue.queue_items else 0,
+        'created_date': queue.created_date.isoformat() if queue.created_date else None,
+        'updated_date': queue.updated_date.isoformat() if queue.updated_date else None
+    }
+
+    if include_items and queue.queue_items:
+        result['items'] = [{
+            'id': item.id,
+            'position': item.position,
+            'song': {
+                'id': item.song.id,
+                'title': item.song.title,
+                'artist': item.song.artist,
+                'album': item.song.album,
+                'duration': item.song.duration,
+                'file_format': item.song.file_format,
+                'play_count': item.song.play_count,
+                'cover_url': item.song.cover_url,
+                'lyrics': item.song.lyrics
+            },
+            'added_date': item.added_date.isoformat() if item.added_date else None
+        } for item in queue.queue_items]
+
+    return result
+
+
+def play_state_to_dict(play_state):
+    """将播放状态对象转换为字典"""
+    if not play_state:
+        return None
+
+    return {
+        'current_queue_id': play_state.current_queue_id,
+        'current_song_id': play_state.current_song_id,
+        'current_position': play_state.current_position,
+        'progress': play_state.progress,
+        'is_playing': play_state.is_playing,
+        'play_mode': play_state.play_mode,
+        'updated_date': play_state.updated_date.isoformat() if play_state.updated_date else None
+    }
+
+
+@app.route('/api/queue/current')
+@login_required
+def get_current_queue():
+    """获取用户的当前播放队列"""
+    print(f"=== DEBUG get_current_queue() 开始 ===")
+    print(f"用户 ID: {current_user.id}")
+
+    # 1. 先尝试获取播放状态
+    play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+    print(f"1. 查询播放状态: {'找到' if play_state else '未找到'}")
+    if play_state:
+        print(f"   当前队列ID: {play_state.current_queue_id}")
+
+    queue = None
+
+    # 2. 如果有播放状态且有指向的队列
+    if play_state and play_state.current_queue_id:
+        queue = PlayQueue.query.filter_by(id=play_state.current_queue_id, user_id=current_user.id).first()
+        print(f"2. 通过播放状态查询队列: {'找到' if queue else '未找到'} (ID: {play_state.current_queue_id})")
+
+    # 3. 【关键补充】如果上面没找到（比如刚注册或状态被清空），尝试找用户最近更新的一个队列
+    if not queue:
+        print("3. 播放状态中没有找到队列，尝试查找用户最近更新的队列...")
+        user_queues = PlayQueue.query.filter_by(user_id=current_user.id).order_by(PlayQueue.updated_date.desc()).all()
+        print(f"   用户共有 {len(user_queues)} 个队列")
+
+        queue = user_queues[0] if user_queues else None
+
+        if queue:
+            print(f"   找到最近更新的队列: ID={queue.id}, 名称='{queue.name}', 更新时间={queue.updated_date}")
+
+            # 如果找到了备选队列，自动把它设为当前
+            if not play_state:
+                print("   创建新的播放状态记录...")
+                play_state = UserPlayState(user_id=current_user.id)
+                db.session.add(play_state)
+            else:
+                print("   更新现有播放状态的队列ID...")
+
+            play_state.current_queue_id = queue.id
+            db.session.commit()
+            print(f"   已将队列 {queue.id} 设为当前队列")
+        else:
+            print("   用户没有任何队列")
+
+    # 4. 如果还是没有任何队列，返回一个空的结构（不要报 404）
+    if not queue:
+        print("4. 最终结果: 没有找到任何队列，返回空结构")
+        print("=== DEBUG get_current_queue() 结束 ===\n")
+        return jsonify({
+            'queue': {
+                'id': 0,
+                'name': '暂无队列',
+                'items': [],
+                'item_count': 0
+            },
+            'state': {
+                'is_playing': False,
+                'current_song_id': None,
+                'progress': 0,
+                'play_mode': 'sequential'
+            }
+        })
+
+    # 返回正常数据
+    print(f"4. 最终结果: 返回队列 {queue.id} ('{queue.name}'), 包含 {len(queue.queue_items) if queue.queue_items else 0} 个歌曲")
+    if queue.queue_items:
+        print(f"   队列中的歌曲: {[item.song_id for item in queue.queue_items[:5]]}" +
+              ("..." if len(queue.queue_items) > 5 else ""))
+
+    print(f"=== DEBUG get_current_queue() 结束 ===\n")
+
+    return jsonify({
+        'queue': queue_to_dict(queue, include_items=True),
+        'state': play_state_to_dict(play_state) if play_state else None
+    })
+
+
+@app.route('/api/queue/items/<int:item_id>', methods=['DELETE'])
+@login_required
+@concurrent_control(lambda item_id: f"queue:{current_user.id}")
+def remove_from_queue(item_id):
+    """从队列中移除歌曲"""
+
+    print(
+        f"[DEBUG] remove_from_queue被调用 - 项目ID: {item_id}, 用户ID: {current_user.id}, 用户名: {current_user.user_name}")
+
+    # 查询要删除的队列项目
+    print(f"[DEBUG] 查询队列项目: item_id={item_id}")
+    queue_item = PlayQueueItem.query.filter_by(id=item_id).first_or_404()
+
+    print(
+        f"[DEBUG] 找到队列项目: ID={queue_item.id}, 队列ID={queue_item.queue_id}, 歌曲ID={queue_item.song_id}, 位置={queue_item.position}")
+
+    # 验证权限
+    print(f"[DEBUG] 验证权限: 队列所有者={queue_item.play_queue.user_id}, 当前用户={current_user.id}")
+    if queue_item.play_queue.user_id != current_user.id:
+        print(f"[ERROR] 权限验证失败: 用户 {current_user.id} 无权操作队列 {queue_item.play_queue.id}")
+        return jsonify({"error": "无权操作此队列"}), 403
+
+    print(f"[DEBUG] 权限验证通过")
+
+    # 记录要删除的项目信息
+    removed_position = queue_item.position
+    queue_id = queue_item.play_queue.id
+
+    print(f"[DEBUG] 准备删除: 位置={removed_position}, 队列ID={queue_id}")
+
+    # 删除队列项目
+    print(f"[DEBUG] 从数据库删除队列项目")
+    db.session.delete(queue_item)
+
+    # 重新排序剩余项目
+    print(f"[DEBUG] 重新排序剩余项目: 队列ID={queue_id}, 位置>{removed_position}")
+    later_items = PlayQueueItem.query.filter(
+        PlayQueueItem.queue_id == queue_id,
+        PlayQueueItem.position > removed_position
+    ).order_by(PlayQueueItem.position).all()
+
+    print(f"[DEBUG] 找到 {len(later_items)} 个需要重新排序的项目")
+
+    for i, item in enumerate(later_items):
+        old_position = item.position
+        item.position -= 1
+        print(f"[DEBUG]  项目 {i + 1}: ID={item.id}, 位置 {old_position} -> {item.position}")
+
+    # 更新播放状态（如果删除的是当前播放位置）
+    print(f"[DEBUG] 获取用户播放状态")
+    play_state = get_or_create_user_play_state(current_user.id)
+
+    print(
+        f"[DEBUG] 播放状态: 当前队列ID={play_state.current_queue_id}, 当前位置={play_state.current_position}, 当前歌曲ID={play_state.current_song_id}")
+
+    if play_state.current_queue_id == queue_id:
+        print(f"[DEBUG] 删除操作影响当前播放队列")
+
+        if play_state.current_position >= removed_position:
+            print(f"[DEBUG] 删除位置 {removed_position} 在当前位置 {play_state.current_position} 之前或相同")
+
+            if play_state.current_position == removed_position:
+                # 如果删除的是当前播放的歌曲，重置状态
+                print(f"[DEBUG] 删除的是当前播放的歌曲，重置播放状态")
+                old_song_id = play_state.current_song_id
+                old_progress = play_state.progress
+
+                play_state.current_song_id = None
+                play_state.progress = 0
+                play_state.current_position = max(0, removed_position - 1)
+
+                print(f"[DEBUG]  歌曲ID: {old_song_id} -> None")
+                print(f"[DEBUG]  进度: {old_progress} -> 0")
+                print(f"[DEBUG]  位置: {removed_position} -> {play_state.current_position}")
+            else:
+                # 只是调整位置
+                print(f"[DEBUG] 删除的是当前位置之前的项目，调整播放位置")
+                old_position = play_state.current_position
+                play_state.current_position -= 1
+                print(f"[DEBUG]  位置: {old_position} -> {play_state.current_position}")
+    else:
+        print(f"[DEBUG] 删除操作不影响当前播放队列")
+
+    # 更新队列时间戳
+    queue = PlayQueue.query.get(queue_id)
+    old_updated_date = queue.updated_date
+    queue.updated_date = datetime.now(timezone.utc)
+
+    print(f"[DEBUG] 更新队列时间戳: {old_updated_date} -> {queue.updated_date}")
+
+    # 提交数据库更改
+    print(f"[DEBUG] 提交数据库更改")
+    try:
+        db.session.commit()
+        print(f"[DEBUG] 数据库提交成功")
+    except Exception as e:
+        print(f"[ERROR] 数据库提交失败: {str(e)}")
+        raise
+
+    # 清除Redis缓存
+    redis_key = f"queue:{queue_id}"
+    print(f"[DEBUG] 清除Redis缓存: {redis_key}")
+    try:
+        redis_client.delete(redis_key)
+        print(f"[DEBUG] Redis缓存清除成功")
+    except Exception as e:
+        print(f"[WARNING] Redis缓存清除失败: {str(e)}")
+
+    print(f"[INFO] 用户 {current_user.user_name} 从队列 {queue_id} 中删除了项目 {item_id} (位置 {removed_position})")
+
+    return jsonify({
+        "message": "已从队列中移除歌曲",
+        "removed_item_id": item_id,
+        "queue_id": queue_id,
+        "removed_position": removed_position
+    })
+
+
+@app.route('/api/queue/items/reorder', methods=['POST'])
+@login_required
+@concurrent_control(lambda: f"queue:{current_user.id}")
+def reorder_queue():
+    print(f"\n=== 开始 reorder_queue 调试 ===")
+    print(f"用户ID: {current_user.id}")
+
+    data = request.json
+    print(f"1. 接收到的原始数据: {data}")
+
+    # 前端发来的是 song_id 的列表，例如 [10, 5, 10, 3] (允许重复)
+    new_order_song_ids = data.get('song_ids', [])
+    queue_id = data.get('queue_id')
+
+    print(f"2. 解析后的数据:")
+    print(f"   新顺序(song_ids): {new_order_song_ids}")
+    print(f"   队列ID: {queue_id}")
+    print(f"   新顺序长度: {len(new_order_song_ids)}")
+
+    if not new_order_song_ids:
+        print("错误: 没有提供顺序")
+        return jsonify({"error": "没有提供顺序"}), 400
+
+    # 1. 验证队列权限
+    print(f"\n3. 验证队列权限:")
+    print(f"   查询条件: queue.id={queue_id}, user_id={current_user.id}")
+    queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first()
+    if not queue:
+        print(f"   错误: 队列不存在或无权访问")
+        return jsonify({"error": "队列不存在或无权访问"}), 404
+    print(f"   找到队列: ID={queue.id}, 名称='{queue.name}'")
+
+    # 2. 获取该队列当前数据库里所有的 Item
+    # 按当前位置排序，保证处理重复歌曲时的稳定性（谁在前面谁先被匹配）
+    print(f"\n4. 获取数据库中的队列项目:")
+    current_items = PlayQueueItem.query.filter_by(queue_id=queue_id).order_by(PlayQueueItem.position).all()
+    print(f"   数据库中的项目总数: {len(current_items)}")
+    for i, item in enumerate(current_items[:5]):  # 只打印前5个
+        print(f"      {i + 1}. ID={item.id}, song_id={item.song_id}, 位置={item.position}")
+    if len(current_items) > 5:
+        print(f"     ... 还有 {len(current_items) - 5} 个项目")
+
+    # 3. 构建"库存池"：{ song_id: [item1, item2, ...] }
+    # 这样如果有两首一样的歌，我们可以按顺序取出来
+    print(f"\n5. 构建库存池:")
+    item_pool = defaultdict(list)
+    for item in current_items:
+        item_pool[item.song_id].append(item)
+
+    print(f"   库存池统计:")
+    for song_id, items in item_pool.items():
+        print(f"     song_id={song_id}: {len(items)} 个项目 (ID: {[item.id for item in items]})")
+
+    # 4. 重新分配位置
+    # 遍历前端发来的顺序
+    print(f"\n6. 开始重新分配位置:")
+    current_pos = 1
+    unmatched_songs = []
+    position_updates = []
+
+    for idx, song_id in enumerate(new_order_song_ids):
+        print(f"   处理第 {idx + 1}/{len(new_order_song_ids)} 个 song_id: {song_id}")
+
+        # 检查库存池里有没有这首歌
+        if song_id in item_pool and item_pool[song_id]:
+            # 从池子里取出一个对应的 Item 对象
+            item = item_pool[song_id].pop(0)
+            old_position = item.position
+
+            # 更新它的位置
+            item.position = current_pos
+            position_updates.append({
+                'item_id': item.id,
+                'song_id': song_id,
+                'old_position': old_position,
+                'new_position': current_pos
+            })
+            print(f"     匹配成功: 项目ID={item.id}, 旧位置={old_position} -> 新位置={current_pos}")
+            current_pos += 1
+        else:
+            # 这种情况通常发生在前端刚添加了歌(Temp)，但后端还没写入DB
+            # 此时我们选择跳过，不报错，等下次同步
+            unmatched_songs.append(song_id)
+            print(f"     匹配失败: song_id={song_id} 不在库存池中")
+
+    # 5. 处理那些"数据库有，但前端列表里没有"的剩余 Item (防止数据丢失)
+    # 通常把它们堆到最后，或者删掉。为了安全，我们把它们堆到最后。
+    print(f"\n7. 处理剩余项目:")
+    remaining_items_count = sum(len(items) for items in item_pool.values())
+    print(f"   剩余项目总数: {remaining_items_count}")
+
+    for song_id, remaining_items in item_pool.items():
+        for item in remaining_items:
+            old_position = item.position
+            item.position = current_pos
+            position_updates.append({
+                'item_id': item.id,
+                'song_id': song_id,
+                'old_position': old_position,
+                'new_position': current_pos
+            })
+            print(f"     剩余项目: 项目ID={item.id}, song_id={song_id}, 旧位置={old_position} -> 新位置={current_pos}")
+            current_pos += 1
+
+    print(f"\n8. 位置更新汇总:")
+    for update in position_updates:
+        print(f"   项目ID={update['item_id']}: {update['old_position']} -> {update['new_position']}")
+
+    if unmatched_songs:
+        print(f"\n9. 未匹配的歌曲ID (前端有但数据库没有): {unmatched_songs}")
+        print(f"   总数: {len(unmatched_songs)}")
+        unique_unmatched = set(unmatched_songs)
+        for song_id in unique_unmatched:
+            count = unmatched_songs.count(song_id)
+            print(f"     song_id={song_id}: {count} 次")
+
+    print(f"\n10. 提交数据库更改")
+    db.session.commit()
+    print(f"    数据库提交成功")
+
+    # 清除缓存
+    redis_key = f"queue:{queue_id}"
+    print(f"\n11. 清除Redis缓存: {redis_key}")
+    redis_client.delete(redis_key)
+
+    print(f"\n12. 返回成功响应")
+    print(f"=== 结束 reorder_queue 调试 ===\n")
+
+    return jsonify({"message": "顺序已更新"})
+
+
+@login_required
+@concurrent_control(lambda: f"queue:{current_user.id}")
+def reorder_queue():
+    """重新排序队列中的歌曲"""
+    print(f"=== 开始 reorder_queue，用户ID: {current_user.id} ===")
+
+    data = request.json
+    print(f"接收到的JSON数据: {data}")
+
+    new_order = data.get('order', [])  # [item_id1, item_id2, ...]
+    queue_id = data.get('queue_id')  # 可选：指定队列
+
+    print(f"新排序顺序: {new_order}")
+    print(f"指定的队列ID: {queue_id}")
+
+    if not new_order:
+        print("错误：没有提供排序数据")
+        return jsonify({"error": "没有提供排序数据"}), 400
+
+    # 确定目标队列
+    if queue_id:
+        print(f"查找指定队列: ID={queue_id}, 用户ID={current_user.id}")
+        queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first()
+        if not queue:
+            print(f"队列不存在或无权访问: ID={queue_id}")
+            return jsonify({"error": "队列不存在或无权访问"}), 404
+    else:
+        print("未指定队列ID，获取当前用户的当前队列")
+        queue = get_user_current_queue(current_user.id)
+
+    print(f"目标队列信息: ID={queue.id}, 名称={queue.name if hasattr(queue, 'name') else 'N/A'}")
+
+    # 验证所有项目都属于该队列
+    print(f"验证队列项目: 队列ID={queue.id}, 项目数量={len(new_order)}")
+    valid_items = PlayQueueItem.query.filter(
+        PlayQueueItem.id.in_(new_order),
+        PlayQueueItem.queue_id == queue.id
+    ).all()
+
+    print(f"数据库中匹配的项目数量: {len(valid_items)}")
+
+    if len(valid_items) != len(new_order):
+        print(f"错误: 提供的项目数量({len(new_order)})与有效项目数量({len(valid_items)})不匹配")
+        print(f"有效项目ID: {[item.id for item in valid_items]}")
+        return jsonify({"error": "包含无效的队列项目"}), 400
+
+    # 更新位置
+    item_position_map = {item_id: position + 1 for position, item_id in enumerate(new_order)}
+    print(f"项目位置映射: {item_position_map}")
+
+    print("开始更新项目位置:")
+    for item in valid_items:
+        old_position = item.position
+        new_position = item_position_map[item.id]
+        print(f"  项目ID={item.id}: 旧位置={old_position}, 新位置={new_position}")
+        item.position = new_position
+
+    print(f"更新队列时间戳")
+    queue.updated_date = datetime.now(timezone.utc)
+
+    print("提交数据库更改")
+    db.session.commit()
+
+    # 清除Redis缓存
+    redis_key = f"queue:{queue.id}"
+    print(f"删除Redis缓存键: {redis_key}")
+    redis_client.delete(redis_key)
+
+    print(f"=== 完成 reorder_queue ===")
+    return jsonify({"message": "队列顺序已更新"})
+
+
+@app.route('/api/queue/clear', methods=['POST'])
+@login_required
+@concurrent_control(lambda: f"queue:{current_user.id}")
+def clear_queue():
+    """清空播放队列"""
+
+    print(f"[DEBUG] clear_queue被调用 - 用户ID: {current_user.id}, 用户名: {current_user.user_name}")
+
+    # 获取请求数据
+    data = request.json or {}
+    queue_id = data.get('queue_id')  # 可选：指定队列
+
+    print(f"[DEBUG] 请求JSON数据: {data}")
+    print(f"[DEBUG] 指定队列ID: {queue_id}")
+
+    # 查找队列
+    if queue_id:
+        print(f"[DEBUG] 查找指定队列: ID={queue_id}, 用户ID={current_user.id}")
+        queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first()
+
+        if not queue:
+            print(f"[ERROR] 队列不存在或无权访问: queue_id={queue_id}")
+            return jsonify({"error": "队列不存在或无权访问"}), 404
+
+        print(f"[DEBUG] 找到指定队列: ID={queue.id}, 名称='{queue.name}'")
+    else:
+        print(f"[DEBUG] 获取用户当前队列...")
+        queue = get_user_current_queue(current_user.id)
+
+        if queue:
+            print(f"[DEBUG] 当前队列: ID={queue.id}, 名称='{queue.name}'")
+        else:
+            print(f"[DEBUG] 用户没有当前队列")
+            return jsonify({"error": "没有可清空的队列"}), 400
+
+    # 统计队列中的项目数
+    item_count = PlayQueueItem.query.filter_by(queue_id=queue.id).count()
+    print(f"[DEBUG] 队列 {queue.id} 中有 {item_count} 个项目将被删除")
+
+    # 删除所有队列项目
+    print(f"[DEBUG] 开始删除队列项目...")
+    deleted_count = PlayQueueItem.query.filter_by(queue_id=queue.id).delete()
+    print(f"[DEBUG] 已删除 {deleted_count} 个项目")
+
+    # 重置播放状态（如果这是当前队列）
+    print(f"[DEBUG] 获取用户播放状态...")
+    play_state = get_or_create_user_play_state(current_user.id)
+
+    print(f"[DEBUG] 播放状态: 当前队列ID={play_state.current_queue_id}, 当前队列ID={play_state.current_queue_id}")
+
+    if play_state.current_queue_id == queue.id:
+        print(f"[DEBUG] 清空的是当前播放队列，重置播放状态")
+
+        # 保存旧值用于调试
+        old_song_id = play_state.current_song_id
+        old_position = play_state.current_position
+        old_progress = play_state.progress
+        old_is_playing = play_state.is_playing
+
+        # 重置播放状态
+        play_state.current_song_id = None
+        play_state.current_position = 0
+        play_state.progress = 0
+        play_state.is_playing = False
+
+        print(f"[DEBUG] 播放状态重置:")
+        print(f"  - 歌曲ID: {old_song_id} -> None")
+        print(f"  - 位置: {old_position} -> 0")
+        print(f"  - 进度: {old_progress} -> 0")
+        print(f"  - 播放状态: {old_is_playing} -> False")
+    else:
+        print(f"[DEBUG] 清空的不是当前播放队列，无需重置播放状态")
+
+    # 更新队列时间戳
+    print(f"[DEBUG] 更新队列时间戳...")
+    queue.updated_date = datetime.now(timezone.utc)
+    print(f"[DEBUG] 队列更新时间设置为: {queue.updated_date}")
+
+    # 提交数据库更改
+    print(f"[DEBUG] 提交数据库更改...")
+    db.session.commit()
+    print(f"[DEBUG] 数据库提交成功")
+
+    # 清除Redis缓存
+    redis_key = f"queue:{queue.id}"
+    print(f"[DEBUG] 清除Redis缓存: key={redis_key}")
+    redis_client.delete(redis_key)
+    print(f"[DEBUG] Redis缓存已清除")
+
+    print(f"[INFO] 用户 {current_user.user_name} 清空了队列 '{queue.name}' (ID: {queue.id})")
+    print(f"[DEBUG] 返回成功响应")
+
+    return jsonify({
+        "message": "队列已清空",
+        "cleared_queue_id": queue.id,
+        "cleared_queue_name": queue.name,
+        "deleted_item_count": item_count
+    })
+
+
+@app.route('/api/queue/playmode', methods=['PUT'])
+@login_required
+def set_play_mode():
+    """设置播放模式"""
+    data = request.json
+    play_mode = data.get('play_mode', 'sequential')
+
+    valid_modes = ['sequential', 'shuffle', 'repeat_one', 'repeat_all']
+    if play_mode not in valid_modes:
+        return jsonify({"error": "无效的播放模式"}), 400
+
+    play_state = get_or_create_user_play_state(current_user.id)
+    play_state.play_mode = play_mode
+    play_state.updated_date =datetime.now(timezone.utc)
+    db.session.commit()
+
+    return jsonify({
+        "message": f"播放模式已设置为 {play_mode}",
+        "play_mode": play_mode
+    })
+
+
+"""
+这里目前好像没什么用
+@app.route('/api/queue/save', methods=['POST'])
+@login_required
+@concurrent_control(lambda: f"queue:{current_user.id}")
+def save_queue():
+    
+    data = request.json
+    name = data.get('name', '已保存的队列')
+    queue_id = data.get('queue_id')  # 可选：指定要保存的队列
+
+    if queue_id:
+        queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first()
+        if not queue:
+            return jsonify({"error": "队列不存在或无权访问"}), 404
+    else:
+        queue = get_user_current_queue(current_user.id)
+
+    if queue.is_saved:
+        return jsonify({"error": "队列已保存"}), 400
+
+    queue.name = name
+    queue.is_saved = True
+    queue.updated_date = datetime.now(timezone.utc)
+
+    # 创建新的当前队列
+    new_queue = create_default_queue(current_user.id)
+
+    # 更新播放状态指向新队列
+    play_state = get_or_create_user_play_state(current_user.id)
+    play_state.current_queue_id = new_queue.id
+    play_state.current_song_id = None
+    play_state.current_position = 0
+    play_state.progress = 0
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "队列已保存",
+        "saved_queue_id": queue.id,
+        "new_queue_id": new_queue.id
+    })
+"""
+
+
+@app.route('/api/queue/state', methods=['PUT'])
+@login_required
+@limiter.exempt
+def update_queue_state():
+    """更新队列播放状态"""
+    data = request.json
+
+    play_state = get_or_create_user_play_state(current_user.id)
+
+    # 更新状态
+    if 'current_song_id' in data:
+        play_state.current_song_id = data['current_song_id']
+    if 'current_position' in data:
+        play_state.current_position = data['current_position']
+    if 'progress' in data:
+        play_state.progress = data['progress']
+    if 'is_playing' in data:
+        play_state.is_playing = data['is_playing']
+    if 'current_queue_id' in data:
+        # 验证队列属于用户
+        if data['current_queue_id']:
+            queue = PlayQueue.query.filter_by(
+                id=data['current_queue_id'],
+                user_id=current_user.id
+            ).first()
+            if queue:
+                play_state.current_queue_id = data['current_queue_id']
+
+    play_state.updated_date = datetime.now(timezone.utc)
+    db.session.commit()
+
+    return jsonify({"message": "播放状态已更新"})
+
+
+@app.route('/api/queues')
+@login_required
+def get_user_queues():
+    """获取用户的所有队列"""
+
+    print(f"[DEBUG] === get_user_queues开始 ===")
+    print(f"[DEBUG] 请求URL: {request.url}")
+    print(f"[DEBUG] 请求方法: {request.method}")
+    print(f"[DEBUG] 当前用户: ID={current_user.id}, 用户名={current_user.user_name}")
+
+    # 查询用户的所有队列
+    print(f"[DEBUG] 执行数据库查询: 用户ID={current_user.id}")
+    queues = PlayQueue.query.filter_by(user_id=current_user.id).order_by(
+        PlayQueue.updated_date.desc()
+    ).all()
+
+    print(f"[DEBUG] 数据库查询完成: 找到 {len(queues)} 个队列")
+
+    # 获取用户的播放状态
+    print(f"[DEBUG] 调用 get_or_create_user_play_state: 用户ID={current_user.id}")
+    play_state = get_or_create_user_play_state(current_user.id)
+    current_queue_id = play_state.current_queue_id
+
+    print(f"[DEBUG] 播放状态结果: 当前队列ID={current_queue_id}")
+    print(f"[DEBUG] 是否为首次创建: {play_state.is_created if hasattr(play_state, 'is_created') else '未知'}")
+
+    # 构建响应
+    print(f"[DEBUG] 构建响应数据...")
+    response_data = []
+
+    for queue in queues:
+        queue_info = {
+            'id': queue.id,
+            'name': queue.name,
+            'is_saved': queue.is_saved,
+            'is_current': queue.id == current_queue_id,
+            'item_count': len(queue.queue_items),
+            'created_date': queue.created_date.isoformat() if queue.created_date else None,
+            'updated_date': queue.updated_date.isoformat() if queue.updated_date else None
+        }
+        response_data.append(queue_info)
+
+        # 如果是当前队列，特别标记一下
+        if queue.id == current_queue_id:
+            print(f"[DEBUG]   -> 队列 {queue.id} ({queue.name}) 是当前队列")
+
+    print(f"[DEBUG] 响应数据构建完成，包含 {len(response_data)} 个队列")
+
+    # 打印所有队列的摘要信息
+    for i, queue in enumerate(queues):
+        status = " [当前队列]" if queue.id == current_queue_id else ""
+        print(f"[DEBUG]   {i + 1}. ID={queue.id}, 名称='{queue.name}', 项目数={len(queue.queue_items)}{status}")
+
+    print(f"[DEBUG] === get_user_queues结束 ===")
+
+    return jsonify(response_data)
+
+
+""""@app.route('/api/queues/saved')
+@login_required
+def get_saved_queues():
+    saved_queues = PlayQueue.query.filter_by(
+        user_id=current_user.id,
+        is_saved=True
+    ).order_by(PlayQueue.updated_date.desc()).all()
+
+    return jsonify([queue_to_dict(queue, include_items=False) for queue in saved_queues])"""
+
+
+@app.route('/api/queues/<int:queue_id>/load', methods=['POST'])
+@login_required
+def load_queue(queue_id):
+    """加载特定队列作为当前队列"""
+
+    # 调试信息：函数调用和用户信息
+    print(
+        f"[DEBUG] load_queue被调用: queue_id={queue_id}, user_id={current_user.id}, username={current_user.user_name}")
+
+    success = set_user_current_queue(current_user.id, queue_id)
+
+    # 调试信息：函数调用结果
+    print(f"[DEBUG] set_user_current_queue结果: success={success}")
+
+    if not success:
+        print(f"[DEBUG] 加载队列失败: queue_id={queue_id} 可能不存在或无访问权限")
+        return jsonify({"error": "队列不存在或无权访问"}), 404
+
+    # 获取队列信息返回
+    queue = PlayQueue.query.get(queue_id)
+
+    # 调试信息：查询结果
+    if queue:
+        print(f"[DEBUG] 成功加载队列: id={queue.id}, name={queue.name}, owner_id={queue.user_id}")
+    else:
+        print(f"[DEBUG] 警告: 队列查询返回None, queue_id={queue_id}")
+
+    # 将队列转换为字典（不包含项目）
+    queue_data = queue_to_dict(queue, include_items=False)
+    print(f"[DEBUG] 队列数据: {queue_data}")
+
+    response = jsonify({
+        "message": "队列已加载",
+        "queue": queue_data
+    })
+
+    print(f"[DEBUG] 返回响应: 队列加载成功")
+
+    return response
+
+
+@app.route('/api/queues/<int:queue_id>', methods=['DELETE'])
+@login_required
+def delete_queue(queue_id):
+    """删除队列"""
+
+    print(f"[DEBUG] === DELETE队列操作开始 ===")
+    print(f"[DEBUG] 请求方法: DELETE")
+    print(f"[DEBUG] 目标队列ID: {queue_id}")
+    print(f"[DEBUG] 请求用户: ID={current_user.id}, 用户名={current_user.user_name}")
+    print(f"[DEBUG] 请求时间: {datetime.now()}")
+
+    # 查询要删除的队列
+    queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first_or_404()
+
+    print(f"[INFO] 找到队列: ID={queue.id}, 名称='{queue.name}'")
+    print(f"[DEBUG] 队列详情: 所有者ID={queue.user_id}, 保存状态={queue.is_saved}")
+    print(f"[DEBUG] 队列创建时间: {queue.created_date}")
+    print(f"[DEBUG] 队列更新时间: {queue.updated_date}")
+    print(f"[DEBUG] 队列包含项目数: {len(queue.queue_items)}")
+
+    # 获取播放状态
+    print(f"[DEBUG] 获取用户播放状态...")
+    play_state = get_or_create_user_play_state(current_user.id)
+
+    if play_state:
+        print(f"[DEBUG] 播放状态信息:")
+        print(f"  - 当前队列ID: {play_state.current_queue_id}")
+        print(f"  - 当前歌曲ID: {play_state.current_song_id}")
+        print(f"  - 当前位置: {play_state.current_position}")
+        print(f"  - 当前进度: {play_state.progress}")
+
+        # 检查是否为当前队列
+        is_current_queue = play_state.current_queue_id == queue.id
+        print(f"[DEBUG] 是否为当前播放队列: {is_current_queue}")
+
+        if is_current_queue:
+            print(f"[WARNING] 用户正在删除当前播放队列!")
+            print(f"[DEBUG] 重置播放状态...")
+
+            # 重置播放状态
+            play_state.current_queue_id = None
+            play_state.current_song_id = None
+            play_state.current_position = 0
+            play_state.progress = 0
+
+            print(f"[DEBUG] 播放状态已重置")
+    else:
+        print(f"[WARNING] 未找到播放状态记录")
+
+    # 删除队列及其所有项目
+    print(f"[DEBUG] 开始删除队列...")
+
+    # 记录删除前的状态
+    items_count = len(queue.queue_items)
+    print(f"[DEBUG] 将要删除 {items_count} 个队列项目")
+
+    # 执行删除
+    db.session.delete(queue)
+    print(f"[DEBUG] 队列对象已标记为删除")
+
+    try:
+        print(f"[DEBUG] 提交数据库事务...")
+        db.session.commit()
+        print(f"[SUCCESS] 队列删除成功!")
+        print(f"[INFO] 用户 {current_user.user_name} 删除了队列 '{queue.name}' (ID: {queue.id})")
+    except Exception as e:
+        print(f"[ERROR] 数据库提交失败: {str(e)}")
+        db.session.rollback()
+        print(f"[DEBUG] 已回滚数据库事务")
+        raise
+
+    print(f"[DEBUG] === DELETE队列操作结束 ===")
+
+    return jsonify({
+        "message": "队列已删除",
+        "deleted_queue_id": queue_id,
+        "deleted_queue_name": queue.name
+    })
+
+
+# @app.route('/api/queues', methods=['POST'])
+# @max_queues_limit(max_queues=5)
+# @login_required
+# def create_queue():
+#     """创建新队列（不添加歌曲）"""
+#     data = request.json
+#     name = data.get('name', '音乐队列')
+#     is_saved = data.get('is_saved', True)  # 默认为已保存队列
+#
+#     if not name or len(name.strip()) == 0:
+#         return jsonify({"error": "队列名称不能为空"}), 400
+#
+#
+#     queue = PlayQueue(
+#         user_id=current_user.id,
+#         name=name.strip(),
+#         is_saved=is_saved
+#     )
+#     db.session.add(queue)
+#     db.session.commit()
+#
+#     return jsonify({
+#         "message": "队列创建成功",
+#         "queue": queue_to_dict(queue, include_items=False)
+#     })
+
+
+@app.route('/api/queues/<int:queue_id>/song', methods=['POST'])
+@login_required
+@concurrent_control(lambda queue_id: f"queue:{current_user.id}")
+def add_song_to_queue(queue_id):
+    """添加歌曲到队列 (优化版) - 添加调试信息"""
+    try:
+        print(f"[DEBUG] ====== 开始添加歌曲到队列流程 (优化版) ======")
+        print(f"[DEBUG] 请求参数: 用户ID={current_user.id}, 队列ID={queue_id}")
+        print(f"[DEBUG] 用户信息: username={current_user.user_name}")
+        print(f"[DEBUG] 请求方法: {request.method}, 内容类型: {request.content_type}")
+
+        data = request.json
+        print(f"[DEBUG] 请求JSON数据: {data}")
+
+        song_id = data.get('song_id')
+        position = data.get('position')
+        new_queue_name = data.get('new_queue_name', '默认播放队列')
+
+        print(f"[DEBUG] 解析参数: song_id={song_id}, position={position}, new_queue_name={new_queue_name}")
+
+        if not song_id:
+            print(f"[ERROR] 没有提供歌曲ID")
+            return jsonify({"error": "没有提供歌曲ID"}), 400
+
+        # 1. 验证歌曲
+        print(f"[DEBUG] 正在验证歌曲 {song_id}...")
+        valid_song = Song.query.filter(Song.id == song_id, Song.is_public == True).first()
+        if not valid_song:
+            print(f"[ERROR] 歌曲不存在或无权访问: song_id={song_id}")
+            return jsonify({"error": "歌曲不存在或无权访问"}), 400
+
+        print(f"[DEBUG] 歌曲验证成功: id={valid_song.id}, title={valid_song.title}")
+
+        # 2. 获取或创建队列
+        queue = None
+
+        # 逻辑：如果是 0，尝试找当前正在听的；否则找指定ID
+        if queue_id == 0:
+            print(f"[DEBUG] queue_id=0，尝试获取当前播放队列...")
+            play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+            print(f"[DEBUG] 播放状态查询结果: {'找到' if play_state else '未找到'}")
+
+            if play_state and play_state.current_queue_id:
+                print(f"[DEBUG] 播放状态中的当前队列ID: {play_state.current_queue_id}")
+                queue = PlayQueue.query.filter_by(id=play_state.current_queue_id, user_id=current_user.id).first()
+                print(f"[DEBUG] 通过播放状态获取队列: {'成功' if queue else '失败'}")
+        else:
+            print(f"[DEBUG] queue_id={queue_id}，直接查询队列...")
+            queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first()
+            print(f"[DEBUG] 直接查询队列结果: {'成功' if queue else '失败'}")
+
+        print(f"[DEBUG] 队列获取结果: queue={queue}, queue_id={queue.id if queue else 'None'}")
+
+        # 3. 队列不存在时的创建逻辑 (含数量限制)
+        if not queue:
+            print(f"[DEBUG] 未找到队列，执行创建逻辑...")
+
+            # A. 检查数量限制 (Max 5)
+            MAX_QUEUES = 5
+            print(f"[DEBUG] 检查队列数量限制: MAX={MAX_QUEUES}")
+            user_queues = PlayQueue.query.filter_by(user_id=current_user.id).all()
+            print(f"[DEBUG] 用户现有队列数量: {len(user_queues)}")
+
+            if len(user_queues) >= MAX_QUEUES:
+                print(f"[DEBUG] 用户队列数量已达上限，准备清理...")
+
+                # 【修改点】获取当前正在播放的队列ID (用于豁免保护)
+                play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+                current_playing_id = play_state.current_queue_id if play_state else None
+                print(f"[DEBUG] 当前正在播放的队列ID: {current_playing_id}")
+
+                # 【修改点】筛选出非当前播放的队列 (备选名单)
+                candidates_to_delete = [q for q in user_queues if q.id != current_playing_id]
+
+                # 如果备选名单为空 (说明所有队列都在播? 理论上不可能，或者是空列表)，那就还是用全列表
+                target_list = candidates_to_delete if candidates_to_delete else user_queues
+                print(f"[DEBUG] 可删除候选队列数: {len(target_list)}")
+
+                # 在候选名单里找最旧的
+                oldest_queue = min(target_list, key=lambda q: q.created_date)
+
+                print(f"[DEBUG] 选中要删除的最旧队列: id={oldest_queue.id}, name={oldest_queue.name}")
+
+                # 删除队列
+                db.session.delete(oldest_queue)
+                redis_client.delete(f"queue:{oldest_queue.id}")
+                print(f"[INFO] 已删除最旧闲置队列: {oldest_queue.name}")
+
+                # (注意：因为我们特意避开了正在播放的队列，所以这里不再需要重置 play_state 的逻辑了)
+            # B. 创建新队列
+            print(f"[DEBUG] 创建新队列: name={new_queue_name}")
+            queue = PlayQueue(user_id=current_user.id, name=new_queue_name, is_saved=True)
+            db.session.add(queue)
+            db.session.flush()  # 获取 ID
+            print(f"[DEBUG] 新队列创建成功: id={queue.id}, name={queue.name}")
+
+            # C. 设为当前队列
+            print(f"[DEBUG] 将新队列设为当前队列...")
+            play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+            if not play_state:
+                print(f"[DEBUG] 用户没有播放状态，创建新的...")
+                play_state = UserPlayState(user_id=current_user.id)
+                db.session.add(play_state)
+
+            play_state.current_queue_id = queue.id
+            play_state.current_position = 0
+            play_state.progress = 0
+            print(f"[DEBUG] 播放状态更新: current_queue_id={play_state.current_queue_id}")
+
+        print(
+            f"[DEBUG] 最终队列信息: id={queue.id}, name={queue.name}, 歌曲数量={queue.item_count if hasattr(queue, 'item_count') else '未知'}")
+
+        # =========================================================
+        # 4. 查重逻辑：如果已存在，直接跳转播放
+        # =========================================================
+        print(f"[DEBUG] 检查歌曲是否已在队列中...")
+        existing_item = PlayQueueItem.query.filter_by(queue_id=queue.id, song_id=song_id).first()
+
+        if existing_item:
+            print(f"[DEBUG] 歌曲已存在于队列中: 记录ID={existing_item.id}, 位置={existing_item.position}")
+            print(f"[DEBUG] 执行跳转播放逻辑...")
+
+            # 更新播放状态
+            play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+            if not play_state:
+                print(f"[DEBUG] 用户没有播放状态，创建新的...")
+                play_state = UserPlayState(user_id=current_user.id)
+                db.session.add(play_state)
+
+            old_state = {
+                'current_queue_id': play_state.current_queue_id,
+                'current_song_id': play_state.current_song_id,
+                'current_position': play_state.current_position,
+                'is_playing': play_state.is_playing
+            }
+
+            play_state.current_queue_id = queue.id
+            play_state.current_song_id = song_id
+            play_state.is_playing = True
+            play_state.progress = 0
+            play_state.updated_date = datetime.now(timezone.utc)
+
+            # 【关键修改】修正索引：数据库(1-based) -> 前端数组(0-based)
+            frontend_position = max(0, existing_item.position - 1)
+            play_state.current_position = frontend_position
+
+            print(f"[DEBUG] 播放状态更新:")
+            print(f"  - current_queue_id: {old_state['current_queue_id']} -> {play_state.current_queue_id}")
+            print(f"  - current_song_id: {old_state['current_song_id']} -> {play_state.current_song_id}")
+            print(
+                f"  - current_position: {old_state['current_position']} -> {play_state.current_position} (数据库位置: {existing_item.position})")
+            print(f"  - is_playing: {old_state['is_playing']} -> {play_state.is_playing}")
+            print(f"[DEBUG] 前端数组索引: {frontend_position}")
+
+            db.session.commit()
+            print(f"[DEBUG] 提交跳转播放事务成功")
+            print(f"[INFO] 歌曲已存在，跳转播放: {valid_song.title} (位置: {existing_item.position})")
+
+            return jsonify({
+                "message": f"正在播放: {valid_song.title}",
+                "queue_id": queue.id,
+                "song_id": song_id,
+                "position": existing_item.position,  # 返回给前端更新 UI
+                "action": "jump_to_existing"
+            })
+
+        print(f"[DEBUG] 歌曲未在队列中，执行添加新歌曲逻辑...")
+
+        # =========================================================
+        # 5. 添加新歌逻辑
+        # =========================================================
+
+        # 计算插入位置
+        max_position = db.session.query(db.func.max(PlayQueueItem.position)).filter_by(
+            queue_id=queue.id
+        ).scalar() or 0
+
+        print(f"[DEBUG] 队列当前最大位置: {max_position}")
+
+        if position is None:
+            insert_pos = max_position + 1
+            print(f"[DEBUG] 未指定位置，插入到最后: {insert_pos}")
+        else:
+            if position < 1:
+                print(f"[ERROR] 位置必须大于0: position={position}")
+                return jsonify({"error": "位置必须大于0"}), 400
+            insert_pos = min(position, max_position + 1)
+            print(f"[DEBUG] 指定位置: {position}, 调整后插入位置: {insert_pos}")
+
+        print(f"[DEBUG] 最终插入位置: {insert_pos}")
+
+        # 插队逻辑：批量更新后续位置
+        if insert_pos <= max_position:
+            print(f"[DEBUG] 需要重新排序队列，从位置 {insert_pos} 开始的歌曲位置+1")
+            try:
+                affected_rows = PlayQueueItem.query.filter(
+                    PlayQueueItem.queue_id == queue.id,
+                    PlayQueueItem.position >= insert_pos
+                ).update(
+                    {PlayQueueItem.position: PlayQueueItem.position + 1},
+                    synchronize_session=False
+                )
+                print(f"[DEBUG] 位置更新完成，影响行数: {affected_rows}")
+            except Exception as e:
+                print(f"[ERROR] 队列排序失败: {e}")
+                print(f"[ERROR] 异常详情: {traceback.format_exc()}")
+                db.session.rollback()
+                return jsonify({"error": "队列排序失败"}), 500
+
+        # 插入新记录
+        print(f"[DEBUG] 创建队列项目记录...")
+        queue_item = PlayQueueItem(
+            queue_id=queue.id,
+            song_id=song_id,
+            position=insert_pos
+        )
+
+        print(
+            f"[DEBUG] 队列项目: queue_id={queue_item.queue_id}, song_id={queue_item.song_id}, position={queue_item.position}")
+
+        db.session.add(queue_item)
+        queue.updated_date = datetime.now(timezone.utc)
+        print(f"[DEBUG] 更新队列修改时间: {queue.updated_date}")
+
+        db.session.commit()
+        print(f"[DEBUG] 提交添加歌曲事务成功")
+        print(f"[DEBUG] 新增记录ID: {queue_item.id}")
+
+        # 清除缓存
+        cache_key = f"queue:{queue.id}"
+        print(f"[DEBUG] 清理缓存键: {cache_key}")
+        try:
+            result = redis_client.delete(cache_key)
+            if result:
+                print(f"[DEBUG] 缓存清理成功: {cache_key}")
+            else:
+                print(f"[DEBUG] 缓存键不存在: {cache_key}")
+        except Exception as e:
+            print(f"[WARN] 缓存清理失败 {cache_key}: {e}")
+
+        print(
+            f"[INFO] 操作完成: 用户 {current_user.id} 添加歌曲 '{valid_song.title}' 到队列 '{queue.name}' 位置 {insert_pos}")
+
+        was_created = queue.created_date == queue.updated_date
+        print(f"[DEBUG] 队列是否刚刚创建: {was_created} (created: {queue.created_date}, updated: {queue.updated_date})")
+
+        return jsonify({
+            "message": f"已添加 {valid_song.title}",
+            "queue_id": queue.id,
+            "queue_name": queue.name,
+            "position": insert_pos,
+            "was_created": was_created,
+            "action": "added",
+            "song_title": valid_song.title,
+            "item_id":  queue_item.id
+        })
+
+    except Exception as e:
+        print(f"[CRITICAL] 全局异常捕获: {type(e).__name__}: {str(e)}")
+        print(f"[CRITICAL] 完整堆栈跟踪:\n{traceback.format_exc()}")
+
+        db.session.rollback()
+        print(f"[ERROR] 添加歌曲失败: {e}")
+        # 生产环境建议隐藏具体错误堆栈，只打印到日志
+        return jsonify({"error": "添加歌曲失败"}), 500
+
+
+@app.route('/api/queues/from-playlist/<int:playlist_id>', methods=['POST'])
+@login_required
+def create_queue_from_playlist(playlist_id):
+    """从歌单创建新队列"""
+    print(f"\n=== [STEP 1] 开始处理播放歌单请求 ===")
+    print(f"用户: {current_user.user_name} (ID: {current_user.id})")
+    print(f"目标歌单ID: {playlist_id}")
+
+    # 1. 获取 JSON (处理可能的空数据)
+    data = request.get_json(silent=True) or {}
+
+    try:
+        # 2. 查询歌单
+        playlist = Playlist.query.filter_by(id=playlist_id).first()
+        if not playlist:
+            print("❌ 歌单不存在")
+            return jsonify({"error": "歌单不存在"}), 404
+
+        print(f"=== [STEP 2] 找到歌单: {playlist.name} ===")
+
+        # 3. 权限检查
+        if not playlist.is_public and playlist.user_id != current_user.id:
+            print("❌ 无权访问")
+            return jsonify({"error": "无权访问此歌单"}), 403
+
+        # ==============================================================================
+        # 4. 【核心修改】队列数量限制逻辑 (Max 5) - 保护当前播放队列
+        # ==============================================================================
+        print("=== [STEP 3] 检查队列上限 ===")
+        MAX_QUEUES = 5
+        user_queues = PlayQueue.query.filter_by(user_id=current_user.id).all()
+
+        if len(user_queues) >= MAX_QUEUES:
+            print(f"当前队列数 {len(user_queues)} 已达上限，准备清理...")
+
+            # A. 获取当前正在播放的队列 ID
+            play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+            current_playing_id = play_state.current_queue_id if play_state else None
+            print(f"当前正在播放的队列 ID: {current_playing_id}")
+
+            # B. 筛选出【非当前播放】的队列 (备选名单)
+            candidates = [q for q in user_queues if q.id != current_playing_id]
+
+            # 兜底：如果所有队列都在播放(理论不可能)或为空，则用全集
+            target_list = candidates if candidates else user_queues
+
+            # C. 在候选名单里找最旧的
+            oldest = min(target_list, key=lambda q: q.created_date)
+            print(f"选中删除对象: {oldest.name} (ID: {oldest.id})")
+
+            # D. 删除
+            db.session.delete(oldest)
+            # 记得 flush，确保删除生效
+            db.session.flush()
+
+            # 清理缓存
+            try:
+                redis_client.delete(f"queue:{oldest.id}")
+            except:
+                pass
+
+            # 注意：因为我们特意避开了正在播放的队列，所以这里不再需要重置 play_state 的逻辑
+
+        # 5. 创建新队列
+        print("=== [STEP 4] 创建新队列对象 ===")
+        new_queue = PlayQueue(
+            user_id=current_user.id,
+            name=f"播放: {playlist.name}",
+            is_saved=True
+        )
+        db.session.add(new_queue)
+        db.session.flush()  # 拿到 ID
+        print(f"新队列创建成功 ID: {new_queue.id}")
+
+        # 6. 复制歌曲 (最关键的一步)
+        print("=== [STEP 5] 正在复制歌曲... ===")
+        playlist_songs = PlaylistSong.query.filter_by(playlist_id=playlist_id).order_by(PlaylistSong.position).all()
+
+        song_count = len(playlist_songs)
+        print(f"歌单中共有 {song_count} 首歌曲")
+
+        if song_count == 0:
+            print("⚠️ 警告: 这是一个空歌单！")
+
+        for i, ps in enumerate(playlist_songs):
+            queue_item = PlayQueueItem(
+                queue_id=new_queue.id,
+                song_id=ps.song_id,
+                position=i + 1
+            )
+            db.session.add(queue_item)
+
+        # 7. 更新播放状态
+        # 这里会将当前播放指向这个新创建的队列
+        print("=== [STEP 6] 更新播放状态 ===")
+        play_state = UserPlayState.query.filter_by(user_id=current_user.id).first()
+        if not play_state:
+            play_state = UserPlayState(user_id=current_user.id)
+            db.session.add(play_state)
+
+        play_state.current_queue_id = new_queue.id
+        play_state.current_position = 0
+        play_state.is_playing = True
+        play_state.updated_date = datetime.now(timezone.utc)
+
+        if playlist_songs:
+            play_state.current_song_id = playlist_songs[0].song_id
+            print(f"当前歌曲指向: {playlist_songs[0].song_id}")
+
+        # 8. 提交
+        db.session.commit()
+        print(f"=== [STEP 7] 事务提交完成，操作成功 ===\n")
+
+        # 清除缓存
+        try:
+            redis_client.delete(f"user:{current_user.id}:play_state")
+        except:
+            pass
+
+        return jsonify({
+            "message": "已加载歌单",
+            "queue_id": new_queue.id,
+            "song_count": song_count
+        })
+
+    except Exception as e:
+        db.session.rollback()
+        print(f"❌❌❌ 发生异常: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": "服务器内部错误"}), 500
+
+
+@app.route('/api/queues/<int:queue_id>')
+@login_required
+def get_queue(queue_id):
+    """获取特定队列的详细信息"""
+    queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first_or_404()
+
+    play_state = get_or_create_user_play_state(current_user.id)
+    is_current = queue.id == play_state.current_queue_id
+
+    result = queue_to_dict(queue, include_items=True)
+    result['is_current'] = is_current
+
+    # 添加统计信息
+    if queue.queue_items:
+        total_duration = sum(item.song.duration for item in queue.queue_items if item.song.duration)
+        result['total_duration'] = total_duration
+        result['song_count'] = len(queue.queue_items)
+    else:
+        result['total_duration'] = 0
+        result['song_count'] = 0
+
+    return jsonify(result)
+
+
+@app.route('/api/queues/<int:queue_id>/stats')
+@login_required
+def get_queue_stats(queue_id):
+    """获取队列统计信息"""
+    queue = PlayQueue.query.filter_by(id=queue_id, user_id=current_user.id).first_or_404()
+
+    # 基础统计
+    song_count = len(queue.queue_items)
+
+    # 时长统计
+    total_duration = 0
+    genre_stats = {}
+    artist_stats = {}
+
+    for item in queue.queue_items:
+        if item.song.duration:
+            total_duration += item.song.duration
+
+        # 流派统计
+        if item.song.genre:
+            genre_stats[item.song.genre] = genre_stats.get(item.song.genre, 0) + 1
+
+        # 艺术家统计
+        if item.song.artist:
+            artist_stats[item.song.artist] = artist_stats.get(item.song.artist, 0) + 1
+
+    # 格式化时长
+    hours = total_duration // 3600
+    minutes = (total_duration % 3600) // 60
+    seconds = total_duration % 60
+
+    return jsonify({
+        'queue_id': queue_id,
+        'song_count': song_count,
+        'total_duration_seconds': total_duration,
+        'total_duration_formatted': f"{hours:02d}:{minutes:02d}:{seconds:02d}" if hours > 0 else f"{minutes:02d}:{seconds:02d}",
+        'genres': [{'name': genre, 'count': count} for genre, count in
+                   sorted(genre_stats.items(), key=lambda x: x[1], reverse=True)],
+        'artists': [{'name': artist, 'count': count} for artist, count in
+                    sorted(artist_stats.items(), key=lambda x: x[1], reverse=True)[:10]]  # 前10个艺术家
+    })
+
+
+# 在歌曲播放API中添加队列支持
+@app.route('/api/songs/<int:song_id>/play', methods=['POST'])
+@login_required
+def play_song(song_id):
+    """播放歌曲并更新队列状态"""
+    song = Song.query.get_or_404(song_id)
+
+    # 获取当前队列
+    queue = get_user_current_queue(current_user.id)
+
+    # 查找歌曲在队列中的位置
+    queue_item = PlayQueueItem.query.filter_by(
+        queue_id=queue.id,
+        song_id=song_id
+    ).first()
+
+    position = queue_item.position - 1 if queue_item else 0  # position从1开始，current_position从0开始
+
+    # 更新播放状态
+    play_state = get_or_create_user_play_state(current_user.id)
+    play_state.current_song_id = song_id
+    play_state.current_queue_id = queue.id
+    play_state.current_position = position
+    play_state.is_playing = True
+    play_state.progress = 0
+    play_state.updated_date = datetime.now(timezone.utc)
+
+    # 更新歌曲播放计数
+    song.play_count += 1
+    song.last_played = datetime.now(timezone.utc)
+
+    db.session.commit()
+
+    return jsonify({
+        "message": "开始播放",
+        "song": {
+            'id': song.id,
+            'title': song.title,
+            'artist': song.artist,
+            'duration': song.duration,
+            'cover_url': song.cover_url,
+            'lyrics': song.lyrics
+        },
+        "queue_id": queue.id
+    })
+
+
+if __name__ == '__main__':
+    init_db()
+    app.run(debug=True, host='127.0.0.1', port=5000)
+
+
