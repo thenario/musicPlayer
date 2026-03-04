@@ -478,6 +478,7 @@ export const usePlayerStore = defineStore('player', () => {
       ElMessage.error('切换队列时出错')
       return
     }
+    currentQueueId.value = queueId
     await fetchCurrentQueue()
     await fetchUserQueues()
     pauseSong() // 切换后暂停

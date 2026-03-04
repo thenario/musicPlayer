@@ -24,7 +24,7 @@
             <div class="relative z-10 flex-1 flex items-center justify-center gap-24 px-20 pb-20 min-h-0">
 
                 <!-- 左侧：唱片动画 -->
-                <div class="w-[45vh] h-[45vh] max-w-[500px] max-h-[500px] flex-shrink-0 relative hidden lg:block">
+                <div class="w-[45vh] h-[45vh] max-w-[500px] max-h-[500px] shrink-0 relative hidden lg:block">
                     <div class="w-full h-full rounded-full bg-black border-8 border-gray-800/50 shadow-2xl flex items-center justify-center overflow-hidden animate-spin-slow"
                         :style="{ animationPlayState: isPlaying ? 'running' : 'paused' }">
                         <!-- 封面图 -->
