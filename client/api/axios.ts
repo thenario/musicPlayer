@@ -14,7 +14,7 @@ request.interceptors.request.use(
     return config
   },
   (error: AxiosError) => {
-    console.log('请求发送失败， catch模块：axios.ts')
+    console.log('请求发送失败， catch模块:axios.ts')
     return Promise.reject(error)
   },
 )

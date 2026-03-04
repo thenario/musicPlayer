@@ -2,7 +2,7 @@
     <transition name="slide-up">
         <!-- 全屏容器，z-index 要很高以覆盖播放条 -->
         <div v-if="playerStore.isSongDetailVisible"
-            class="fixed inset-0 z-[60] bg-gray-900 flex flex-col overflow-hidden">
+            class="fixed inset-0 z-60 bg-gray-900 flex flex-col overflow-hidden">
             <!-- 1. 背景层：使用当前封面进行高斯模糊 -->
             <div class="absolute inset-0 bg-cover bg-center transition-all duration-700 opacity-40 blur-[80px] scale-110"
                 :style="`background-image: url(${currentSongCover})`"></div>
@@ -43,7 +43,7 @@
 
                     <!-- 歌曲信息标题 -->
                     <div class="mb-8 w-full">
-                        <h1 class="text-3xl font-bold text-white mb-3">{{ currentSong?.title }}</h1>
+                        <h1 class="text-3xl font-bold text-white mb-3">{{ currentSong?.song_title }}</h1>
                         <div class="text-lg text-gray-300">
                             <span class="text-gray-400">歌手：</span>{{ currentSong?.artist }}
                             <span class="mx-2 text-gray-600">|</span>
@@ -73,7 +73,7 @@
     </transition>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { storeToRefs } from 'pinia'
@@ -84,7 +84,7 @@ const API_BASE_URL = 'http://127.0.0.1:5000'
 
 // 封面处理 (和 PlayerBar 保持一致)
 const currentSongCover = computed(() => {
-    const url = currentSong.value?.cover_url
+    const url = currentSong.value?.song_cover_url
     if (!url) return null
     if (url.startsWith('http')) return url
     return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`

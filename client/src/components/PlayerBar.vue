@@ -144,7 +144,7 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { usePlayerStore } from '../stores/player'
 
@@ -196,7 +196,7 @@ const togglePlayMode = () => {
 }
 
 const playModeTitle = computed(() => {
-  const map = {
+  const map: Record<string, string> = {
     'repeat_all': '列表循环',
     'sequential': '列表循环',
     'repeat_one': '单曲循环',

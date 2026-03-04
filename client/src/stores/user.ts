@@ -8,42 +8,40 @@ import { userApi } from '../../api/userApi'
 import { IUser } from '../../type'
 
 export const useUserStore = defineStore('user', () => {
-  const localuser = localStorage.getItem('user')
+  const localuser = localStorage.getItem('user') || null
   const user = ref<IUser | null>(localuser ? JSON.parse(localuser) : null)
-  const isAuthenticated = ref(false)
+  const isAuthenticated = ref(!!localuser)
 
   const login = async (user_name: string, password: string) => {
     const res = await userApi.login(user_name, password)
-    if (res.success) {
-      ElMessage.success('登录成功')
-      isAuthenticated.value = true
-      user.value = res.user || null
-    } else ElMessage.error(`登录失败,请稍后重试`)
+    if (!res.success) {
+      ElMessage.error('登录失败')
+      return { success: false }
+    }
+    user.value = res.user || null
+    isAuthenticated.value = true
+    return { success: true }
   }
 
-  const register = async (userData: {
-    user_name: string
-    password: string
-    user_email: string
-  }) => {
+  const register = async (userData: any) => {
     const res = await userApi.register(userData)
-    if (res.success) ElMessage.success('注册成功')
-    else ElMessage.error('注册失败,请稍后重试')
+    if (!res.success) {
+      ElMessage.error('注册失败')
+      return { success: false }
+    }
+    return { success: true }
   }
 
   const logout = async (user_id: number) => {
     const res = await userApi.logout(user_id)
-    if (res.success) {
-      ElMessage.success('登出成功')
-      user.value = null
-      isAuthenticated.value = false
-    } else ElMessage.error('登出失败,请稍后重试')
+    if (!res.success) {
+      ElMessage.error('登出失败')
+      return { success: false }
+    }
+    user.value = null
+    isAuthenticated.value = false
+    return { success: true }
   }
 
-  return {
-    user,
-    login,
-    register,
-    logout,
-  }
+  return { user, isAuthenticated, login, register, logout }
 })

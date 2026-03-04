@@ -1,13 +1,13 @@
 import request from './axios'
 
-import { ILoginRt, ILogoutRt, IUser, IRegisterRt } from '../type'
+import { ILogin, ILogout, IUser, IRegister } from '../type'
 
 import { encryptPassword } from '../src/utils/crypto'
 
 async function login(user_name: string, password: string) {
   try {
     password = encryptPassword(password)
-    const res = await request.post<any, ILoginRt>('api/login', {
+    const res = await request.post<any, ILogin>('api/login', {
       user_name: user_name,
       password: password,
     })
@@ -26,6 +26,7 @@ async function login(user_name: string, password: string) {
     }
   }
 }
+
 async function register(registerFormdata: {
   user_name: string
   password: string
@@ -33,17 +34,16 @@ async function register(registerFormdata: {
 }) {
   try {
     registerFormdata.password = encryptPassword(registerFormdata.password)
-    const res = await request.post<any, IRegisterRt>('api/register', {
+    const res = await request.post<any, IRegister>('api/register', {
       user_name: registerFormdata.user_name,
       user_email: registerFormdata.user_email,
       password: registerFormdata.password,
     })
-    if (res.success) {
-      return {
-        success: res.success,
-        message: res.message,
-        user: res.user,
-      }
+
+    return {
+      success: res.success,
+      message: res.message,
+      user: res.user,
     }
   } catch (error: any) {
     return {
@@ -56,7 +56,7 @@ async function register(registerFormdata: {
 
 async function logout(user_id: number) {
   try {
-    const res = await request.post<any, ILogoutRt>('api/logout', { user_id: user_id })
+    const res = await request.post<any, ILogout>('api/logout', { user_id: user_id })
     localStorage.removeItem('user')
     localStorage.removeItem('token')
     return {
