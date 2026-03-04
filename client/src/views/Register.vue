@@ -1,196 +1,144 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-    <!-- 多层次背景 -->
-    <div class="absolute inset-0 bg-gradient-to-tr from-blue-950 via-indigo-900 to-pink-900"></div>
-    
-    <!-- 几何网格背景 -->
-    <div class="absolute inset-0 opacity-10">
-      <div class="absolute inset-0" style="
-        background-image: 
-          linear-gradient(to right, #ffffff0a 1px, transparent 1px),
-          linear-gradient(to bottom, #ffffff0a 1px, transparent 1px);
-        background-size: 50px 50px;
-      "></div>
+    <div class="absolute inset-0 bg-linear-to-tr from-blue-950 via-indigo-900 to-pink-900"></div>
+    <div class="absolute inset-0 opacity-10"
+      style="background-image: linear-gradient(to right, #ffffff0a 1px, transparent 1px), linear-gradient(to bottom, #ffffff0a 1px, transparent 1px); background-size: 50px 50px;">
     </div>
-    
-    <!-- 漂浮装饰元素 -->
-    <div class="absolute top-20 right-10 w-64 h-64 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-20 left-10 w-80 h-80 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"></div>
-    <div class="absolute top-1/2 right-1/4 w-40 h-40 bg-gradient-to-r from-yellow-500/10 to-orange-500/10 rounded-full blur-2xl"></div>
-    <div class="absolute bottom-1/3 left-1/4 w-60 h-60 bg-gradient-to-r from-green-500/10 to-teal-500/10 rounded-full blur-2xl"></div>
-    
+
     <div class="w-full max-w-md z-10">
-      <!-- 卡片头部 -->
-      <div class="text-center mb-10">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl shadow-lg mb-4">
-          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path>
-          </svg>
-        </div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-300 bg-clip-text text-transparent">
-          加入我们
-        </h1>
+      <div class="text-center mb-8">
+        <h1 class="text-4xl font-bold bg-linear-to-r from-cyan-400 to-blue-300 bg-clip-text text-transparent">加入我们</h1>
         <p class="text-gray-300 mt-2">创建账号，开启您的音乐之旅</p>
       </div>
 
-      <!-- 表单卡片 -->
-      <div class="bg-gray-900/70 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-800 p-8">
-        <form @submit.prevent="handleRegister" class="space-y-6">
-          <!-- 用户名输入 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">
-              用户名
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path>
-                </svg>
-              </div>
-              <input 
-                v-model="form.user_name"
-                type="text" 
-                required
-                class="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
-                placeholder="设置您的用户名"
-              >
-            </div>
-          </div>
+      <div
+        class="bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-800 p-8 custom-form-container">
+        <el-form ref="registerFormRef" :model="form" :rules="rules" label-position="top" @submit.prevent>
+          <el-form-item label="用户名" prop="user_name">
+            <el-input v-model="form.user_name" placeholder="设置您的用户名" :prefix-icon="User" />
+          </el-form-item>
 
-          <!-- 邮箱输入 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">
-              邮箱地址
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z"></path>
-                  <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z"></path>
-                </svg>
-              </div>
-              <input 
-                v-model="form.email"
-                type="email" 
-                required
-                class="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="输入您的邮箱"
-              >
-            </div>
-          </div>
+          <el-form-item label="邮箱地址" prop="email">
+            <el-input v-model="form.email" placeholder="输入您的邮箱" :prefix-icon="Message" />
+          </el-form-item>
 
-          <!-- 密码输入 -->
-          <div>
-            <label class="block text-sm font-medium text-gray-300 mb-2">
-              密码
-            </label>
-            <div class="relative">
-              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <svg class="h-5 w-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-              </div>
-              <input 
-                v-model="form.password"
-                type="password" 
-                required
-                class="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all"
-                placeholder="设置登录密码"
-              >
-            </div>
-            <p class="mt-2 text-xs text-gray-500">建议使用8位以上字母、数字和符号组合</p>
-          </div>
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="form.password" type="password" show-password placeholder="设置登录密码" :prefix-icon="Lock" />
+            <p class="text-[10px] text-gray-500 mt-1">建议包含字母、数字和符号</p>
+          </el-form-item>
 
-          <!-- 提交按钮 -->
-          <button 
-            type="submit"
-            :disabled="loading"
-            class="w-full bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold py-3.5 rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 mt-2"
-          >
-            <span v-if="loading" class="flex items-center justify-center">
-              <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              注册中...
-            </span>
-            <span v-else>创建账号</span>
-          </button>
+          <el-button type="primary" class="w-full mt-4 submit-btn" :loading="loading" @click="handleRegister">
+            {{ loading ? '注册中...' : '创建账号' }}
+          </el-button>
 
-          <!-- 成功/错误提示 -->
-          <div v-if="success" class="mt-4 p-3 bg-green-900/30 border border-green-700/50 rounded-xl backdrop-blur-sm">
-            <p class="text-green-300 text-center text-sm flex items-center justify-center">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-              </svg>
-              注册成功！2秒后跳转到登录页面
-            </p>
+          <div class="mt-6 pt-4 border-t border-gray-800 text-center">
+            <span class="text-gray-400 text-sm">已有账号？</span>
+            <el-link type="primary" :underline="false" @click="$router.push('/login')">
+              立即登录 →
+            </el-link>
           </div>
-          
-          <div v-if="error" class="mt-4 p-3 bg-red-900/30 border border-red-700/50 rounded-xl backdrop-blur-sm">
-            <p class="text-red-300 text-center text-sm flex items-center justify-center">
-              <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-              </svg>
-              {{ error }}
-            </p>
-          </div>
-
-          <!-- 登录链接 -->
-          <div class="pt-6 border-t border-gray-800">
-            <p class="text-center text-gray-400 text-sm">
-              已有账号？
-              <router-link 
-                to="/login" 
-                class="ml-1 font-semibold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-300 hover:from-cyan-300 hover:to-blue-200 transition-all"
-              >
-                立即登录 →
-              </router-link>
-            </p>
-          </div>
-        </form>
+        </el-form>
       </div>
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from 'vue'
+
+<script setup lang="ts">
+import { ref, reactive } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
+import { User, Lock, Message } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
 
 const userStore = useUserStore()
 const router = useRouter()
 
-const form = ref({
+const registerFormRef = ref<FormInstance>()
+const loading = ref(false)
+
+const form = reactive({
   user_name: '',
   email: '',
   password: ''
 })
-const loading = ref(false)
-const error = ref('')
-const success = ref(false)
+
+const rules = reactive<FormRules>({
+  user_name: [
+    { required: true, message: '请输入用户名', trigger: 'blur' },
+    { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 8, message: '密码长度不能少于 8 位', trigger: 'blur' }
+  ]
+})
 
 const handleRegister = async () => {
-  loading.value = true
-  error.value = ''
-  success.value = false
-  
-  const result = await userStore.register(form.value)
-  
-  if (result.success) {
-    success.value = true
-    setTimeout(() => {
-      router.push('/login')
-    }, 2000)
-  } else {
-    error.value = result.error
-  }
-  
-  loading.value = false
+  if (!registerFormRef.value) return
+
+  await registerFormRef.value.validate(async (valid) => {
+    if (valid) {
+      loading.value = true
+      try {
+        const result = await userStore.register(form)
+        if (result.success) {
+          ElMessage.success('注册成功！即将跳转登录页')
+          setTimeout(() => {
+            router.push('/login')
+          }, 2000)
+        } else {
+        }
+      } catch (err: any) {
+        ElMessage.error('网络请求失败，请稍后再试')
+      } finally {
+        loading.value = false
+      }
+    } else {
+      ElMessage.warning('请完善表单信息')
+    }
+  })
 }
 </script>
 
 <style scoped>
-/* 复用相同的动画样式，或添加注册页面特有的样式 */
+:deep(.el-form-item__label) {
+  color: #d1d5db !important;
+  padding-bottom: 4px !important;
+}
+
+:deep(.el-input__wrapper) {
+  background-color: rgba(31, 41, 55, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(75, 85, 99, 0.5) inset !important;
+  border-radius: 12px;
+  padding: 8px 12px;
+}
+
+:deep(.el-input__inner) {
+  color: white !important;
+}
+
+:deep(.el-input__inner::placeholder) {
+  color: #6b7280;
+}
+
+.submit-btn {
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(to right, #0891b2, #2563eb);
+  border: none;
+  font-weight: 600;
+  transition: all 0.3s;
+}
+
+.submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+  opacity: 0.9;
+}
 </style>

@@ -33,7 +33,7 @@
 
           <div v-if="userStore.isAuthenticated" class="relative">
             <button @click="toggleUserMenu" class="flex items-center text-sm text-white focus:outline-none">
-              {{ userStore.user.user_name }}
+              {{ userStore.user ? userStore.user.user_name : "未知昵称" }}
               <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
               </svg>
@@ -60,7 +60,7 @@
   </nav>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
@@ -74,7 +74,8 @@ const toggleUserMenu = () => {
 }
 
 const logout = async () => {
-  await userStore.logout()
+  if (!userStore.user) return
+  await userStore.logout(userStore.user.user_id)
   showUserMenu.value = false
   router.push('/')
 }

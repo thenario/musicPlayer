@@ -1620,7 +1620,7 @@ def get_stats():
         Song.play_count.desc()
     ).limit(10).all()
 
-    return jsonify({
+    return jsonify({  
         'total_songs': total_songs,
         'total_plays': total_plays,
         'total_users': total_users,
