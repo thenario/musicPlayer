@@ -32,7 +32,6 @@ onMounted(() => {
 </script>
 
 <style>
-/* 全局样式 */
 body {
   font-family: 'Inter', sans-serif;
 }

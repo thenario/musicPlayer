@@ -1,82 +1,103 @@
 <template>
-  <nav class="bg-gray-800 shadow-lg">
-    <div class="container mx-auto px-4">
-      <div class="flex justify-between items-center h-16">
-        <!-- 左侧 Logo 和导航链接 -->
-        <div class="flex items-center space-x-8">
-          <router-link to="/" class="text-xl font-bold text-white">
-            音乐播放器
-          </router-link>
+  <el-menu :default-active="activePath" mode="horizontal" class="navbar-container" :ellipsis="false" router>
+    <div class="logo-section" @click="router.push('/')">
+      <span class="text-xl font-bold text-white cursor-pointer">音乐播放器</span>
+    </div>
 
-          <div class="hidden md:flex space-x-4">
-            <router-link to="/songs" class="text-gray-300 hover:text-white px-3 py-2 rounded-md">
-              歌曲库
-            </router-link>
-            <router-link to="/playlists" class="text-gray-300 hover:text-white px-3 py-2 rounded-md">
-              歌单
-            </router-link>
-          </div>
-        </div>
+    <el-menu-item index="/songs">歌曲库</el-menu-item>
+    <el-menu-item index="/playlists">歌单</el-menu-item>
 
-        <!-- 右侧用户菜单 -->
-        <div class="flex items-center space-x-4">
-          <!-- 上传歌曲按钮 (带图标和背景色) -->
-          <router-link v-if="userStore.isAuthenticated" to="/upload"
-            class="flex items-center px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md transition-colors text-sm font-medium shadow-md">
-            <!-- 上传图标 -->
-            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path>
-            </svg>
-            上传歌曲
-          </router-link>
+    <div class="grow" />
 
-          <div v-if="userStore.isAuthenticated" class="relative">
-            <button @click="toggleUserMenu" class="flex items-center text-sm text-white focus:outline-none">
+    <div class="flex items-center gap-4 px-5">
+
+      <template v-if="userStore.isAuthenticated">
+        <el-button type="success" :icon="Upload" round @click="router.push('/upload')">
+          上传歌曲
+        </el-button>
+
+        <el-dropdown trigger="click" @command="handleCommand">
+          <div class="user-profile flex items-center cursor-pointer">
+            <el-avatar :size="32" class="mr-2">{{ userStore.user?.user_name?.charAt(0) }}</el-avatar>
+            <span class="text-white text-sm">
               {{ userStore.user ? userStore.user.user_name : "未知昵称" }}
-              <svg class="ml-1 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+            </span>
+            <el-icon class="el-icon--right text-white">
+              <ArrowDown />
+            </el-icon>
+          </div>
 
-            <div v-if="showUserMenu" class="absolute right-0 mt-2 w-48 bg-gray-700 rounded-md shadow-lg py-1 z-50">
-              <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-600">
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item :icon="User">个人中心</el-dropdown-item>
+              <el-dropdown-item :icon="SwitchButton" command="logout" divided>
                 退出登录
-              </button>
-            </div>
-          </div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </template>
 
-          <div v-else class="flex space-x-2">
-            <router-link to="/login" class="text-gray-300 hover:text-white px-3 py-2">
-              登录
-            </router-link>
-            <router-link to="/register" class="text-gray-300 hover:bg-blue-600 hover:text-white px-4 py-2 rounded-md">
-              注册
-            </router-link>
-          </div>
-        </div>
+      <div v-else class="auth-buttons">
+        <el-button link @click="router.push('/login')">登录</el-button>
+        <el-button type="primary" @click="router.push('/register')">注册</el-button>
       </div>
     </div>
-  </nav>
+  </el-menu>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed } from 'vue'
 import { useUserStore } from '../stores/user'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
+// 导入需要的图标
+import { Upload, ArrowDown, SwitchButton, User } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 const router = useRouter()
-const showUserMenu = ref(false)
+const route = useRoute()
 
-const toggleUserMenu = () => {
-  showUserMenu.value = !showUserMenu.value
+// 自动关联路由高亮状态
+const activePath = computed(() => route.path)
+
+// 处理下拉菜单指令
+const handleCommand = (command: string) => {
+  if (command === 'logout') {
+    logout()
+  }
 }
 
 const logout = async () => {
   if (!userStore.user) return
   await userStore.logout(userStore.user.user_id)
-  showUserMenu.value = false
-  router.push('/')
+  router.push('/login')
 }
 </script>
+
+<style scoped>
+/* 深度定制 Element Plus 导航栏背景 */
+.navbar-container {
+  @apply bg-gray-800 border-none px-4 items-center h-16;
+  --el-menu-bg-color: #1f2937;
+  --el-menu-text-color: #d1d5db;
+  --el-menu-active-color: #ffffff;
+  --el-menu-hover-bg-color: #374151;
+}
+
+.logo-section {
+  @apply flex items-center h-full mr-8 outline-none;
+}
+
+.flex-grow {
+  flex-grow: 1;
+}
+
+:deep(.el-menu--horizontal .el-menu-item.is-active) {
+  border-bottom: 2px solid #3b82f6 !important;
+  background-color: transparent !important;
+}
+
+.user-profile:hover {
+  opacity: 0.8;
+}
+</style>
