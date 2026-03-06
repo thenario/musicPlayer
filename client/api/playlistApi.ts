@@ -8,137 +8,147 @@ import {
   ILikePlaylist,
   IRemoveSongFromPlaylist,
   IUnlikePlaylist,
+  IAxiosRes,
 } from '../type'
 import request from './axios'
 
 const createPlaylist = async (formData: any) => {
-  try {
-    const res = await request.post<any, ICreatePlaylist>('api/playlists/create')
+  const res = await request.post<any, IAxiosRes<any>>('api/playlists', formData)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      playlist_id: res.playlist_id,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.reponse?.data?.message,
-    }
+    } as ICreatePlaylist
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    playlist_id: res.data.playlist_id,
   }
 }
 
 const deletePlaylist = async (playlistId: number) => {
-  try {
-    const res = await request.delete<any, IDeletePlaylist>('api/playlists/id/delete', {
-      params: { playlistId },
-    })
+  const res = await request.delete<any, IAxiosRes<any>>(`api/playlists/${playlistId}`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.reponse?.data?.message,
-    }
+    } as IDeletePlaylist
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const likePlaylist = async (playlistId: number) => {
-  try {
-    const res = await request.post<any, ILikePlaylist>('api/playlists/id/like', {
-      playlistId,
-    })
+  const res = await request.post<any, IAxiosRes<any>>(`api/playlists/${playlistId}/likes`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.reponse?.data?.message,
-    }
+    } as ILikePlaylist
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const unlikePlaylist = async (playlistId: number) => {
-  try {
-    const res = await request.post<any, IUnlikePlaylist>('api/playlists/id/unlike', {
-      playlistId,
-    })
+  const res = await request.delete<any, IAxiosRes<any>>(`api/playlists/${playlistId}/likes`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.reponse?.data?.message,
-    }
+    } as IUnlikePlaylist
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const getMyPlaylists = async (userId: number) => {
-  try {
-    const res = await request.post<any, IGetMyPlaylists>('api/playlists', {
-      userId,
-    })
+  const res = await request.get<any, IAxiosRes<any>>('api/playlists', {
+    params: { userId },
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      playlists: res.playlits,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.reponse?.data?.message,
-    }
+    } as IGetMyPlaylists
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    playlits: res.data.playlits,
   }
 }
 
 const getPlaylistById = async (playlistId: number) => {
-  try {
-    const res = await request.post<any, IGetPlaylistById>('api/playlists/id', {
-      playlistId,
-    })
+  const res = await request.get<any, IAxiosRes<any>>(`api/playlists/${playlistId}`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      playlist: res.playlist,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.reponse?.data?.message,
-    }
+    } as IGetPlaylistById
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    playlist: res.data.playlist,
+    songs: res.data.songs,
   }
 }
 
 const addSongToPlaylist = async (playlistId: number, songId: number) => {
-  const res = await request.post<any, IAddSongToPlaylist>('api/playlists/id/addSong', {
-    playlistId,
+  const res = await request.post<any, IAxiosRes<any>>(`api/playlists/${playlistId}/songs`, {
     songId,
   })
+
   if (!res.success) {
-    ElMessage.error('添加歌曲到歌单时出错')
+    ElMessage.error(res.message || '添加歌曲到歌单时出错')
+    return {
+      success: false,
+      message: res.message,
+    } as IAddSongToPlaylist
   }
+
   return {
-    success: res.success,
+    success: true,
     message: res.message,
-    song_position: res.song_position,
+    song_position: res.data.song_position,
   }
 }
 
 const removeSongFromPlaylist = async (playlistId: number, songId: number) => {
-  const res = await request.post<any, IRemoveSongFromPlaylist>('api/playlists/id/addSong', {
-    playlistId,
-    songId,
-  })
+  const res = await request.delete<any, IAxiosRes<any>>(
+    `api/playlists/${playlistId}/songs/${songId}`,
+  )
+
   if (!res.success) {
-    ElMessage.error('从歌单删除歌曲时出错')
+    ElMessage.error(res.message || '从歌单删除歌曲时出错')
+    return {
+      success: false,
+      message: res.message,
+    } as IRemoveSongFromPlaylist
   }
+
   return {
-    success: res.success,
+    success: true,
     message: res.message,
   }
 }

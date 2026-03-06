@@ -47,7 +47,6 @@ export const router = createRouter({
   routes,
 })
 
-// 路由守卫
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
 

@@ -1,44 +1,31 @@
-/* =========================================
-   自定义滚动条样式 (自动隐身术)
-   类名：.custom-scrollbar
-   ========================================= */
-
-/* 1. 全局设置滚动条大小 */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-/* 2. 轨道永远透明 */
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* 3. 核心：针对拥有 .custom-scrollbar 类的元素 */
-
-/* 默认状态：滑块透明 (看不见) */
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: transparent; /* 关键：平时是透明的 */
+  background-color: transparent;
   border-radius: 20px;
   border: 2px solid transparent;
   background-clip: content-box;
 }
 
-/* 4. Hover 状态：当鼠标悬停在【容器】上时，滑块变色 (现身) */
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-  background-color: #4b5563; /* 灰色滑块浮现 */
+  background-color: #4b5563;
 }
 
-/* 5. Active 状态：滑块被按住时颜色加深 */
 .custom-scrollbar::-webkit-scrollbar-thumb:active {
-  background-color: #6b7280; 
+  background-color: #6b7280;
 }
 
-/* 6. 兼容火狐 (Firefox) */
 .custom-scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: transparent transparent; /* 默认透明 */
+  scrollbar-color: transparent transparent;
 }
 .custom-scrollbar:hover {
-  scrollbar-color: #4b5563 transparent; /* Hover时变色 */
+  scrollbar-color: #4b5563 transparent;
 }

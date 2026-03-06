@@ -1,25 +1,24 @@
-import { IGetStatics } from '../type'
+import { IGetStatics, IAxiosRes } from '../type'
 import request from './axios'
 
 const getStatics = async () => {
-  try {
-    const res = await request.get<any, IGetStatics>('api/statics')
-    return {
-      success: res.success,
-      message: res.message,
-      total_songs: res.total_songs,
-      total_users: res.total_users,
-      online_user: res.online_users,
-      popular_songs: res.popular_songs,
-    }
-  } catch (error: any) {
+  const res = await request.get<any, IAxiosRes<any>>('api/stats')
+
+  if (!res.success) {
     return {
       success: false,
-      message: error.response?.data?.message,
-    }
+      message: res.message,
+    } as IGetStatics
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    total_songs: res.data.total_songs,
+    total_users: res.data.total_users,
+    online_users: res.data.online_users,
+    popular_songs: res.data.popular_songs,
   }
 }
 
-export const choreApi = {
-  getStatics,
-}
+export const choreApi = { getStatics }
