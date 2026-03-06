@@ -1,3 +1,10 @@
+export interface IAxiosRes<T = any> {
+  success: boolean
+  data: T
+  message: string
+  code: number
+}
+
 export interface IError {
   success: boolean
   message: string
@@ -121,7 +128,7 @@ export interface IGetStatics {
 export interface IGetMyPlaylists {
   message: string
   success: boolean
-  playlits: IPlaylist[]
+  playlists: IPlaylist[]
 }
 export interface IGetPlaylistById {
   message: string

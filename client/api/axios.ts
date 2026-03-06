@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 
 const request = axios.create({
-  baseURL: '127.0.0.1:3000/',
+  baseURL: 'http://127.0.0.1:3000/',
   timeout: 5000,
 })
 
@@ -20,32 +20,46 @@ request.interceptors.request.use(
 )
 
 request.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response.data || { data: {} }
+  (response: AxiosResponse): any => {
+    return {
+      success: response.data?.code === 200,
+      data: response.data?.data || null,
+      message: response.data?.message || '请求成功',
+      code: response.data?.code || 200,
+    }
   },
   (error: AxiosError) => {
+    let message = '网络连接异常'
+    let status = 500
+
     if (error.response) {
-      switch (error.response.status) {
+      status = error.response.status
+      switch (status) {
         case 401:
-          console.error('未授权，请重新登录')
+          message = '未授权，请重新登录'
           break
         case 403:
-          console.error('拒绝访问')
+          message = '拒绝访问'
           break
         case 404:
-          console.error('资源未找到')
+          message = '资源未找到'
           break
         case 500:
-          console.error('服务器内部错误')
+          message = '服务器内部错误'
           break
         default:
-          console.error(`网络错误: ${error.response.status}`)
+          message = `网络错误: ${status}`
       }
-    } else {
-      console.error('网络连接异常或服务器宕机')
+    } else if (error.request) {
+      message = '服务器未响应，请检查网络'
     }
 
-    return Promise.reject(error)
+    return Promise.resolve({
+      success: false,
+      data: null,
+      message: message,
+      code: status,
+    })
   },
 )
 

@@ -171,6 +171,7 @@ const getImageUrl = (url: string) => {
 const loadPlaylist = async () => {
   loading.value = true
   try {
+    const playlistId = route.params.id[0];
     const res = await playlistApi.getPlaylistById(parseInt(playlistId))
     if (!res.success) {
       ElMessage.error("获取列表时出错")

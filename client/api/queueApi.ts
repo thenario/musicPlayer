@@ -11,212 +11,226 @@ import {
   IReorderQueue,
   ISetPlayMode,
   IUpdateCurrentQueueState,
+  IRemoveSongFromQueue,
+  IAxiosRes,
 } from '../type'
 import request from './axios'
 
 const getMyQueues = async () => {
-  try {
-    const res = await request.get<any, IGetMyQueues>('api/queues')
+  const res = await request.get<any, IAxiosRes<any>>('api/queues')
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      queues: res.queues,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IGetMyQueues
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    queues: res.data.queues,
   }
 }
 
 const getQueueById = async (queueId: number) => {
-  try {
-    const res = await request.get<any, IGetQueueById>('api/queues/id', { params: queueId })
+  const res = await request.get<any, IAxiosRes<any>>(`api/queues/${queueId}`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      queue: res.queue,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IGetQueueById
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    queue: res.data.queue,
+    queue_items: res.data.queue_items,
   }
 }
 
 const getCurrentQueue = async () => {
-  try {
-    const res = await request.get<any, IGetCurrentQueue>('api/queues/id')
+  const res = await request.get<any, IAxiosRes<any>>('api/queues/current')
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      queue: res.queue,
-      queue_state: res.queue_state,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IGetCurrentQueue
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    queue: res.data.queue,
+    queue_state: res.data.queue_state,
   }
 }
 
 const alterQueueToCurrent = async (queueId: number) => {
-  try {
-    const res = await request.post<any, IAlterQueueTocurrent>('api/queues/id/altertocurrent', {
-      queueId,
-    })
+  const res = await request.put<any, IAxiosRes<any>>('api/player/current-queue', {
+    queueId,
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IAlterQueueTocurrent
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const deletQueue = async (queueId: number) => {
-  try {
-    const res = await request.post<any, IDeleteQueue>('api/queues/id', { queueId })
+  const res = await request.delete<any, IAxiosRes<any>>(`api/queues/${queueId}`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IDeleteQueue
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const addSongToQueue = async (song_id: number, queue_id: number, song_position: number) => {
-  try {
-    const res = await request.post<any, IAddSongToQueue>('api/queues/id/addsong', {
-      song_id,
-      queue_id,
-      song_position,
-    })
+  const res = await request.post<any, IAxiosRes<any>>(`api/queues/${queue_id}/songs`, {
+    song_id,
+    song_position,
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      queue_id: res.queue_id,
-      song_id: res.song_id,
-      song_position: res.song_position,
-      action: res.action,
-      queue_item: res.queue_item,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IAddSongToQueue
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    queue_id: res.data.queue_id,
+    song_id: res.data.song_id,
+    song_position: res.data.song_position,
+    action: res.data.action,
+    queue_item: res.data.queue_item,
   }
 }
 
-const removeSongFromQueue = async (itemId: number) => {
-  try {
-    const res = await request.put<any, ISetPlayMode>('api/queues/id/remove', {
-      itemId,
-    })
+const removeSongFromQueue = async (queueId: number, itemId: number) => {
+  const res = await request.delete<any, IAxiosRes<any>>(`api/queues/${queueId}/songs/${itemId}`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.message,
-    }
+    } as IRemoveSongFromQueue
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
-const setPlayMode = async (play_mode: string) => {
-  try {
-    const res = await request.put<any, ISetPlayMode>('api/queues/id/playmode', {
-      play_mode,
-    })
+const setPlayMode = async (queueId: number, play_mode: string) => {
+  const res = await request.patch<any, IAxiosRes<any>>(`api/queues/${queueId}`, {
+    playmode: play_mode,
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.message,
-    }
+    } as ISetPlayMode
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const reorderQueue = async (song_ids: number[], queue_id: number) => {
-  try {
-    const res = await request.post<any, IReorderQueue>('api/queues/id/reorder', {
-      song_ids,
-      queue_id,
-    })
+  const res = await request.patch<any, IAxiosRes<any>>(`api/queues/${queue_id}/order`, {
+    song_ids,
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IReorderQueue
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
-const createQueueFromPlaylist = async (playlistIId: number) => {
-  try {
-    const res = await request.post<any, ICreatQueueFromPlaylist>('api/queues/createfromlist/id', {
-      playlistIId,
-    })
+const createQueueFromPlaylist = async (playlistId: number) => {
+  const res = await request.post<any, IAxiosRes<any>>('api/queues', {
+    source: 'playlist',
+    playlistId,
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-      queue_id: res.queue_id,
-      song_count: res.song_count,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as ICreatQueueFromPlaylist
+  }
+
+  return {
+    success: true,
+    message: res.message,
+    queue_id: res.data.queue_id,
+    song_count: res.data.song_count,
   }
 }
 
 const updateCurrentQueueState = async (stateData: IQueueState) => {
-  try {
-    const res = await request.post<any, IUpdateCurrentQueueState>('api/queues/state', { stateData })
+  const res = await request.patch<any, IAxiosRes<any>>('api/queues/current/state', {
+    stateData,
+  })
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IUpdateCurrentQueueState
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 
 const clearQueue = async (queueId: number) => {
-  try {
-    const res = await request.post<any, IClearQueue>('api/queues/state', { queueId })
+  const res = await request.delete<any, IAxiosRes<any>>(`api/queues/${queueId}/songs`)
+
+  if (!res.success) {
     return {
-      success: res.success,
+      success: false,
       message: res.message,
-    }
-  } catch (error: any) {
-    return {
-      success: error.response?.data?.success,
-      message: error.response?.ata?.messssage,
-    }
+    } as IClearQueue
+  }
+
+  return {
+    success: true,
+    message: res.message,
   }
 }
 

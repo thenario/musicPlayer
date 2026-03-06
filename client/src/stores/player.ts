@@ -223,7 +223,7 @@ export const usePlayerStore = defineStore('player', () => {
     if (mode === 'shuffle') {
       await shuffleQueue()
     }
-    const res = await queueApi.setPlayMode(mode)
+    const res = await queueApi.setPlayMode(-1, mode)
     if (!res.success) ElMessage.error('播放模式更新失败')
   }
 
@@ -333,7 +333,7 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       const isTempId = typeof itemId === 'string' && itemId.startsWith('temp-')
       if (!isTempId) {
-        const res = await queueApi.removeSongFromQueue(typeof itemId !== 'string' ? itemId : 0)
+        const res = await queueApi.removeSongFromQueue(-1, typeof itemId !== 'string' ? itemId : 0)
         if (!res.success) {
           ElMessage.error('移除歌曲时出错')
           return
