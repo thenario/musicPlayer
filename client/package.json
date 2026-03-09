@@ -21,6 +21,8 @@
     "axios": "^1.13.2",
     "crypto-js": "^4.2.0",
     "element-plus": "^2.13.2",
+    "multer": "^2.1.1",
+    "music-metadata": "^11.12.1",
     "pinia": "^3.0.3",
     "vue": "^3.5.22",
     "vue-axios": "^3.5.2",

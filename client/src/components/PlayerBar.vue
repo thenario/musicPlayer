@@ -105,11 +105,9 @@ import {
 const playerStore = usePlayerStore()
 const API_BASE_URL = 'http://127.0.0.1:5000'
 
-// 1. 进度条状态同步
 const isDragging = ref(false)
 const sliderValue = ref(0)
 
-// 实时同步进度条（非拖拽时）
 watch(() => playerStore.currentTime, (val) => {
   if (!isDragging.value) sliderValue.value = val || 0
 })
@@ -123,22 +121,18 @@ const handleSeekChange = (val: number) => {
   isDragging.value = false
 }
 
-// 2. 音量状态同步
 const volumeValue = ref(playerStore.volume)
 watch(() => playerStore.volume, (val) => { volumeValue.value = val })
 
-// 3. 快捷键优化 (使用 VueUse)
 const { space } = useMagicKeys()
 const activeElement = useActiveElement()
 watch(space, (v) => {
-  // 仅当用户没在输入框时触发空格播放/暂停
   const isTyping = ['INPUT', 'TEXTAREA'].includes(activeElement.value?.tagName || '')
   if (v && !isTyping) {
     togglePlay()
   }
 })
 
-// 4. 逻辑函数
 const togglePlay = () => playerStore.togglePlay()
 const togglePlayMode = () => {
   const modes = ['repeat_all', 'repeat_one', 'shuffle']
@@ -181,7 +175,6 @@ const toggleMute = () => {
   @apply text-gray-400 hover:text-white transition-all active:scale-90 disabled:opacity-20;
 }
 
-/* 深度定制 El-Slider 样式使其更精致 */
 :deep(.custom-slider .el-slider__runway) {
   height: 4px;
   background-color: theme('colors.gray.700');

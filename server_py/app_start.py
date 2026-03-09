@@ -511,7 +511,7 @@ def login():
         db.session.rollback()
         logger.critical("Login process error", exc_info=True)
         return jsonify({"error": "登录过程出错"}), 500
-
+ 
 
 @app.route('/api/logout', methods=['POST'])
 @login_required
