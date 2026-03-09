@@ -99,15 +99,12 @@ const playerStore = usePlayerStore()
 const { currentQueue, currentSong, isPlaying, isQueueVisible, currentQueueId } = storeToRefs(playerStore)
 
 
-
-// 状态管理
 const activeTab = ref('queue')
 const songRows = ref([])
 const previewQueueId = ref<number>()
 const previewData = ref<IQueue | null>()
 const previewLoading = ref(false)
 
-// 切换 Tab 时重置预览状态
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
   if (tab === 'queue') {
@@ -115,15 +112,12 @@ const handleTabChange = (tab: string) => {
   }
 }
 
-// 1. 点击队列：进入预览模式
 const handlePreviewQueue = async (queueId: number) => {
-  // 如果点击的是【当前正在播放】的队列，直接切回当前播放视图
   if (queueId === currentQueueId.value) {
     activeTab.value = 'queue'
     return
   }
 
-  // 否则进入预览
   previewQueueId.value = queueId
   previewLoading.value = true
   previewData.value = null
@@ -137,19 +131,15 @@ const handlePreviewQueue = async (queueId: number) => {
 
 }
 
-// 2. 从预览列表播放：切换队列并播放
 const playFromPreview = async (index: number) => {
   if (!previewQueueId.value) return
 
-  // 调用 Store 的切换并播放逻辑
   await playerStore.playSongInQueue(previewQueueId.value, index)
 
-  // 切回"当前播放"视图
   activeTab.value = 'queue'
   previewQueueId.value = -1
 }
 
-// 3. 返回队列列表
 const backToQueueList = () => {
   previewQueueId.value = -1
   previewData.value = null
@@ -159,24 +149,20 @@ onBeforeUpdate(() => {
   songRows.value = []
 })
 
-// 拖拽数据绑定
 const dragQueue = computed({
   get: () => currentQueue.value,
   set: (newVal) => playerStore.updateQueueOrder(newVal)
 })
 
 
-// 1. 播放逻辑
 const playFromQueue = (index: number) => {
   playerStore.playAtIndex(index)
 }
 
-// 2. 移除单曲逻辑
 const removeFromQueue = async (itemId: number | string) => {
   await playerStore.removeQueueItem(itemId)
 }
 
-// 3. 清空队列
 const clearQueue = async (queueId: number) => {
   if (confirm('确定要清空队列吗？')) {
     const res = await queueApi.clearQueue(queueId)
@@ -190,24 +176,22 @@ const clearQueue = async (queueId: number) => {
 
 const confirmClear = () => {
   ElMessageBox.confirm(
-    '确定要清空播放队列吗？', // 第1参数：内容
-    '提示',                   // 第2参数：标题
-    {                        // 第3参数：配置对象
+    '确定要清空播放队列吗？',
+    '提示',
+    {
       confirmButtonText: '清空',
       cancelButtonText: '取消',
       type: 'warning',
     }
   )
     .then(() => {
-      // 确保你的 script setup 里有定义或者 import 了 clearQueue
       clearQueue(currentQueueId.value || -1);
     })
     .catch(() => {
-      // 用户点击取消，通常不需要做任何事，但 catch 必须写以防控制台报错 Uncaught (in promise)
+
       console.log('用户取消了清空');
     });
 };
-// 4. 切换歌单逻辑
 const handleSwitchQueue = async (queueId: number) => {
   if (queueId === currentQueueId.value) {
     activeTab.value = 'queue'
@@ -217,14 +201,12 @@ const handleSwitchQueue = async (queueId: number) => {
   activeTab.value = 'queue'
 }
 
-// 5. 删除歌单逻辑
 const handleDeleteQueue = async (queueId: number) => {
   if (confirm('确定要永久删除这个歌单吗？')) {
     await playerStore.deleteQueue(queueId)
   }
 }
 
-// 工具函数
 const formatDuration = (seconds: number) => {
   if (!seconds) return '0:00'
   const mins = Math.floor(seconds / 60)
@@ -238,7 +220,6 @@ const formatDate = (dateStr: Date) => {
   return `${date.getMonth() + 1}月${date.getDate()}日`
 }
 
-// 滚动到当前歌曲的核心逻辑
 const scrollToCurrent = async () => {
   if (!isQueueVisible.value || !currentSong.value?.song_id) return
   await nextTick()
@@ -253,7 +234,6 @@ watch([isQueueVisible, () => currentSong.value?.song_id], () => {
   if (isQueueVisible.value) setTimeout(scrollToCurrent, 200)
 })
 
-// 监听切歌 (如果抽屉开着，也跟着滚)
 watch(() => currentSong.value?.song_id, () => {
   if (isQueueVisible.value && activeTab.value === 'queue') {
     scrollToCurrent()

@@ -72,7 +72,6 @@ const playerStore = usePlayerStore()
 const { currentSong, isPlaying } = storeToRefs(playerStore)
 const API_BASE_URL = 'http://127.0.0.1:5000'
 
-// 封面处理 (和 PlayerBar 保持一致)
 const currentSongCover = computed(() => {
     const url = currentSong.value?.song_cover_url
     if (!url) return null
@@ -82,6 +81,8 @@ const currentSongCover = computed(() => {
 </script>
 
 <style scoped>
+@reference "../assets/index.css";
+
 :deep(.song-detail-dialog) {
     padding: 0 !important;
     background: #0f172a;

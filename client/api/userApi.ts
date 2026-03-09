@@ -5,7 +5,7 @@ import { encryptPassword } from '../src/utils/crypto'
 async function login(user_name: string, password: string) {
   const encryptedPassword = encryptPassword(password)
 
-  const res = await request.post<any, IAxiosRes<any>>('api/auth/login', {
+  const res = await request.post<any, IAxiosRes<any>>('api/users/login', {
     user_name: user_name,
     password: encryptedPassword,
   })

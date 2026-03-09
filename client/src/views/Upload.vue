@@ -54,6 +54,10 @@
 import { ref } from 'vue'
 import { songApi } from '../../api/songApi'
 import { ElMessage } from 'element-plus'
+import { useUserStore } from '../stores/user'
+import { storeToRefs } from 'pinia'
+const userstore = useUserStore()
+const { user } = storeToRefs(userstore)
 
 const audioFile = ref<any>(null)
 const coverFile = ref<any>(null)
@@ -84,11 +88,11 @@ const submitUpload = async () => {
   uploading.value = true;
   try {
     const formdata = new FormData();
-    formdata.append('file_name', audioFile.value.name);
-    formdata.append('file_size', audioFile.value.size);
     formdata.append('audiofile', audioFile.value.raw);
     formdata.append('coverfile', coverFile.value);
     const now = new Date();
+    formdata.append('uploader_name', user.value?.user_name ?? '')
+    formdata.append('uploader_id', String(user.value?.user_id) ?? '')
     formdata.append('added_date', now.toISOString());
     formdata.append('title', form.value.title);
     formdata.append('artist', form.value.artist);

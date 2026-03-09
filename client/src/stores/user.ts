@@ -33,7 +33,7 @@ export const useUserStore = defineStore('user', () => {
   }
 
   const logout = async (user_id: number) => {
-    const res = await userApi.logout(user_id)
+    const res = await userApi.logout()
     if (!res.success) {
       ElMessage.error('登出失败')
       return { success: false }

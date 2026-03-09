@@ -50,17 +50,15 @@
 import { computed } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter, useRoute } from 'vue-router'
-// 导入需要的图标
+
 import { Upload, ArrowDown, SwitchButton, User } from '@element-plus/icons-vue'
 
 const userStore = useUserStore()
 const router = useRouter()
 const route = useRoute()
 
-// 自动关联路由高亮状态
 const activePath = computed(() => route.path)
 
-// 处理下拉菜单指令
 const handleCommand = (command: string) => {
   if (command === 'logout') {
     logout()
@@ -75,7 +73,6 @@ const logout = async () => {
 </script>
 
 <style scoped>
-/* 深度定制 Element Plus 导航栏背景 */
 .navbar-container {
   @apply bg-gray-800 border-none px-4 items-center h-16;
   --el-menu-bg-color: #1f2937;
