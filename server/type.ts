@@ -62,6 +62,7 @@ export interface IQueueItem {
 export interface IQueue {
   queue_id: number;
   queue_name: string;
+  creator_id:string;
   song_count: number;
   is_current: boolean;
   created_date: Date;
@@ -70,6 +71,7 @@ export interface IQueue {
 }
 
 export interface IQueueState {
+  user_id:string;
   current_queue_id: number;
   current_song_id: number;
   current_position: number;

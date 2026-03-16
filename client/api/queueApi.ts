@@ -47,7 +47,6 @@ const getQueueById = async (queueId: number) => {
     success: true,
     message: res.message,
     queue: res.data.queue,
-    queue_items: res.data.queue_items,
   }
 }
 
@@ -103,10 +102,10 @@ const deletQueue = async (queueId: number) => {
   }
 }
 
-const addSongToQueue = async (song_id: number, queue_id: number, song_position: number) => {
+const addSongToQueue = async (song_id: number, queue_id: number, mode: string) => {
   const res = await request.post<any, IAxiosRes<any>>(`api/queues/${queue_id}/songs`, {
     song_id,
-    song_position,
+    mode,
   })
 
   if (!res.success) {

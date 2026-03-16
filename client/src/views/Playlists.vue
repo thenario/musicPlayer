@@ -63,6 +63,7 @@ import { playlistApi } from '../../api/playlistApi'
 import { useUserStore } from '../stores/user'
 import { storeToRefs } from 'pinia'
 import { IPlaylist } from '../../type'
+import { now } from '@vueuse/core'
 
 
 
@@ -113,6 +114,8 @@ const createPlaylist = async (formEl: FormInstance | undefined) => {
       const formData = new FormData()
       formData.append('name', newPlaylist.name)
       formData.append('description', newPlaylist.description)
+      formData.append('creator_id', String(user.value?.user_id))
+      formData.append('created_date', now.toString())
       if (selectedFile.value) formData.append('cover_image', selectedFile.value)
 
       const res = await playlistApi.createPlaylist(formData)

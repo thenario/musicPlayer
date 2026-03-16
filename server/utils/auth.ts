@@ -11,7 +11,7 @@ export const authMiddleWare = (
   next: NextFunction,
 ) => {
   const auth = req.headers["authorization"];
-  const token = auth && auth.split(" ")[1];
+  const token = auth?.split(" ")[1];
   if (!token) {
     return res.status(401).json({
       code: 401,
@@ -24,6 +24,7 @@ export const authMiddleWare = (
       (req as any).user = decoded;
       next();
     } catch (error) {
+      console.log(error);
       return res.status(403).json({
         code: 403,
         success: false,

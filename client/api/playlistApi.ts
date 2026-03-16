@@ -92,7 +92,7 @@ const getMyPlaylists = async (userId: number) => {
   return {
     success: true,
     message: res.message,
-    playlits: res.data.playlits,
+    playlists: res.data.playlists,
   }
 }
 
@@ -115,9 +115,7 @@ const getPlaylistById = async (playlistId: number) => {
 }
 
 const addSongToPlaylist = async (playlistId: number, songId: number) => {
-  const res = await request.post<any, IAxiosRes<any>>(`api/playlists/${playlistId}/songs`, {
-    songId,
-  })
+  const res = await request.post<any, IAxiosRes<any>>(`api/playlists/${playlistId}/songs/${songId}`)
 
   if (!res.success) {
     ElMessage.error(res.message || '添加歌曲到歌单时出错')
