@@ -50,12 +50,11 @@ export interface IPlaylist {
   playlist_cover_url: string
   song_count: number
   like_count: number
+  play_count: number
   is_public: boolean
   created_date: Date
-  updatedd_date: Date
-  songs: ISong[]
-  is_liked: boolean
-  user: IUser
+  updated_date: Date
+  description: string
 }
 
 export interface IQueueItem {

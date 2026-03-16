@@ -15,4 +15,4 @@ app.use("/api/user", userRt);
 app.use("/api/songs", songRt);
 app.use("/api/playlist", playlistRt);
 app.use("/api/queue", queueRt);
-app.use("/api/chore", choreRt);
+app.use("/api/stats", choreRt);
