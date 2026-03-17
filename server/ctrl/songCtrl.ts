@@ -9,9 +9,13 @@ export const getSongs = async (req: Request, res: Response) => {
   const { page, keyword } = req.query;
   const pageLimit = 15;
 
+  if (!page) {
+    return res.status(400).json({ message: "缺少页码参数", data: null });
+  }
+
   const sqlPage = parseInt(page as string);
   if (isNaN(sqlPage) || sqlPage < 1) {
-    return res.status(400).json({ message: "请输入正确页码" });
+    return res.status(400).json({ message: "请输入正确页码", data: null });
   }
 
   try {
@@ -29,7 +33,8 @@ export const getSongs = async (req: Request, res: Response) => {
     }
 
     const [countRows]: any = await db.query(countSql, queryParams);
-    const totalItems = countRows[0].total;
+    const totalItems =
+      countRows && countRows.length > 0 ? countRows[0].total : 0;
 
     dataSql += ` LIMIT ? OFFSET ?`;
     const [rows] = await db.query(dataSql, [...queryParams, pageLimit, offset]);
@@ -37,8 +42,9 @@ export const getSongs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalItems / pageLimit);
 
     return res.status(200).json({
+      message: "获取成功",
       data: {
-        songs: rows,
+        songs: rows || [],
         pagination: {
           total_items: totalItems,
           total_pages: totalPages,
@@ -49,7 +55,7 @@ export const getSongs = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("SQL Error:", error);
-    return res.status(500).json({ message: "歌曲查询失败" });
+    return res.status(500).json({ message: "歌曲查询失败", data: null });
   }
 };
 
@@ -59,12 +65,15 @@ export const uploadSong = async (req: Request, res: Response) => {
     req.body;
 
   if (
-    !files?.["coverfile"] ||
-    !files?.["audiofile"] ||
+    !files ||
+    !files["coverfile"] ||
+    !files["audiofile"] ||
     !uploader_id ||
     !uploader_name
   ) {
-    return res.status(400).json({ message: "请上传完整信息" });
+    return res
+      .status(400)
+      .json({ message: "请上传完整信息(包含封面与音频文件)", data: null });
   }
 
   try {
@@ -105,11 +114,13 @@ export const uploadSong = async (req: Request, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "歌曲上传成功",
+      data: null,
     });
   } catch (error) {
     console.error("Upload Error:", error);
     return res.status(500).json({
       message: "提交出错，请稍后重试",
+      data: null,
     });
   }
 };
