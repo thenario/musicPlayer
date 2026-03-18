@@ -2,7 +2,7 @@ import { IGetSongs, IUploadSong, IAxiosRes } from '../type'
 import request from './axios'
 
 const getSongs = async (search_page: number, searchKeyword: string) => {
-  const res = await request.get<any, IAxiosRes<any>>('api/songs', {
+  const res = await request.get<any, IAxiosRes<any>>('/songs', {
     params: { page: search_page, keyword: searchKeyword },
   })
 
@@ -22,7 +22,7 @@ const getSongs = async (search_page: number, searchKeyword: string) => {
 }
 
 const uploadSong = async (uploaFormdata: any) => {
-  const res = await request.post<any, IAxiosRes<any>>('api/songs', uploaFormdata)
+  const res = await request.post<any, IAxiosRes<any>>('/songs', uploaFormdata)
 
   if (!res.success) {
     return {

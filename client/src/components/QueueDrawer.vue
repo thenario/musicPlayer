@@ -94,7 +94,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { Delete, Rank, Close, VideoPause, ArrowLeft } from '@element-plus/icons-vue'
 import { ElMessageBox, ElMessage } from 'element-plus'
 import { IQueue } from '../../type'
-import { queueApi } from '../../api/queueApi'
+import { queueApi } from '../../axios/queueApi'
 const playerStore = usePlayerStore()
 const { currentQueue, currentSong, isPlaying, isQueueVisible, currentQueueId } = storeToRefs(playerStore)
 

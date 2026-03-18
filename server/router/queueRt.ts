@@ -4,32 +4,28 @@ import { authMiddleWare } from "../utils/auth.js";
 const queueRt = Router();
 
 queueRt.get("/queues", authMiddleWare, queueCtrl.getMyQueues);
-queueRt.get("/queues/:queue_id", authMiddleWare, queueCtrl.getQueueById);
-queueRt.get("/queues/current", authMiddleWare, queueCtrl.getCurrentQueue);
+queueRt.get("/:queue_id", authMiddleWare, queueCtrl.getQueueById);
+queueRt.get("/current", authMiddleWare, queueCtrl.getCurrentQueue);
 queueRt.put(
   "/player/current-queue",
   authMiddleWare,
   queueCtrl.alterQueueToCurrent,
 );
-queueRt.delete("/queues/:id", authMiddleWare, queueCtrl.deletQueue);
-queueRt.post(
-  "/queues/:queue_id/songs",
-  authMiddleWare,
-  queueCtrl.addSongToQueue,
-);
+queueRt.delete("/:id", authMiddleWare, queueCtrl.deletQueue);
+queueRt.post(":queue_id/songs", authMiddleWare, queueCtrl.addSongToQueue);
 queueRt.delete(
-  "/queues/:queue_id/songs/:queue_item_id",
+  "/:queue_id/songs/:queue_item_id",
   authMiddleWare,
   queueCtrl.removeSongFromQueue,
 );
-queueRt.patch("/queues/:queue_id", authMiddleWare, queueCtrl.setPlayMode);
-queueRt.patch("/queues/:queue_id", authMiddleWare, queueCtrl.reorderQueue);
-queueRt.post("/queues", authMiddleWare, queueCtrl.createQueueFromPlaylist);
+queueRt.patch("/:queue_id", authMiddleWare, queueCtrl.setPlayMode);
+queueRt.patch("/:queue_id", authMiddleWare, queueCtrl.reorderQueue);
+queueRt.post("/", authMiddleWare, queueCtrl.createQueueFromPlaylist);
 queueRt.patch(
-  "/queues/current/state",
+  "/current/state",
   authMiddleWare,
   queueCtrl.updateCurrentQueueState,
 );
-queueRt.delete("/queues/:queue_id/songs", authMiddleWare, queueCtrl.clearQueue);
+queueRt.delete("/:queue_id/songs", authMiddleWare, queueCtrl.clearQueue);
 
 export default queueRt;

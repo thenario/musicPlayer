@@ -70,7 +70,7 @@ import { ArrowDownBold, Share } from '@element-plus/icons-vue'
 
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying } = storeToRefs(playerStore)
-const API_BASE_URL = 'http://127.0.0.1:5000'
+const API_BASE_URL = 'http://127.0.0.1:3000'
 
 const currentSongCover = computed(() => {
     const url = currentSong.value?.song_cover_url

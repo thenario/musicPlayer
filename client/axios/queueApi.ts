@@ -17,7 +17,7 @@ import {
 import request from './axios'
 
 const getMyQueues = async () => {
-  const res = await request.get<any, IAxiosRes<any>>('api/queues')
+  const res = await request.get<any, IAxiosRes<any>>('/queues')
 
   if (!res.success) {
     return {
@@ -34,7 +34,7 @@ const getMyQueues = async () => {
 }
 
 const getQueueById = async (queueId: number) => {
-  const res = await request.get<any, IAxiosRes<any>>(`api/queues/${queueId}`)
+  const res = await request.get<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
   if (!res.success) {
     return {
@@ -51,7 +51,7 @@ const getQueueById = async (queueId: number) => {
 }
 
 const getCurrentQueue = async () => {
-  const res = await request.get<any, IAxiosRes<any>>('api/queues/current')
+  const res = await request.get<any, IAxiosRes<any>>('/queues/current')
 
   if (!res.success) {
     return {
@@ -69,7 +69,7 @@ const getCurrentQueue = async () => {
 }
 
 const alterQueueToCurrent = async (queueId: number) => {
-  const res = await request.put<any, IAxiosRes<any>>('api/player/current-queue', {
+  const res = await request.put<any, IAxiosRes<any>>('/queues/player/current-queue', {
     queueId,
   })
 
@@ -87,7 +87,7 @@ const alterQueueToCurrent = async (queueId: number) => {
 }
 
 const deletQueue = async (queueId: number) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`api/queues/${queueId}`)
+  const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
   if (!res.success) {
     return {
@@ -103,7 +103,7 @@ const deletQueue = async (queueId: number) => {
 }
 
 const addSongToQueue = async (song_id: number, queue_id: number, mode: string) => {
-  const res = await request.post<any, IAxiosRes<any>>(`api/queues/${queue_id}/songs`, {
+  const res = await request.post<any, IAxiosRes<any>>(`/queues/${queue_id}/songs`, {
     song_id,
     mode,
   })
@@ -127,7 +127,7 @@ const addSongToQueue = async (song_id: number, queue_id: number, mode: string) =
 }
 
 const removeSongFromQueue = async (queueId: number, itemId: number) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`api/queues/${queueId}/songs/${itemId}`)
+  const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs/${itemId}`)
 
   if (!res.success) {
     return {
@@ -143,7 +143,7 @@ const removeSongFromQueue = async (queueId: number, itemId: number) => {
 }
 
 const setPlayMode = async (queueId: number, play_mode: string) => {
-  const res = await request.patch<any, IAxiosRes<any>>(`api/queues/${queueId}`, {
+  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queueId}`, {
     playmode: play_mode,
   })
 
@@ -161,7 +161,7 @@ const setPlayMode = async (queueId: number, play_mode: string) => {
 }
 
 const reorderQueue = async (song_ids: number[], queue_id: number) => {
-  const res = await request.patch<any, IAxiosRes<any>>(`api/queues/${queue_id}/order`, {
+  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queue_id}/order`, {
     song_ids,
   })
 
@@ -179,7 +179,7 @@ const reorderQueue = async (song_ids: number[], queue_id: number) => {
 }
 
 const createQueueFromPlaylist = async (playlistId: number) => {
-  const res = await request.post<any, IAxiosRes<any>>('api/queues', {
+  const res = await request.post<any, IAxiosRes<any>>('/queues', {
     source: 'playlist',
     playlistId,
   })
@@ -200,7 +200,7 @@ const createQueueFromPlaylist = async (playlistId: number) => {
 }
 
 const updateCurrentQueueState = async (stateData: IQueueState) => {
-  const res = await request.patch<any, IAxiosRes<any>>('api/queues/current/state', {
+  const res = await request.patch<any, IAxiosRes<any>>('/queues/current/state', {
     stateData,
   })
 
@@ -218,7 +218,7 @@ const updateCurrentQueueState = async (stateData: IQueueState) => {
 }
 
 const clearQueue = async (queueId: number) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`api/queues/${queueId}/songs`)
+  const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs`)
 
   if (!res.success) {
     return {

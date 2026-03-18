@@ -126,8 +126,8 @@ import { Plus, Delete, Picture, CaretRight, Star, StarFilled, MoreFilled, Search
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { debounce } from 'lodash-es'
 import { IPlaylist, ISong } from '../../type'
-import { playlistApi } from '../../api/playlistApi'
-import { songApi } from '../../api/songApi'
+import { playlistApi } from '../../axios/playlistApi'
+import { songApi } from '../../axios/songApi'
 
 const route = useRoute()
 const router = useRouter()

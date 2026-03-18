@@ -47,10 +47,10 @@ export const router = createRouter({
   routes,
 })
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
 
-  if (userStore.isAuthenticated === null) {
+  if (!userStore.isAuthenticated) {
     userStore.isAuthenticated = localStorage.getItem('user') ? true : false
   }
 

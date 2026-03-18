@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { IQueue, IQueueItem, ISong } from '../../type'
-import { queueApi } from '../../api/queueApi'
+import { queueApi } from '../../axios/queueApi'
 import { ElMessage } from 'element-plus'
 
 const API_BASE_URL = 'http://127.0.0.1:5000'

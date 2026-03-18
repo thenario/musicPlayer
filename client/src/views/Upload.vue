@@ -52,7 +52,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue'
-import { songApi } from '../../api/songApi'
+import { songApi } from '../../axios/songApi'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { storeToRefs } from 'pinia'

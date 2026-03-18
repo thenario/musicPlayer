@@ -1,10 +1,9 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 
-import { ElMessage } from 'element-plus'
 import 'element-plus/dist/index.css'
 
-import { userApi } from '../../api/userApi'
+import { userApi } from '../../axios/userApi'
 import { IUser } from '../../type'
 
 export const useUserStore = defineStore('user', () => {
@@ -15,32 +14,29 @@ export const useUserStore = defineStore('user', () => {
   const login = async (user_name: string, password: string) => {
     const res = await userApi.login(user_name, password)
     if (!res.success) {
-      ElMessage.error('登录失败')
-      return { success: false }
+      return { success: false, message: res.message }
     }
     user.value = res.user || null
     isAuthenticated.value = true
-    return { success: true }
+    return { success: true, message: res.message }
   }
 
   const register = async (userData: any) => {
     const res = await userApi.register(userData)
     if (!res.success) {
-      ElMessage.error('注册失败')
-      return { success: false }
+      return { success: false, message: res.message }
     }
-    return { success: true }
+    return { success: true, message: res.message }
   }
 
   const logout = async (user_id: number) => {
     const res = await userApi.logout()
     if (!res.success) {
-      ElMessage.error('登出失败')
-      return { success: false }
+      return { success: false, message: res.message }
     }
     user.value = null
     isAuthenticated.value = false
-    return { success: true }
+    return { success: true, message: res.message }
   }
 
   return { user, isAuthenticated, login, register, logout }
