@@ -42,6 +42,7 @@ export const getSongs = async (req: Request, res: Response) => {
     const totalPages = Math.ceil(totalItems / pageLimit);
 
     return res.status(200).json({
+      success: true,
       message: "获取成功",
       data: {
         songs: rows || [],
