@@ -13,7 +13,7 @@ import {
 import request from './axios'
 
 const createPlaylist = async (formData: any) => {
-  const res = await request.post<any, IAxiosRes<any>>('api/playlists', formData)
+  const res = await request.post<any, IAxiosRes<any>>('/playlists', formData)
 
   if (!res.success) {
     return {
@@ -30,7 +30,7 @@ const createPlaylist = async (formData: any) => {
 }
 
 const deletePlaylist = async (playlistId: number) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`api/playlists/${playlistId}`)
+  const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
   if (!res.success) {
     return {
@@ -46,7 +46,7 @@ const deletePlaylist = async (playlistId: number) => {
 }
 
 const likePlaylist = async (playlistId: number) => {
-  const res = await request.post<any, IAxiosRes<any>>(`api/playlists/${playlistId}/likes`)
+  const res = await request.post<any, IAxiosRes<any>>(`/playlists/${playlistId}/likes`)
 
   if (!res.success) {
     return {
@@ -62,7 +62,7 @@ const likePlaylist = async (playlistId: number) => {
 }
 
 const unlikePlaylist = async (playlistId: number) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`api/playlists/${playlistId}/likes`)
+  const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}/likes`)
 
   if (!res.success) {
     return {
@@ -78,7 +78,7 @@ const unlikePlaylist = async (playlistId: number) => {
 }
 
 const getMyPlaylists = async (userId: number) => {
-  const res = await request.get<any, IAxiosRes<any>>('api/playlists', {
+  const res = await request.get<any, IAxiosRes<any>>('/playlists', {
     params: { userId },
   })
 
@@ -97,7 +97,7 @@ const getMyPlaylists = async (userId: number) => {
 }
 
 const getPlaylistById = async (playlistId: number) => {
-  const res = await request.get<any, IAxiosRes<any>>(`api/playlists/${playlistId}`)
+  const res = await request.get<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
   if (!res.success) {
     return {
@@ -115,7 +115,7 @@ const getPlaylistById = async (playlistId: number) => {
 }
 
 const addSongToPlaylist = async (playlistId: number, songId: number) => {
-  const res = await request.post<any, IAxiosRes<any>>(`api/playlists/${playlistId}/songs/${songId}`)
+  const res = await request.post<any, IAxiosRes<any>>(`/playlists/${playlistId}/songs/${songId}`)
 
   if (!res.success) {
     ElMessage.error(res.message || '添加歌曲到歌单时出错')
@@ -133,9 +133,7 @@ const addSongToPlaylist = async (playlistId: number, songId: number) => {
 }
 
 const removeSongFromPlaylist = async (playlistId: number, songId: number) => {
-  const res = await request.delete<any, IAxiosRes<any>>(
-    `api/playlists/${playlistId}/songs/${songId}`,
-  )
+  const res = await request.delete<any, IAxiosRes<any>>(`playlists/${playlistId}/songs/${songId}`)
 
   if (!res.success) {
     ElMessage.error(res.message || '从歌单删除歌曲时出错')

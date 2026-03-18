@@ -2,7 +2,7 @@ import { IGetStatics, IAxiosRes } from '../type'
 import request from './axios'
 
 const getStatics = async () => {
-  const res = await request.get<any, IAxiosRes<any>>('api/stats')
+  const res = await request.get<any, IAxiosRes<any>>('/stats')
 
   if (!res.success) {
     return {

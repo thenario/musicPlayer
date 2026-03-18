@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
 const uploadSong = multer({ storage: storage });
 
 songRt.post(
-  "/api/songs",
+  "/",
   (req, res, next) => {
     uploadSong.fields([
       { name: "audiofile", maxCount: 1 },
@@ -44,5 +44,7 @@ songRt.post(
   },
   songCtrl.uploadSong,
 );
+
+songRt.get("/", songCtrl.getSongs);
 
 export default songRt;

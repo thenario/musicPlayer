@@ -1,6 +1,8 @@
-require("dotenv").config();
+import dotenv from "dotenv";
 import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+
+dotenv.config();
 
 const SECRET_KEY =
   process.env.JWT_SECRET || "deault1234567890qwertyuiopasdfghjklzxcvbnm";

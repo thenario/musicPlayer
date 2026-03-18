@@ -5,7 +5,7 @@ import { encryptPassword } from '../src/utils/crypto'
 async function login(user_name: string, password: string) {
   const encryptedPassword = encryptPassword(password)
 
-  const res = await request.post<any, IAxiosRes<any>>('api/users/login', {
+  const res = await request.post<any, IAxiosRes<any>>('/users/login', {
     user_name: user_name,
     password: encryptedPassword,
   })
@@ -32,7 +32,7 @@ async function register(registerFormdata: {
 }) {
   const encryptedPassword = encryptPassword(registerFormdata.password)
 
-  const res = await request.post<any, IAxiosRes<any>>('api/users', {
+  const res = await request.post<any, IAxiosRes<any>>('/users/register', {
     user_name: registerFormdata.user_name,
     user_email: registerFormdata.user_email,
     password: encryptedPassword,
@@ -48,7 +48,7 @@ async function register(registerFormdata: {
 }
 
 async function logout() {
-  const res = await request.post<any, IAxiosRes<any>>('api/auth/logout')
+  const res = await request.post<any, IAxiosRes<any>>('/users/logout')
 
   if (!res.success) return { success: false, message: res.message } as ILogout
 

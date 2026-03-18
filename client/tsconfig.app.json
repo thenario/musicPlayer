@@ -1,12 +1,14 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "frontend/src/**/*", "frontend/src/**/*.vue"],
-  "exclude": ["frontend/src/**/__tests__/*"],
+  "include": ["env.d.ts", "client/src/**/*", "client/src/**/*.vue"],
+  "exclude": ["client/src/**/__tests__/*"],
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
+    "baseUrl": ".",
+
     "paths": {
-      "@/*": ["frontend/src/*"]
+      "@/*": ["client/src/*"]
     }
   }
 }

@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
 
 const request = axios.create({
-  baseURL: 'http://127.0.0.1:3000/',
+  baseURL: '/api',
   timeout: 5000,
 })
 
@@ -22,7 +22,7 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse): any => {
     return {
-      success: response.data?.code === 200,
+      success: response.data?.success,
       data: response.data?.data || null,
       message: response.data?.message || '请求成功',
       code: response.data?.code || 200,
@@ -57,7 +57,7 @@ request.interceptors.response.use(
     return Promise.resolve({
       success: false,
       data: null,
-      message: message,
+      message: (error.response as any).data?.message || message,
       code: status,
     })
   },

@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 playlistRt.post(
-  "/playlists",
+  "/",
   (req, res, next) => {
     upload.single("cover_image")(req, res, (err: any) => {
       if (err instanceof multer.MulterError) {
@@ -38,30 +38,22 @@ playlistRt.post(
   playlistCtrl.createPlaylist,
 );
 
-playlistRt.delete(
-  "/playlists/:id",
-  authMiddleWare,
-  playlistCtrl.deletePlaylist,
-);
+playlistRt.delete("/:id", authMiddleWare, playlistCtrl.deletePlaylist);
 
-playlistRt.post(
-  "/playlists/:id/likes",
-  authMiddleWare,
-  playlistCtrl.likePlaylist,
-);
+playlistRt.post("/:id/likes", authMiddleWare, playlistCtrl.likePlaylist);
 
 playlistRt.get("/playlists", authMiddleWare, playlistCtrl.getMyPlaylists);
 
 playlistRt.get("/playlists/:id", authMiddleWare, playlistCtrl.getPlaylistById);
 
 playlistRt.post(
-  "/playlists/:playlist_id/songs/:song_id",
+  "/:playlist_id/songs/:song_id",
   authMiddleWare,
   playlistCtrl.addSongToPlaylist,
 );
 
 playlistRt.delete(
-  "/playlists/:playlist_id/songs/:song_id",
+  "/:playlist_id/songs/:song_id",
   authMiddleWare,
   playlistCtrl.removeSongFromPlaylist,
 );

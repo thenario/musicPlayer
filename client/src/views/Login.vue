@@ -1,51 +1,66 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-    <div class="absolute inset-0 bg-linear-to-br from-gray-900 via-purple-900 to-blue-900"></div>
+  <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gray-950 text-white">
+    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900"></div>
     <div class="absolute inset-0 opacity-10"
       style="background-image: linear-gradient(to right, #ffffff0a 1px, transparent 1px), linear-gradient(to bottom, #ffffff0a 1px, transparent 1px); background-size: 50px 50px;">
     </div>
+
     <div
-      class="absolute top-20 left-10 w-64 h-64 bg-linear-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse-slow">
+      class="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse-slow">
     </div>
     <div
-      class="absolute bottom-20 right-10 w-80 h-80 bg-linear-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse-slow">
+      class="absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse-slow">
     </div>
 
     <div class="w-full max-w-md z-10 animate-fade-in">
       <div class="text-center mb-10">
         <div
-          class="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
-          <el-icon :size="32" color="white">
-            <UserFilled />
-          </el-icon>
+          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
+            <path
+              d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+          </svg>
         </div>
-        <h1 class="text-4xl font-bold bg-linear-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">欢迎回来
+        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">欢迎回来
         </h1>
         <p class="text-gray-300 mt-2">登录您的音乐空间，发现更多精彩</p>
       </div>
 
-      <div
-        class="bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-800/50 p-8 custom-login-form">
-        <el-form ref="loginFormRef" :model="form" :rules="rules" label-position="top" @submit.prevent>
-          <el-form-item label="用户名" prop="user_name">
-            <el-input v-model="form.user_name" placeholder="请输入用户名" :prefix-icon="User" clearable />
-          </el-form-item>
+      <div class="bg-gray-900/70 backdrop-blur-xl rounded-2xl shadow-2xl border border-gray-800/50 p-8">
+        <form @submit.prevent="handleLogin" class="space-y-6">
 
-          <el-form-item label="密码" prop="password">
-            <el-input v-model="form.password" type="password" placeholder="请输入密码" :prefix-icon="Lock" show-password />
-          </el-form-item>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-300 ml-1">用户名</label>
+            <div class="relative group">
+              <input v-model="form.user_name" type="text" placeholder="请输入用户名"
+                class="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all group-hover:bg-gray-800/80">
+            </div>
+            <p v-if="errors.user_name" class="text-red-400 text-xs mt-1 ml-1">{{ errors.user_name }}</p>
+          </div>
 
-          <el-button type="primary" class="w-full mt-4 login-btn" :loading="loading" @click="handleLogin(loginFormRef)">
-            {{ loading ? '登录中...' : '立即登录' }}
-          </el-button>
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-300 ml-1">密码</label>
+            <div class="relative group">
+              <input v-model="form.password" type="password" placeholder="请输入密码"
+                class="w-full bg-gray-800/50 border border-gray-700/50 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all group-hover:bg-gray-800/80">
+            </div>
+            <p v-if="errors.password" class="text-red-400 text-xs mt-1 ml-1">{{ errors.password }}</p>
+          </div>
+
+          <button type="submit" :disabled="loading"
+            class="w-full h-12 mt-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transform transition-all active:scale-95 disabled:opacity-50">
+            <span v-if="loading">登录中...</span>
+            <span v-else>立即登录</span>
+          </button>
 
           <div class="mt-8 pt-6 border-t border-gray-800 text-center">
             <span class="text-gray-400 text-sm">还没有账号？</span>
-            <el-link type="primary" :underline="false" class="register-link" @click="router.push('/register')">
+            <button type="button" @click="router.push('/register')"
+              class="ml-1 text-sm font-semibold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent hover:opacity-80 transition-opacity">
               立即注册 →
-            </el-link>
+            </button>
           </div>
-        </el-form>
+        </form>
       </div>
 
       <div class="mt-8 text-center">
@@ -60,12 +75,9 @@ import { ref, reactive } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { User, Lock, UserFilled } from '@element-plus/icons-vue'
-import type { FormInstance, FormRules } from 'element-plus'
 
 const userStore = useUserStore()
 const router = useRouter()
-const loginFormRef = ref<FormInstance>()
 const loading = ref(false)
 
 const form = reactive({
@@ -73,92 +85,42 @@ const form = reactive({
   password: ''
 })
 
-const rules = reactive<FormRules>({
-  user_name: [
-    { required: true, message: '用户名不能为空', trigger: 'blur' },
-    { min: 3, message: '用户名长度至少为 3 位', trigger: 'blur' }
-  ],
-  password: [
-    { required: true, message: '密码不能为空', trigger: 'blur' },
-    { min: 6, message: '密码长度至少为 6 位', trigger: 'blur' }
-  ]
+const errors = reactive({
+  user_name: '',
+  password: ''
 })
 
-const handleLogin = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
+const validate = () => {
+  let isValid = true
+  errors.user_name = form.user_name.length < 3 ? '用户名长度至少为 3 位' : ''
+  errors.password = form.password.length < 6 ? '密码长度至少为 6 位' : ''
 
-  await formEl.validate(async (valid) => {
-    if (valid) {
-      loading.value = true
-      try {
-        const result = await userStore.login(form.user_name, form.password)
+  if (errors.user_name || errors.password) isValid = false
+  return isValid
+}
 
-        if (result.success) {
-          ElMessage.success("登录成功，欢迎回来！")
-          router.push('/')
-        } else {
-        }
-      } catch (err) {
-        ElMessage.error('网络连接超时，请稍后重试')
-      } finally {
-        loading.value = false
-      }
+const handleLogin = async () => {
+  if (!validate()) return
+
+  loading.value = true
+  try {
+    const result = await userStore.login(form.user_name, form.password)
+    if (result.success) {
+      ElMessage.success("登录成功，欢迎回来！")
+      router.push('/')
     } else {
-      ElMessage.warning('请正确填写登录信息')
+      ElMessage.error(result.message || "登录失败，请检查用户名或密码")
     }
-  })
+  } catch (err) {
+    console.log(err)
+    alert('网络连接超时，请稍后重试')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 
 <style scoped>
-/* 深度修改 Element Plus 样式以适配暗色玻璃主题 */
-:deep(.el-form-item__label) {
-  color: #d1d5db !important;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin-bottom: 8px !important;
-}
-
-:deep(.el-input__wrapper) {
-  background-color: rgba(31, 41, 55, 0.5) !important;
-  box-shadow: 0 0 0 1px rgba(55, 65, 81, 0.5) inset !important;
-  border-radius: 12px;
-  padding: 8px 12px;
-  transition: all 0.3s;
-}
-
-:deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px #6366f1 inset !important;
-  background-color: rgba(31, 41, 55, 0.8) !important;
-}
-
-:deep(.el-input__inner) {
-  color: white !important;
-}
-
-.login-btn {
-  height: 50px;
-  border-radius: 12px;
-  background: linear-gradient(to right, #2563eb, #9333ea);
-  border: none;
-  font-weight: 600;
-  font-size: 1rem;
-}
-
-.login-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.4);
-}
-
-.register-link {
-  background: linear-gradient(to right, #60a5fa, #c084fc);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-weight: 600;
-}
-
-/* 动画保持 */
 @keyframes fade-in {
   from {
     opacity: 0;

@@ -7,7 +7,7 @@
 
     <PlayerBar />
 
-    <SongDetail />
+    <!-- <SongDetail /> -->
 
     <QueueDrawer />
 

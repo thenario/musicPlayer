@@ -49,6 +49,7 @@ export const login = async (req: Request, res: Response) => {
     );
 
     return res.status(200).json({
+      success: true,
       message: "登录成功",
       data: {
         user: {
@@ -96,6 +97,7 @@ export const register = async (req: Request, res: Response) => {
       await db.query(insertSql, [user_name, user_email, hashedPassword]);
 
       return res.status(200).json({
+        success: true,
         message: "注册成功",
         data: null,
       });
@@ -105,6 +107,24 @@ export const register = async (req: Request, res: Response) => {
     return res.status(500).json({
       message: "网络连接异常，请稍后重试",
       data: null,
+    });
+  }
+};
+
+export const logout = async (req: any, res: any) => {
+  try {
+    return res.json({
+      success: true,
+      message: "登出成功，期待下次再见",
+      data: null,
+    });
+  } catch (err: any) {
+    console.error("Logout Error:", err);
+
+    return res.status(500).json({
+      success: false,
+      message: "登出过程中服务器出现异常",
+      error: err.message,
     });
   }
 };

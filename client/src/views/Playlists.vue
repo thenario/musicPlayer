@@ -1,150 +1,134 @@
 <template>
-  <div class="p-4">
+  <div class="p-6 bg-gray-900 min-h-screen text-white">
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-white">我的歌单</h1>
+      <h1 class="text-2xl font-bold">我的歌单</h1>
     </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-      <div v-if="userStore.isAuthenticated" @click="showCreateModal = true"
-        class="bg-gray-800/50 hover:bg-gray-700 rounded-lg p-3 cursor-pointer transition-all duration-200 border-2 border-dashed border-gray-700 hover:border-blue-500 group flex flex-col items-center justify-center min-h-60">
-        <el-icon :size="40" class="text-gray-400 group-hover:text-blue-500 mb-3 transition-colors">
-          <Plus />
-        </el-icon>
-        <span class="text-gray-400 font-medium group-hover:text-white">新建歌单</span>
+    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6">
+      <div v-if="userStore.isAuthenticated" @click="showModal = true"
+        class="aspect-square bg-gray-800 border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:border-blue-500 hover:bg-gray-700 transition-all group">
+        <span class="text-4xl text-gray-500 group-hover:text-blue-500 mb-2">+</span>
+        <span class="text-sm text-gray-400 group-hover:text-white">新建歌单</span>
       </div>
 
+      <div v-for="item in playlists" :key="item.playlist_id" class="group cursor-pointer">
+        <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden mb-2">
+          <img :src="item.cover_url || '/default-cover.png'"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform">
+        </div>
+        <p class="font-medium truncate">{{ item.name }}</p>
+      </div>
     </div>
 
-    <el-dialog v-model="showCreateModal" title="创建新歌单" width="460px" class="playlist-dialog" destroy-on-close
-      @close="closeModal">
-      <el-form ref="formRef" :model="newPlaylist" :rules="rules" label-position="top">
-        <el-form-item label="歌单封面">
-          <el-upload class="cover-uploader" action="#" :auto-upload="false" :show-file-list="false"
-            :on-change="handleFileChange">
-            <img v-if="previewUrl" :src="previewUrl" class="cover-preview" />
-            <el-icon v-else class="uploader-icon">
-              <Plus />
-            </el-icon>
-            <div v-if="previewUrl" class="upload-mask" @click.stop="removeImage">
-              <el-icon color="white">
-                <Delete />
-              </el-icon>
+    <Teleport to="body">
+      <div v-if="showModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <div class="bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
+          <h2 class="text-xl font-bold mb-4">创建新歌单</h2>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-sm text-gray-400 mb-2">封面</label>
+              <div @click="fileInput?.click()"
+                class="relative w-32 h-32 bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-blue-500">
+                <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover">
+                <div v-else class="flex items-center justify-center h-full text-gray-500 text-2xl">+</div>
+                <input type="file" ref="fileInput" hidden @change="handleFileChange" accept="image/*">
+              </div>
             </div>
-          </el-upload>
-        </el-form-item>
 
-        <el-form-item label="歌单名称" prop="name">
-          <el-input v-model="newPlaylist.name" placeholder="请输入歌单名称" maxlength="20" show-word-limit />
-        </el-form-item>
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">名称</label>
+              <input v-model="form.name" type="text"
+                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none">
+            </div>
 
-        <el-form-item label="描述" prop="description">
-          <el-input v-model="newPlaylist.description" type="textarea" rows="3" placeholder="介绍一下这个歌单吧..." />
-        </el-form-item>
-      </el-form>
+            <div>
+              <label class="block text-sm text-gray-400 mb-1">描述</label>
+              <textarea v-model="form.description" rows="3"
+                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none resize-none"></textarea>
+            </div>
+          </div>
 
-      <template #footer>
-        <div class="flex justify-end gap-3 mt-4">
-          <el-button @click="closeModal">取消</el-button>
-          <el-button type="primary" :loading="isSubmitting" @click="createPlaylist(formRef)">
-            立即创建
-          </el-button>
+          <div class="flex justify-end space-x-3 mt-8">
+            <button @click="closeModal" class="px-6 py-2 text-gray-400 hover:text-white">取消</button>
+            <button @click="submitForm" :disabled="isSubmitting || !form.name"
+              class="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50">
+              {{ isSubmitting ? '上传中...' : '立即创建' }}
+            </button>
+          </div>
         </div>
-      </template>
-    </el-dialog>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-import { Plus, Delete } from '@element-plus/icons-vue'
-import type { FormInstance, FormRules, UploadFile } from 'element-plus'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { playlistApi } from '../../api/playlistApi'
+import { ref, reactive, onMounted, onUnmounted } from 'vue'
+import { playlistApi } from '../../axios/playlistApi'
 import { useUserStore } from '../stores/user'
-import { storeToRefs } from 'pinia'
-import { IPlaylist } from '../../type'
-import { now } from '@vueuse/core'
-
-
 
 const userStore = useUserStore()
-const playlists = ref<IPlaylist[]>([])
-const { user } = storeToRefs(userStore)
-const formRef = ref<FormInstance>()
-const showCreateModal = ref(false)
+const playlists = ref<any[]>([])
+const showModal = ref(false)
 const isSubmitting = ref(false)
 const previewUrl = ref('')
 const selectedFile = ref<File | null>(null)
+const fileInput = ref<HTMLInputElement | null>(null)
 
-const newPlaylist = reactive({
-  name: '',
-  description: ''
-})
+const form = reactive({ name: '', description: '' })
 
-const rules = reactive<FormRules>({
-  name: [{ required: true, message: '请输入歌单名称', trigger: 'blur' }]
-})
-
-const handleFileChange = (uploadFile: UploadFile) => {
-  if (uploadFile.raw) {
-    selectedFile.value = uploadFile.raw
-    previewUrl.value = URL.createObjectURL(uploadFile.raw)
+const handleFileChange = (e: Event) => {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) {
+    selectedFile.value = file
+    if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+    previewUrl.value = URL.createObjectURL(file)
   }
-}
-
-const removeImage = () => {
-  selectedFile.value = null
-  previewUrl.value = ''
 }
 
 const closeModal = () => {
-  showCreateModal.value = false
-  removeImage()
-  if (formRef.value) formRef.value.resetFields()
+  showModal.value = false
+  form.name = ''; form.description = ''
+  selectedFile.value = null
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+  previewUrl.value = ''
 }
 
-const createPlaylist = async (formEl: FormInstance | undefined) => {
-  if (!formEl) return
+const submitForm = async () => {
+  if (!form.name || isSubmitting.value) return
+  isSubmitting.value = true
 
-  await formEl.validate(async (valid) => {
-    if (!valid) return
+  try {
+    const formData = new FormData()
+    formData.append('name', form.name)
+    formData.append('description', form.description)
+    formData.append('creator_id', String(userStore.user?.user_id))
+    if (selectedFile.value) formData.append('cover_image', selectedFile.value)
 
-    isSubmitting.value = true
-    try {
-      const formData = new FormData()
-      formData.append('name', newPlaylist.name)
-      formData.append('description', newPlaylist.description)
-      formData.append('creator_id', String(user.value?.user_id))
-      formData.append('created_date', now.toString())
-      if (selectedFile.value) formData.append('cover_image', selectedFile.value)
-
-      const res = await playlistApi.createPlaylist(formData)
-      if (!res.success) {
-        ElMessage.error("歌单创建失败")
-        return
-      }
-      ElMessage.success('歌单创建成功')
+    const res = await playlistApi.createPlaylist(formData)
+    if (res.success) {
+      alert('创建成功')
       closeModal()
-      await loadPlaylists()
-    } catch (error: any) {
-      ElMessage.error(error.response?.data?.error || '创建失败')
-    } finally {
-      isSubmitting.value = false
+      loadPlaylists()
     }
-  })
+  } catch (error) {
+    console.log(error)
+    alert('创建失败')
+  } finally {
+    isSubmitting.value = false
+  }
 }
 
 const loadPlaylists = async () => {
-  if (user.value) {
-    const res = await playlistApi.getMyPlaylists(user.value?.user_id)
-    if (!res.success) {
-      ElMessage.error("获取歌单失败")
-      return
-    }
-    playlists.value = res.playlists || []
+  if (userStore.user) {
+    const res = await playlistApi.getMyPlaylists(userStore.user.user_id)
+    if (res.success) playlists.value = res.playlists || []
   }
-
 }
 
 onMounted(loadPlaylists)
+onUnmounted(() => {
+  if (previewUrl.value) URL.revokeObjectURL(previewUrl.value)
+})
 </script>
