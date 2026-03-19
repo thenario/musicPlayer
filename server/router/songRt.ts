@@ -6,10 +6,10 @@ import * as songCtrl from "../ctrl/songCtrl.js";
 
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
-    if (file.memetype.startWith("/image")) {
-      cb(null, "/static/song_covers");
-    } else if (file.mimeType.startWith("/audio")) {
-      cb(null, "/static/songs");
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, "static/song_covers");
+    } else if (file.mimetype.startsWith("audio/")) {
+      cb(null, "static/songs");
     } else {
       cb(new Error("不支持此种文件类型"), false);
     }

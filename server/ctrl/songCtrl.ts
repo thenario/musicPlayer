@@ -60,15 +60,16 @@ export const getSongs = async (req: Request, res: Response) => {
   }
 };
 
+import fs from "fs"; // 记得引入 fs
+
 export const uploadSong = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
   const { added_date, title, artist, album, uploader_id, uploader_name } =
     req.body;
 
   if (
-    !files ||
-    !files["coverfile"] ||
-    !files["audiofile"] ||
+    !files?.["coverfile"] ||
+    !files?.["audiofile"] ||
     !uploader_id ||
     !uploader_name
   ) {
@@ -77,10 +78,10 @@ export const uploadSong = async (req: Request, res: Response) => {
       .json({ message: "请上传完整信息(包含封面与音频文件)", data: null });
   }
 
-  try {
-    const audioFile = files["audiofile"][0];
-    const coverFile = files["coverfile"][0];
+  const audioFile = files["audiofile"][0];
+  const coverFile = files["coverfile"][0];
 
+  try {
     const metadata = await mm.parseFile(audioFile!.path);
     const duration = Math.round(metadata.format.duration || 0);
     const bitrate = Math.round((metadata.format.bitrate || 0) / 1000);
@@ -88,6 +89,11 @@ export const uploadSong = async (req: Request, res: Response) => {
     const song_cover_url = `${BASE_URL}/song_covers/${coverFile!.filename}`;
     const song_url = `${BASE_URL}/songs/${audioFile!.filename}`;
     const file_format = path.extname(audioFile!.filename).replace(".", "");
+
+    const dateToInsert = new Date(added_date || Date.now())
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
 
     const sql = ` 
       INSERT INTO songs 
@@ -106,7 +112,7 @@ export const uploadSong = async (req: Request, res: Response) => {
       bitrate,
       song_cover_url,
       song_url,
-      added_date || new Date(),
+      dateToInsert, // 使用处理后的时间
       file_format,
     ];
 
@@ -119,8 +125,17 @@ export const uploadSong = async (req: Request, res: Response) => {
     });
   } catch (error) {
     console.error("Upload Error:", error);
+
+    [audioFile, coverFile].forEach((file) => {
+      if (file && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+        console.log(`已清理冗余文件: ${file.path}`);
+      }
+    });
+
     return res.status(500).json({
-      message: "提交出错，请稍后重试",
+      success: false,
+      message: "提交出错，数据库写入失败",
       data: null,
     });
   }
