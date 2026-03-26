@@ -7,14 +7,18 @@ const playlistRt = Router();
 
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
-    if (!file.mimetype.startsWith("/image"))
-      cb(new Error("不支持此封面"), false);
-    else {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      const playlist_cover_name =
-        file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname);
-      cb(null, playlist_cover_name);
+    if (file.mimetype.startsWith("image/")) {
+      cb(null, "static/playlist_covers");
+    } else {
+      cb(new Error("不支持此种文件类型"), false);
     }
+  },
+  filename: (req: any, file: any, cb: any) => {
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+    cb(
+      null,
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
+    );
   },
 });
 
@@ -42,9 +46,11 @@ playlistRt.delete("/:id", authMiddleWare, playlistCtrl.deletePlaylist);
 
 playlistRt.post("/:id/likes", authMiddleWare, playlistCtrl.likePlaylist);
 
-playlistRt.get("/playlists", authMiddleWare, playlistCtrl.getMyPlaylists);
+playlistRt.delete("/:id/unlikes", authMiddleWare, playlistCtrl.unlikePlaylist);
 
-playlistRt.get("/playlists/:id", authMiddleWare, playlistCtrl.getPlaylistById);
+playlistRt.get("/", authMiddleWare, playlistCtrl.getMyPlaylists);
+
+playlistRt.get("/:id", authMiddleWare, playlistCtrl.getPlaylistById);
 
 playlistRt.post(
   "/:playlist_id/songs/:song_id",

@@ -1,8 +1,11 @@
 <template>
+  <!-- 底部播放栏主体 -->
   <div v-if="playerStore.currentSong"
     class="w-full shrink-0 h-24 bg-gray-900/90 backdrop-blur-lg border-t border-white/5 px-6 flex items-center justify-between z-50 select-none">
 
+    <!-- 左侧：歌曲信息 -->
     <div class="w-[30%] flex items-center gap-4 min-w-0">
+      <!-- 🚩 点击封面触发展开详情页 -->
       <div class="relative group cursor-pointer shrink-0" @click="playerStore.toggleSongDetail">
         <div
           class="w-16 h-16 rounded-lg shadow-2xl overflow-hidden transition-transform group-hover:scale-105 bg-gray-800">
@@ -14,11 +17,12 @@
             </svg>
           </div>
         </div>
+        <!-- 向上箭头的悬停效果 -->
         <div
           class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-lg text-white">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-          </svg>
+          <el-icon :size="20">
+            <ArrowUpBold />
+          </el-icon>
         </div>
       </div>
 
@@ -28,6 +32,7 @@
       </div>
     </div>
 
+    <!-- 中间：播放控制 -->
     <div class="w-[40%] flex flex-col items-center gap-2">
       <div class="flex items-center gap-6">
         <button @click="togglePlayMode" class="ctrl-btn" :title="playModeTitle">
@@ -87,13 +92,13 @@
       </div>
     </div>
 
+    <!-- 右侧：音量控制 -->
     <div class="w-[30%] flex items-center justify-end gap-4">
       <div class="flex items-center w-32 gap-2 group">
         <button @click="toggleMute" class="text-gray-400 hover:text-white transition-colors">
           <svg v-if="playerStore.volume === 0" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
-              stroke-dasharray="5" />
+              d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
           <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -105,28 +110,28 @@
           :style="{ '--progress': volumeValue + '%' }" />
       </div>
     </div>
+
+    <SongDetail />
   </div>
 </template>
 
 <script setup lang="ts">
-/* 原有 Logic 保持不变，只需删掉 Element Plus 的 Icon 导入 */
 import { ref, computed, watch } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { useMagicKeys, useActiveElement } from '@vueuse/core'
+import { ArrowUpBold } from '@element-plus/icons-vue'
+import SongDetail from './songDetail.vue'
 
 const playerStore = usePlayerStore()
 const API_BASE_URL = 'http://127.0.0.1:3000'
 
 const isDragging = ref(false)
 const sliderValue = ref(0)
-
 watch(() => playerStore.currentTime, (val) => {
   if (!isDragging.value) sliderValue.value = val || 0
 })
-
 const currentTimeDisplay = computed(() => sliderValue.value)
 const safeDuration = computed(() => Number(playerStore.duration) || 0)
-
 const handleSeekInput = () => { isDragging.value = true }
 const handleSeekChange = (e: any) => {
   const val = Number(e.target.value)
@@ -137,25 +142,14 @@ const handleSeekChange = (e: any) => {
 const volumeValue = ref(playerStore.volume)
 watch(() => playerStore.volume, (val) => { volumeValue.value = val })
 
-const { space } = useMagicKeys()
-const activeElement = useActiveElement()
-watch(space, (v) => {
-  const isTyping = ['INPUT', 'TEXTAREA'].includes(activeElement.value?.tagName || '')
-  if (v && !isTyping) togglePlay()
-})
-
 const togglePlay = () => playerStore.togglePlay()
 const togglePlayMode = () => {
   const modes = ['repeat_all', 'repeat_one', 'shuffle']
   const currentIdx = modes.indexOf(playerStore.playMode === 'sequential' ? 'repeat_all' : playerStore.playMode)
   playerStore.setPlayMode(modes[(currentIdx + 1) % modes.length])
 }
-
 const playModeTitle = computed(() => ({
-  repeat_all: '列表循环',
-  sequential: '顺序播放',
-  repeat_one: '单曲循环',
-  shuffle: '随机播放'
+  repeat_all: '列表循环', sequential: '顺序播放', repeat_one: '单曲循环', shuffle: '随机播放'
 }[playerStore.playMode] || '未知'))
 
 const currentSongCover = computed(() => {
@@ -179,6 +173,13 @@ const toggleMute = () => {
     playerStore.setVolume(prevVol.value)
   }
 }
+
+const { space } = useMagicKeys()
+const activeElement = useActiveElement()
+watch(space, (v) => {
+  const isTyping = ['INPUT', 'TEXTAREA'].includes(activeElement.value?.tagName || '')
+  if (v && !isTyping) togglePlay()
+})
 </script>
 
 <style scoped>
@@ -209,14 +210,5 @@ const toggleMute = () => {
 
 .volume-range::-webkit-slider-thumb {
   @apply appearance-none w-2.5 h-2.5 bg-white rounded-full;
-}
-
-/* 兼容 Firefox */
-.custom-range::-moz-range-thumb {
-  @apply border-none w-3 h-3 bg-white rounded-full opacity-0;
-}
-
-.group:hover .custom-range::-moz-range-thumb {
-  @apply opacity-100;
 }
 </style>

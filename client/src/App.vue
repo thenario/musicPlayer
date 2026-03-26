@@ -7,8 +7,6 @@
 
     <PlayerBar />
 
-    <!-- <SongDetail /> -->
-
     <QueueDrawer />
 
     <audio ref="audioElement" preload="auto" />
@@ -21,7 +19,6 @@ import { usePlayerStore } from './stores/player'
 import NavBar from './components/NavBar.vue'
 import PlayerBar from './components/PlayerBar.vue'
 import QueueDrawer from './components/QueueDrawer.vue'
-import SongDetail from './components/songDetail.vue'
 
 const audioElement = ref(null)
 const playerStore = usePlayerStore()

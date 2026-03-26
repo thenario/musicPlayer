@@ -16,55 +16,66 @@ SELECT
         'current_progress', ps.current_progress,
         'playmode', ps.playmode
     ) AS queue_state,
-
-    JSON_OBJECT(
-        'queue_id', q.queue_id,
-        'queue_name', q.queue_name,
-        'creator_id', q.creator_id,
-        'song_count', q.song_count,
-        'is_current', q.is_current,
-        'created_date', q.created_date,
-        'updated_date', q.updated_date,
-        'queue_items', IF(COUNT(qi.queue_item_id) = 0, JSON_ARRAY(), 
-            JSON_ARRAYAGG(
-                JSON_OBJECT(
-                    'queue_item_id', qi.queue_item_id,
-                    'queue_item_position', qi.queue_item_position,
-                    'queue_id', qi.queue_id,
-                    'added_date', qi.added_date,
-                    'song', JSON_OBJECT(
-                        'song_id', s.song_id,
-                        'song_title', s.song_title,
-                        'song_cover_url', s.song_cover_url,
-                        'song_url', s.song_url,
-                        'artist', s.artist
+    IF(q.queue_id IS NULL, NULL, 
+        JSON_OBJECT(
+            'queue_id', q.queue_id,
+            'queue_name', q.queue_name,
+            'creator_id', q.creator_id,
+            'song_count', q.song_count,
+            'is_current', q.is_current,
+            'created_date', q.created_date,
+            'updated_date', q.updated_date,
+            'queue_items', IF(COUNT(qi.queue_item_id) = 0, JSON_ARRAY(), 
+                JSON_ARRAYAGG(
+                    JSON_OBJECT(
+                        'queue_item_id', qi.queue_item_id,
+                        'queue_item_position', qi.queue_item_position,
+                        'queue_id', qi.queue_id,
+                        'added_date', qi.added_date,
+                        'song', JSON_OBJECT(
+                            'song_id', s.song_id,
+                            'song_title', s.song_title,
+                            'song_cover_url', s.song_cover_url,
+                            'song_url', s.song_url,
+                            'artist', s.artist
+                        )
                     )
                 )
             )
         )
     ) AS queue
-
 FROM play_state ps
-LEFT JOIN queues q ON ps.user_id = q.creator_id AND q.is_current = 1
+LEFT JOIN queues q ON ps.user_id = q.creator_id AND ps.current_queue_id = q.queue_id
 LEFT JOIN queue_items qi ON q.queue_id = qi.queue_id
 LEFT JOIN songs s ON qi.song_id = s.song_id
 WHERE ps.user_id = ?
 GROUP BY ps.user_id, q.queue_id, ps.current_queue_id;
     `;
+
     const [rows]: [any[], any] = await db.query(sql, user_id);
 
     if (!rows || rows.length === 0) {
       return res
-        .status(404)
-        .json({ message: "未找到当前队列状态", data: null });
+        .status(200)
+        .json({ success: true, message: "当前无队列", data: null });
     }
 
     return res.status(200).json({
+      success: true,
       message: "获取成功",
-      data: { queue: rows[0].queue, queue_state: rows[0].queue_state },
+      data: {
+        queue:
+          typeof rows[0].queue === "string"
+            ? JSON.parse(rows[0].queue)
+            : rows[0].queue,
+        queue_state:
+          typeof rows[0].queue_state === "string"
+            ? JSON.parse(rows[0].queue_state)
+            : rows[0].queue_state,
+      },
     });
   } catch (error) {
-    console.error(error);
+    console.error("SQL Error:", error);
     return res.status(500).json({ message: "获取失败", data: null });
   }
 };
@@ -76,7 +87,7 @@ export const getMyQueues = async (req: any, res: Response) => {
 
   try {
     let sql = `
-  SELECT 
+SELECT 
     q.queue_id,
     q.queue_name,
     q.creator_id,
@@ -84,38 +95,45 @@ export const getMyQueues = async (req: any, res: Response) => {
     q.is_current,
     q.created_date,
     q.updated_date,
-    IF(COUNT(qi.queue_item_id) = 0, JSON_ARRAY(), 
+    IF(COUNT(ordered_items.queue_item_id) = 0, JSON_ARRAY(), 
         JSON_ARRAYAGG(
             JSON_OBJECT(
-                'queue_item_id', qi.queue_item_id,
-                'queue_item_poition', queue_item_position,
-                'queue_id', qi.queue_id,
-                'added_date', qi.added_date,
+                'queue_item_id', ordered_items.queue_item_id,
+                'queue_item_position', ordered_items.queue_item_position,
+                'queue_id', ordered_items.queue_id,
+                'added_date', ordered_items.added_date,
                 'song', JSON_OBJECT(
-                    'song_id', s.song_id,
-                    'song_title', s.song_title,
-                    'song_cover_url',s.song_cover_url,
-                    'song_url', s.song_url,
-                    'artist', s.artist
+                    'song_id', ordered_items.song_id,
+                    'song_title', ordered_items.song_title,
+                    'song_cover_url', ordered_items.song_cover_url,
+                    'song_url', ordered_items.song_url,
+                    'artist', ordered_items.artist
                 )
             )
         )
     ) AS queue_items
 FROM queues q
-LEFT JOIN queue_items qi ON q.queue_id = qi.queue_id
-LEFT JOIN songs s ON qi.song_id = s.song_id
+LEFT JOIN (
+    SELECT qi.*, s.song_title, s.song_cover_url, s.song_url, s.artist 
+    FROM queue_items qi
+    LEFT JOIN songs s ON qi.song_id = s.song_id
+    ORDER BY qi.queue_item_position ASC
+) AS ordered_items ON q.queue_id = ordered_items.queue_id
 WHERE q.creator_id = ?
-GROUP BY q.queue_id;
-  `;
+GROUP BY q.queue_id
+ORDER BY q.updated_date DESC;
+    `;
     const [rows]: any = await db.query(sql, user_id);
+
     return res.status(200).json({
+      success: true,
       message: "获取成功",
       data: {
         queues: rows || [],
       },
     });
   } catch (error) {
-    console.error(error);
+    console.error("getMyQueues Error:", error);
     return res.status(500).json({ message: "获取失败", data: null });
   }
 };
@@ -182,60 +200,51 @@ export const deletQueue = async (req: Request, res: Response) => {
   const { queue_id } = req.params;
   const user_id = (req as any).user?.user_id;
 
-  if (!queue_id)
-    return res.status(400).json({ message: "缺少队列ID", data: null });
-  if (!user_id)
-    return res.status(401).json({ message: "用户未登录", data: null });
-
   const connection = await db.getConnection();
-
   try {
     await connection.beginTransaction();
 
-    const [deleteRes]: any = await connection.execute(
+    const [state]: any = await connection.execute(
+      "SELECT current_queue_id FROM play_state WHERE user_id = ?",
+      [user_id],
+    );
+    const isActive =
+      state.length > 0 &&
+      String(state[0].current_queue_id) === String(queue_id);
+
+    await connection.execute("DELETE FROM queue_items WHERE queue_id = ?", [
+      queue_id as string,
+    ]);
+    const [delRes]: any = await connection.execute(
       "DELETE FROM queues WHERE queue_id = ? AND creator_id = ?",
       [queue_id, user_id],
     );
 
-    if (deleteRes.affectedRows === 0) {
-      await connection.rollback();
-      return res
-        .status(403)
-        .json({ message: "队列不存在或无权删除", data: null });
-    }
+    if (delRes.affectedRows === 0) throw new Error("删除失败");
 
-    const [stateRows]: any = await connection.execute(
-      "SELECT current_queue_id FROM play_state WHERE user_id = ?",
-      [user_id],
-    );
-
-    if (stateRows.length > 0 && stateRows[0].current_queue_id == queue_id) {
-      const [latestQueues]: any = await connection.execute(
+    let newQueueId = null;
+    if (isActive) {
+      const [latest]: any = await connection.execute(
         "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY updated_date DESC LIMIT 1",
         [user_id],
       );
-
-      const nextQueueId =
-        latestQueues.length > 0 ? latestQueues[0].queue_id : null;
+      newQueueId = latest.length > 0 ? latest[0].queue_id : null;
 
       await connection.execute(
-        `UPDATE play_state 
-         SET current_queue_id = ?, current_song_id = NULL, current_progress = 0
-         WHERE user_id = ?`,
-        [nextQueueId, user_id],
+        "UPDATE play_state SET current_queue_id = ?, current_song_id = NULL, current_position = 0, current_progress = 0 WHERE user_id = ?",
+        [newQueueId, user_id],
       );
     }
 
     await connection.commit();
     return res.status(200).json({
       success: true,
-      message: "删除成功，播放状态已自动同步",
-      data: null,
+      data: { newQueueId, wasActive: isActive },
+      message: "删除成功",
     });
-  } catch (error) {
+  } catch (error: any) {
     await connection.rollback();
-    console.error("Delete and Sync Error:", error);
-    return res.status(500).json({ message: "删除操作失败", data: null });
+    return res.status(500).json({ success: false, message: error.message });
   } finally {
     connection.release();
   }
@@ -285,11 +294,18 @@ export const createQueueFromPlaylist = async (req: Request, res: Response) => {
     await connection.execute(
       `
       INSERT INTO queue_items (queue_id, song_id, queue_item_position)
-      SELECT ?, song_id, queue_item_position 
+      SELECT ?, song_id, song_playlist_position 
       FROM songs_playlists_relation 
       WHERE playlist_id = ?
     `,
       [newQueueId, playlist_id],
+    );
+
+    await connection.execute(
+      `UPDATE queues 
+   SET song_count = (SELECT COUNT(*) FROM queue_items WHERE queue_id = ?) 
+   WHERE queue_id = ?`,
+      [newQueueId, newQueueId],
     );
 
     await connection.execute(
@@ -315,37 +331,59 @@ export const createQueueFromPlaylist = async (req: Request, res: Response) => {
 };
 
 export const addSongToQueue = async (req: Request, res: Response) => {
-  let { queue_id } = req.params;
+  let { queue_id: paramQueueId } = req.params;
   const { song_id, mode } = req.body;
   const user_id = (req as any).user?.user_id;
 
-  if (!song_id)
-    return res.status(400).json({ message: "缺少歌曲ID", data: null });
-  if (!user_id)
-    return res.status(401).json({ message: "用户未登录", data: null });
+  if (song_id === undefined || song_id === null) {
+    return res.status(400).json({ success: false, message: "缺少歌曲ID" });
+  }
+  if (!user_id) {
+    return res.status(401).json({ success: false, message: "用户未登录" });
+  }
 
   const connection = await db.getConnection();
 
   try {
     await connection.beginTransaction();
-    let finalQueueId: number | string = queue_id as string | number;
-    if (finalQueueId === 0 || !finalQueueId || finalQueueId === "undefined") {
-      const [existingQueues]: any = await connection.execute(
+
+    let finalQueueId: number;
+    let isNewQueue = false;
+    const qId = Number(paramQueueId);
+
+    if (!qId || qId === 0 || isNaN(qId)) {
+      const [existing]: any = await connection.execute(
         "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY created_date DESC LIMIT 1",
         [user_id],
       );
 
-      if (!existingQueues || existingQueues.length === 0) {
+      if (existing.length > 0) {
+        finalQueueId = existing[0].queue_id;
+      } else {
         const [countRows]: any = await connection.execute(
           "SELECT COUNT(*) as total FROM queues WHERE creator_id = ?",
           [user_id],
         );
 
         if (countRows[0].total >= 5) {
-          await connection.rollback();
-          return res
-            .status(400)
-            .json({ message: "最多只能创建 5 个队列", data: null });
+          const [oldest]: any = await connection.execute(
+            "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY created_date ASC LIMIT 1",
+            [user_id],
+          );
+
+          if (oldest.length > 0) {
+            const oldestId = oldest[0].queue_id;
+            await connection.execute(
+              "DELETE FROM queue_items WHERE queue_id = ?",
+              [oldestId],
+            );
+            await connection.execute("DELETE FROM queues WHERE queue_id = ?", [
+              oldestId,
+            ]);
+            console.log(
+              `[自动清理] 用户 ${user_id} 队列已满，已删除最旧队列: ${oldestId}`,
+            );
+          }
         }
 
         const [newQueue]: any = await connection.execute(
@@ -353,9 +391,10 @@ export const addSongToQueue = async (req: Request, res: Response) => {
           ["默认列表", user_id],
         );
         finalQueueId = newQueue.insertId;
-      } else {
-        finalQueueId = existingQueues[0].queue_id;
+        isNewQueue = true;
       }
+    } else {
+      finalQueueId = qId;
     }
 
     const [stateRows]: any = await connection.execute(
@@ -363,11 +402,10 @@ export const addSongToQueue = async (req: Request, res: Response) => {
       [user_id],
     );
 
-    const currentPos =
-      stateRows && stateRows.length > 0
-        ? stateRows[0].current_position || 0
-        : 0;
-    const insertPos = currentPos + 1;
+    const hasState = stateRows && stateRows.length > 0;
+    const currentPos = hasState ? stateRows[0].current_position : 0;
+
+    const insertPos = mode ? currentPos + 1 : currentPos;
 
     const [delRes]: any = await connection.execute(
       "DELETE FROM queue_items WHERE queue_id = ? AND song_id = ?",
@@ -381,14 +419,19 @@ export const addSongToQueue = async (req: Request, res: Response) => {
     );
 
     await connection.execute(
-      `INSERT INTO queue_items (queue_id, song_id, queue_item_position, added_date) VALUES (?, ?, ?, NOW())`,
+      "INSERT INTO queue_items (queue_id, song_id, queue_item_position, added_date) VALUES (?, ?, ?, NOW())",
       [finalQueueId, song_id, insertPos],
     );
 
-    if (mode === "now" || stateRows.length === 0) {
+    const [Res]: any = await connection.execute(
+      "SELECT queue_item_id FROM queue_items WHERE queue_id = ? AND song_id = ?",
+      [finalQueueId, song_id],
+    );
+    const final_queue_item_id = Res[0].queue_item_id;
+
+    if (!mode || !hasState || isNewQueue) {
       await connection.execute(
-        `
-        INSERT INTO play_state 
+        `INSERT INTO play_state 
           (user_id, current_queue_id, current_song_id, current_position, current_progress, updated_date)
         VALUES (?, ?, ?, ?, 0, NOW())
         ON DUPLICATE KEY UPDATE
@@ -396,8 +439,7 @@ export const addSongToQueue = async (req: Request, res: Response) => {
           current_song_id = VALUES(current_song_id),
           current_position = VALUES(current_position),
           current_progress = 0,
-          updated_date = NOW()
-      `,
+          updated_date = NOW()`,
         [user_id, finalQueueId, song_id, insertPos],
       );
     }
@@ -412,13 +454,17 @@ export const addSongToQueue = async (req: Request, res: Response) => {
     await connection.commit();
     return res.status(200).json({
       success: true,
-      message: mode === "now" ? "正在播放" : "已添加到下一首",
-      data: { queue_id: finalQueueId },
+      message: mode ? "已添加到下一首" : "正在播放",
+      data: {
+        queue_id: finalQueueId,
+        queue_item_position: insertPos,
+        queue_item_id: final_queue_item_id,
+      },
     });
   } catch (error) {
     await connection.rollback();
-    console.error(error);
-    return res.status(500).json({ message: "操作失败", data: null });
+    console.error("AddSongToQueue Error:", error);
+    return res.status(500).json({ success: false, message: "服务器内部错误" });
   } finally {
     connection.release();
   }
@@ -520,20 +566,25 @@ export const updateCurrentQueueState = async (req: Request, res: Response) => {
   if (!stateData)
     return res.status(400).json({ message: "缺少播放状态数据", data: null });
 
-  const { queue_id, song_id, queue_item_position, progress } = stateData;
-  if (!queue_id)
+  const {
+    current_queue_id,
+    current_song_id,
+    current_position,
+    current_progress,
+  } = stateData;
+  if (!current_queue_id)
     return res.status(400).json({ message: "缺少队列ID", data: null });
 
   const connection = await db.getConnection();
 
   try {
     await connection.beginTransaction();
-    let finalPosition = queue_item_position;
+    let finalPosition = current_position;
 
-    if (finalPosition === undefined && song_id) {
+    if (finalPosition === undefined && current_song_id) {
       const [posRows]: any = await connection.execute(
         "SELECT queue_item_position FROM queue_items WHERE queue_id = ? AND song_id = ?",
-        [queue_id, song_id],
+        [current_queue_id, current_song_id],
       );
       if (posRows && posRows.length > 0) {
         finalPosition = posRows[0].queue_item_position;
@@ -553,7 +604,13 @@ export const updateCurrentQueueState = async (req: Request, res: Response) => {
         current_progress = VALUES(current_progress),
         updated_date = NOW()
     `,
-      [user_id, queue_id, song_id, finalPosition, progress || 0],
+      [
+        user_id,
+        current_queue_id,
+        current_song_id,
+        finalPosition,
+        current_progress || 0,
+      ],
     );
 
     await connection.commit();
@@ -759,27 +816,15 @@ export const clearQueue = async (req: Request, res: Response) => {
   const { queue_id } = req.params;
   const user_id = (req as any).user?.user_id;
 
-  if (!queue_id)
-    return res.status(400).json({ message: "缺少队列ID", data: null });
-  if (!user_id)
-    return res.status(401).json({ message: "用户未登录", data: null });
-
   const connection = await db.getConnection();
-
   try {
     await connection.beginTransaction();
 
-    const [queueRows]: any = await connection.execute(
+    const [q]: any = await connection.execute(
       "SELECT queue_id FROM queues WHERE queue_id = ? AND creator_id = ?",
       [queue_id, user_id],
     );
-
-    if (!queueRows || queueRows.length === 0) {
-      await connection.rollback();
-      return res
-        .status(403)
-        .json({ message: "队列不存在或无权操作", data: null });
-    }
+    if (q.length === 0) throw new Error("无权操作");
 
     await connection.execute("DELETE FROM queue_items WHERE queue_id = ?", [
       queue_id as string,
@@ -791,26 +836,17 @@ export const clearQueue = async (req: Request, res: Response) => {
     );
 
     await connection.execute(
-      `
-      UPDATE play_state 
-      SET current_song_id = NULL, 
-          current_position = 0, 
-          current_progress = 0 
-      WHERE user_id = ? AND current_queue_id = ?
-    `,
+      `UPDATE play_state 
+       SET current_song_id = NULL, current_position = 0, current_progress = 0 
+       WHERE user_id = ? AND current_queue_id = ?`,
       [user_id, queue_id],
     );
 
     await connection.commit();
-    return res.status(200).json({
-      success: true,
-      message: "队列已清空",
-      data: null,
-    });
-  } catch (error) {
+    return res.status(200).json({ success: true, message: "队列已清空" });
+  } catch (error: any) {
     await connection.rollback();
-    console.error("Clear Queue Error:", error);
-    return res.status(500).json({ message: "清空失败", data: null });
+    return res.status(500).json({ success: false, message: error.message });
   } finally {
     connection.release();
   }

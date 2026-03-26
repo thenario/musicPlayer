@@ -99,13 +99,14 @@ const deletQueue = async (queueId: number) => {
   return {
     success: true,
     message: res.message,
+    data: res.data,
   }
 }
 
-const addSongToQueue = async (song_id: number, queue_id: number, mode: string) => {
-  const res = await request.post<any, IAxiosRes<any>>(`/queues/${queue_id}/songs`, {
+const addSongToQueue = async (song_id: number, queue_id: number, mode: boolean) => {
+  const res = await request.post<any, IAxiosRes<any>>(`/queues/${queue_id || 0}/songs`, {
     song_id,
-    mode,
+    mode, //true下一首播放，false直接播放
   })
 
   if (!res.success) {
@@ -116,13 +117,9 @@ const addSongToQueue = async (song_id: number, queue_id: number, mode: string) =
   }
 
   return {
-    success: true,
+    success: res.success,
     message: res.message,
-    queue_id: res.data.queue_id,
-    song_id: res.data.song_id,
-    song_position: res.data.song_position,
-    action: res.data.action,
-    queue_item: res.data.queue_item,
+    data: res.data,
   }
 }
 
@@ -143,8 +140,8 @@ const removeSongFromQueue = async (queueId: number, itemId: number) => {
 }
 
 const setPlayMode = async (queueId: number, play_mode: string) => {
-  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queueId}`, {
-    playmode: play_mode,
+  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queueId}/play-mode`, {
+    play_mode: play_mode,
   })
 
   if (!res.success) {
@@ -161,7 +158,7 @@ const setPlayMode = async (queueId: number, play_mode: string) => {
 }
 
 const reorderQueue = async (song_ids: number[], queue_id: number) => {
-  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queue_id}/order`, {
+  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queue_id}/reorder`, {
     song_ids,
   })
 
@@ -178,10 +175,10 @@ const reorderQueue = async (song_ids: number[], queue_id: number) => {
   }
 }
 
-const createQueueFromPlaylist = async (playlistId: number) => {
+const createQueueFromPlaylist = async (playlist_id: number) => {
   const res = await request.post<any, IAxiosRes<any>>('/queues', {
     source: 'playlist',
-    playlistId,
+    playlist_id,
   })
 
   if (!res.success) {

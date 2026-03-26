@@ -4,7 +4,7 @@ import { IQueue, IQueueItem, ISong } from '../../type'
 import { queueApi } from '../../axios/queueApi'
 import { ElMessage } from 'element-plus'
 
-const API_BASE_URL = 'http://127.0.0.1:5000'
+const API_BASE_URL = 'http://127.0.0.1:3000'
 
 export const usePlayerStore = defineStore('player', () => {
   const currentSong = ref<ISong | null>(null)
@@ -26,7 +26,7 @@ export const usePlayerStore = defineStore('player', () => {
   const isQueueVisible = ref<boolean>(false)
   const isSongDetailVisible = ref<boolean>(false)
 
-  const SYNC_INTERVAL = 5000
+  const SYNC_INTERVAL = 500000
   let lastSyncTime = 0
 
   const hasNext = computed(() => currentQueue.value.length > 0)
@@ -174,16 +174,25 @@ export const usePlayerStore = defineStore('player', () => {
     if (audioElement.value) audioElement.value.volume = val / 100
   }
 
-  const playSong = async (song: ISong) => {
-    if (currentSong.value?.song_id === song.song_id) {
+  const playSong = async (song: ISong, mode: 'now' | 'next') => {
+    if (mode === 'now' && currentSong.value?.song_id === song.song_id) {
       togglePlay()
       return
     }
-    const res = await addToQueue(song, true)
+
+    const insertNext = mode === 'next'
+
+    const res = await addToQueue(song, insertNext)
+    if (!res.success) {
+      return false
+    }
+
     const newIndex = res.targetIndex
-    if (newIndex !== -1) {
+
+    if (mode === 'now' && newIndex !== -1) {
       playAtIndex(newIndex)
     }
+    return true
   }
 
   const nextSong = (isAuto = false) => {
@@ -223,8 +232,9 @@ export const usePlayerStore = defineStore('player', () => {
     if (mode === 'shuffle') {
       await shuffleQueue()
     }
-    const res = await queueApi.setPlayMode(-1, mode)
-    if (!res.success) ElMessage.error('播放模式更新失败')
+
+    const res = await queueApi.setPlayMode(currentQueueId.value ?? -1, mode)
+    if (!res.success) ElMessage.error(`播放模式更新失败${res.message}`)
   }
 
   const shuffleQueue = async () => {
@@ -248,7 +258,8 @@ export const usePlayerStore = defineStore('player', () => {
     }
 
     if (currentItem) {
-      currentQueue.value = [currentItem, ...others]
+      const cleanOthers = others.filter((item) => item.queue_item_id !== currentItem.queue_item_id)
+      currentQueue.value = [currentItem, ...cleanOthers]
       currentIndex.value = 0
     } else {
       currentQueue.value = others
@@ -275,22 +286,22 @@ export const usePlayerStore = defineStore('player', () => {
 
   const addToQueue = async (song: ISong, insertNext = false) => {
     if (!song || !song.song_id) return { targetIndex: -1, success: false }
-    let success = true
+
     const oldIdx = currentQueue.value.findIndex((item) => item.song.song_id === song.song_id)
     if (oldIdx !== -1) {
-      if (insertNext && oldIdx === currentIndex.value) return { targetIndex: oldIdx, success: true }
       currentQueue.value.splice(oldIdx, 1)
-      if (oldIdx < currentIndex.value) currentIndex.value--
+      if (oldIdx < currentIndex.value) {
+        currentIndex.value--
+      }
     }
 
-    // 2. 计算位置 (保持不变)
-    let targetIndex = insertNext ? currentIndex.value + 1 : currentQueue.value.length
+    let targetIndex = insertNext ? currentIndex.value + 1 : currentIndex.value
+    if (targetIndex < 0) targetIndex = 0
 
-    // 3. 本地插入 (临时 ID)
-    const tempId = `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    const tempId = `temp-${Date.now()}`
     const newItem = {
       queue_item_id: tempId,
-      queue_item_poition: -1,
+      queue_item_position: targetIndex,
       queue_id: currentQueueId.value ?? -1,
       song: song,
       added_date: new Date(),
@@ -298,33 +309,32 @@ export const usePlayerStore = defineStore('player', () => {
 
     currentQueue.value.splice(targetIndex, 0, newItem)
 
-    const res = await queueApi.addSongToQueue(song.song_id, currentQueueId.value ?? -1, targetIndex)
-    if (res.success && res.action === 'added') {
-      const itemToUpdate = currentQueue.value.find((item) => item.queue_item_id === tempId)
-
-      if (itemToUpdate) {
-        if (res.queue_item.queue_item_id) {
-          itemToUpdate.queue_item_id = res.queue_item.queue_item_id
-        }
-
-        if (res.queue_item.song) {
-          itemToUpdate.song = res.queue_item.song
-        }
-
-        if (currentQueueId.value) {
-          const targetQueue = userQueues.value.find((q) => q.queue_id === currentQueueId.value)
-          if (targetQueue) targetQueue.song_count++
-        }
-      }
-    } else if (res.success && res.action === 'jump_to_existing') {
-    } else if (!res.success) {
-      success = false
-      const failIdx = currentQueue.value.findIndex((item) => item.queue_item_id === tempId)
-      if (failIdx !== -1) currentQueue.value.splice(failIdx, 1)
-      ElMessage.error('歌曲插入时出错')
+    if (!insertNext) {
+      currentIndex.value = targetIndex
     }
 
-    return { targetIndex, success }
+    const res = await queueApi.addSongToQueue(song.song_id, currentQueueId.value || 0, insertNext)
+
+    if (res.success) {
+      const itemToUpdate = currentQueue.value.find((item) => item.queue_item_id === tempId)
+      if (itemToUpdate && (res as any).data) {
+        itemToUpdate.queue_item_id = (res as any).data.queue_item_id
+        itemToUpdate.queue_item_position = (res as any).data.queue_item_position
+        itemToUpdate.queue_id = (res as any).data.queue_id
+        currentQueueId.value = (res as any).data.queue_id
+      }
+
+      if (currentQueueId.value) {
+        const targetQueue = userQueues.value.find((q) => q.queue_id === currentQueueId.value)
+        if (targetQueue && oldIdx === -1) targetQueue.song_count++
+      }
+    } else {
+      const failIdx = currentQueue.value.findIndex((item) => item.queue_item_id === tempId)
+      if (failIdx !== -1) currentQueue.value.splice(failIdx, 1)
+      return { targetIndex: -1, success: false }
+    }
+
+    return { targetIndex, success: true }
   }
 
   const removeQueueItem = async (itemId: number | string) => {
@@ -333,7 +343,11 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       const isTempId = typeof itemId === 'string' && itemId.startsWith('temp-')
       if (!isTempId) {
-        const res = await queueApi.removeSongFromQueue(-1, typeof itemId !== 'string' ? itemId : 0)
+        if (!currentQueueId) {
+          ElMessage.error('移除歌曲时出错')
+          return
+        }
+        const res = await queueApi.removeSongFromQueue(currentQueueId.value!, itemId as number)
         if (!res.success) {
           ElMessage.error('移除歌曲时出错')
           return
@@ -379,12 +393,18 @@ export const usePlayerStore = defineStore('player', () => {
         ElMessage.error('获取列表失败')
         return
       }
+      if (res.queue) {
+        res.queue.queue_items.sort((a: any, b: any) => {
+          return a.queue_item_position - b.queue_item_position
+        })
+      }
+
       const queueData = res.queue
       const stateData = res.queue_state
 
       if (queueData && queueData.queue_items) {
         const items = queueData.queue_items
-        // 初始化本地队列
+
         currentQueue.value = [...items]
         currentQueueId.value = queueData.queue_id
 
@@ -400,7 +420,8 @@ export const usePlayerStore = defineStore('player', () => {
               currentSong.value = currentQueue.value[idx].song
 
               if (audioElement.value) {
-                audioElement.value.src = `${API_BASE_URL}/api/songs/${currentSong.value.song_id}/stream`
+                const token = localStorage.getItem('token')
+                audioElement.value.src = `${API_BASE_URL}/api/songs/${currentSong.value.song_id}/stream?token=${token}`
 
                 const savedProgress = stateData.current_progress || 0
 
@@ -425,6 +446,7 @@ export const usePlayerStore = defineStore('player', () => {
             }
           }
         }
+        return { success: true }
       }
     } catch (e) {
       console.error(e)
@@ -439,11 +461,25 @@ export const usePlayerStore = defineStore('player', () => {
       const res = await queueApi.getMyQueues()
       if (!res.success) {
         ElMessage.error('获取用户队列失败')
-        return
+        return { success: false }
       }
-      userQueues.value = res.queues ?? []
+
+      const rawQueues = res.queues ?? []
+
+      rawQueues.forEach((queue: any) => {
+        if (queue.queue_items && Array.isArray(queue.queue_items)) {
+          queue.queue_items.sort((a: any, b: any) => {
+            return a.queue_item_position - b.queue_item_position
+          })
+        }
+      })
+
+      userQueues.value = rawQueues
+
+      return { success: true }
     } catch (e) {
       console.error(e)
+      return { success: false }
     }
   }
 
@@ -486,16 +522,38 @@ export const usePlayerStore = defineStore('player', () => {
 
   const deleteQueue = async (queueId: number) => {
     const res = await queueApi.deletQueue(queueId)
-    if (!res.success) {
-      ElMessage.error('切换队列时出错')
-      return
+    if (res.success) {
+      const { newQueueId, wasActive } = res.data
+
+      if (wasActive) {
+        currentSong.value = null
+        currentQueue.value = []
+        pauseSong()
+
+        if (newQueueId) {
+          await switchQueue(newQueueId)
+        } else {
+          currentQueueId.value = null
+        }
+      }
+      const resF = await fetchUserQueues()
+      if (resF.success) return { success: false }
+      return { success: true }
     }
-    await fetchUserQueues()
-    if (currentQueueId.value === queueId) {
-      currentQueue.value = []
-      currentSong.value = null
-      isPlaying.value = false
-      currentQueueId.value = null
+  }
+
+  const clearQueue = async (queueId: number) => {
+    const res = await queueApi.clearQueue(queueId)
+    if (res.success) {
+      if (currentQueueId.value === queueId) {
+        currentQueue.value = []
+        currentSong.value = null
+        currentIndex.value = -1
+        pauseSong()
+      }
+      const resF = await fetchUserQueues()
+      if (resF.success) return { success: false }
+      return { success: true }
     }
   }
 
@@ -562,6 +620,7 @@ export const usePlayerStore = defineStore('player', () => {
     fetchQueueDetails,
     switchQueue,
     deleteQueue,
+    clearQueue,
     playPlaylist,
     playSongInQueue,
 

@@ -9,12 +9,11 @@ request.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token')
     if (token) {
-      config.headers['Authorization'] = `bearer ${token}`
+      config.headers['Authorization'] = `Bearer ${token}`
     }
     return config
   },
   (error: AxiosError) => {
-    console.log('请求发送失败， catch模块:axios.ts')
     return Promise.reject(error)
   },
 )
