@@ -59,7 +59,7 @@ export interface IPlaylist {
 
 export interface IQueueItem {
   queue_item_id: number | string
-  queue_item_poition: number
+  queue_item_position: number
   queue_id: number
   song: ISong
   added_date: Date
@@ -185,6 +185,7 @@ export interface IAlterQueueTocurrent {
 export interface IDeleteQueue {
   message: string
   success: boolean
+  data?: any
 }
 export interface IClearQueue {
   message: string

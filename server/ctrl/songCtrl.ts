@@ -1,5 +1,6 @@
 import path from "node:path";
 import db from "../db.js";
+import { URL } from "url";
 import * as mm from "music-metadata";
 import type { Request, Response } from "express";
 
@@ -112,7 +113,7 @@ export const uploadSong = async (req: Request, res: Response) => {
       bitrate,
       song_cover_url,
       song_url,
-      dateToInsert, // 使用处理后的时间
+      dateToInsert,
       file_format,
     ];
 
@@ -138,5 +139,71 @@ export const uploadSong = async (req: Request, res: Response) => {
       message: "提交出错，数据库写入失败",
       data: null,
     });
+  }
+};
+
+export const streamSong = async (req: Request, res: Response) => {
+  try {
+    const songId = req.params.id;
+
+    const [rows] = await db.query<any[]>(
+      "SELECT song_url FROM songs WHERE song_id = ?",
+      [songId],
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).send("数据库中未找到该歌曲记录");
+    }
+
+    const dbSongUrl = rows[0].song_url;
+
+    const parsedUrl = new URL(dbSongUrl);
+    const fileName = path.basename(decodeURIComponent(parsedUrl.pathname));
+
+    const filePath = path.join(process.cwd(), "static", "songs", fileName);
+
+    if (!fs.existsSync(filePath)) {
+      console.error("❌ 文件物理路径不存在:", filePath);
+      return res.status(404).send("音频不存在");
+    }
+
+    const stat = fs.statSync(filePath);
+    const fileSize = stat.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0]!, 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize || end >= fileSize) {
+        res
+          .status(416)
+          .set("Content-Range", `bytes */${fileSize}`)
+          .send("Requested Range Not Satisfiable");
+        return;
+      }
+
+      const chunkSize = end - start + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+
+      res.writeHead(206, {
+        "Content-Range": `bytes ${start}-${end}/${fileSize}`,
+        "Accept-Ranges": "bytes",
+        "Content-Length": chunkSize,
+        "Content-Type": "audio/mpeg",
+      });
+      file.pipe(res);
+    } else {
+      res.writeHead(200, {
+        "Content-Length": fileSize,
+        "Content-Type": "audio/mpeg",
+        "Accept-Ranges": "bytes",
+      });
+      fs.createReadStream(filePath).pipe(res);
+    }
+  } catch (error) {
+    console.error("音频流处理崩溃:", error);
+    res.status(500).send("服务器内部错误");
   }
 };

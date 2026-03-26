@@ -11,20 +11,21 @@
         <span class="text-sm text-gray-400 group-hover:text-white">新建歌单</span>
       </div>
 
-      <div v-for="item in playlists" :key="item.playlist_id" class="group cursor-pointer">
+      <router-link v-for="item in playlists" :key="item.playlist_id" :to="`/playlists/${item.playlist_id}`"
+        class="group cursor-pointer block">
         <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden mb-2">
-          <img :src="item.cover_url || '/default-cover.png'"
+          <img :src="item.playlist_cover_url || '/default-cover.png'"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform">
         </div>
-        <p class="font-medium truncate">{{ item.name }}</p>
-      </div>
+        <p class="font-medium truncate text-white">{{ item.playlist_name || item.name }}</p>
+      </router-link>
     </div>
 
     <Teleport to="body">
       <div v-if="showModal"
         class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
         <div class="bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-          <h2 class="text-xl font-bold mb-4">创建新歌单</h2>
+          <h2 class="text-xl text-white font-bold mb-4">创建新歌单</h2>
 
           <div class="space-y-4">
             <div>
@@ -40,13 +41,13 @@
             <div>
               <label class="block text-sm text-gray-400 mb-1">名称</label>
               <input v-model="form.name" type="text"
-                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none">
+                class="w-full bg-gray-900 border text-white border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none">
             </div>
 
             <div>
               <label class="block text-sm text-gray-400 mb-1">描述</label>
               <textarea v-model="form.description" rows="3"
-                class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none resize-none"></textarea>
+                class="w-full bg-gray-900 border text-white border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none resize-none"></textarea>
             </div>
           </div>
 
@@ -67,6 +68,7 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { playlistApi } from '../../axios/playlistApi'
 import { useUserStore } from '../stores/user'
+import { ElMessage } from 'element-plus'
 
 const userStore = useUserStore()
 const playlists = ref<any[]>([])
@@ -108,13 +110,16 @@ const submitForm = async () => {
 
     const res = await playlistApi.createPlaylist(formData)
     if (res.success) {
-      alert('创建成功')
+      ElMessage.success('创建成功')
       closeModal()
       loadPlaylists()
     }
+    else {
+      ElMessage.error("创建失败")
+    }
   } catch (error) {
     console.log(error)
-    alert('创建失败')
+    ElMessage.error("创建失败")
   } finally {
     isSubmitting.value = false
   }
@@ -122,7 +127,7 @@ const submitForm = async () => {
 
 const loadPlaylists = async () => {
   if (userStore.user) {
-    const res = await playlistApi.getMyPlaylists(userStore.user.user_id)
+    const res = await playlistApi.getMyPlaylists()
     if (res.success) playlists.value = res.playlists || []
   }
 }

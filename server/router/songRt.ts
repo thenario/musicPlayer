@@ -3,6 +3,7 @@ const songRt = Router();
 import multer from "multer";
 import path from "node:path";
 import * as songCtrl from "../ctrl/songCtrl.js";
+import { authMiddleWare } from "../utils/auth.js";
 
 const storage = multer.diskStorage({
   destination: (req: any, file: any, cb: any) => {
@@ -46,5 +47,7 @@ songRt.post(
 );
 
 songRt.get("/", songCtrl.getSongs);
+
+songRt.get("/:id/stream", authMiddleWare, songCtrl.streamSong);
 
 export default songRt;

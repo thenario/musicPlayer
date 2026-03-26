@@ -6,23 +6,24 @@
       <header class="h-16 flex items-center justify-between px-4 border-b border-white/5 bg-white/5 shrink-0">
         <el-segmented v-model="activeTab" :options="[
           { label: '当前播放', value: 'queue' },
-          { label: '播放历史', value: 'lists' }
+          { label: '队列列表', value: 'lists' }
         ]" @change="handleTabChange" class="custom-segmented" />
 
         <div class="flex items-center gap-2">
-          <transition name="el-fade-in">
+          <transition name="el-fade-in" mode="out-in">
             <div v-if="activeTab === 'queue'" class="flex items-center gap-3">
               <span class="text-[10px] text-gray-500 tracking-tighter">{{ currentQueue.length }} 首</span>
-              <el-button link type="danger" :icon="Delete" @click="confirmClear" size="small">清空</el-button>
+              <el-button link type="danger" :icon="Delete" @click="confirmClear" size="small"
+                :disabled="currentQueue.length === 0">清空</el-button>
             </div>
-            <el-button v-else-if="previewQueueId" link :icon="ArrowLeft" @click="backToQueueList"
-              size="small">返回</el-button>
+            <div v-else-if="previewQueueId !== -1" class="flex items-center">
+              <el-button link :icon="ArrowLeft" @click="backToQueueList" size="small">返回列表</el-button>
+            </div>
           </transition>
         </div>
       </header>
 
       <main class="flex-1 overflow-y-auto custom-scrollbar">
-
         <div v-show="activeTab === 'queue'" class="p-2">
           <el-empty v-if="currentQueue.length === 0" description="队列空空如也" :image-size="80" />
 
@@ -34,12 +35,15 @@
                   class="group transition-all hover:bg-white/5 cursor-default"
                   :class="{ 'bg-blue-600/10 active-row': item.song?.song_id === currentSong?.song_id }"
                   @dblclick="playFromQueue(index)">
+
                   <td class="w-12 py-3 text-center">
                     <div class="relative flex justify-center items-center h-5">
+                      <!-- 拖拽手柄 -->
                       <el-icon
                         class="drag-handle opacity-0 group-hover:opacity-100 cursor-grab text-gray-500 hover:text-white transition-opacity">
                         <Rank />
                       </el-icon>
+                      <!-- 播放状态动画 -->
                       <div v-if="item.song?.song_id === currentSong?.song_id" class="absolute text-blue-500">
                         <span v-if="isPlaying" class="playing-bar-animation"></span>
                         <el-icon v-else>
@@ -60,9 +64,8 @@
                   </td>
 
                   <td class="pr-4 text-right">
-                    <span class="text-[11px] font-mono text-gray-600 group-hover:hidden">{{
-                      formatDuration(item.song?.duration) }}</span>
-                    <el-button link type="info" :icon="Close" class="hidden group-hover:inline-flex"
+                    <el-button link type="info" :icon="Close"
+                      class="opacity-0 group-hover:opacity-100 transition-opacity"
                       @click="removeFromQueue(item.queue_item_id)" />
                   </td>
                 </tr>
@@ -71,14 +74,67 @@
           </table>
         </div>
 
-        <div v-show="activeTab === 'lists'" class="p-4 h-full">
-          <el-skeleton :loading="previewLoading" animated>
-            <template #template>
-              <div v-for="i in 5" :key="i" class="mb-4 h-12 bg-white/5 rounded-lg" />
-            </template>
-            <template #default>
-            </template>
-          </el-skeleton>
+        <div v-show="activeTab === 'lists'" class="p-2">
+          <div v-if="previewQueueId !== -1">
+            <div class="px-2 py-4 border-b border-white/5 mb-2 flex justify-between items-center">
+              <h3 class="text-blue-400 font-bold">{{ previewData?.queue_name || '队列详情' }}</h3>
+              <span class="text-[10px] text-gray-500">{{ previewData?.queue_items?.length }} 首歌</span>
+            </div>
+            <table class="w-full border-separate border-spacing-y-1">
+              <tbody>
+                <tr v-for="(item, index) in previewData?.queue_items" :key="item.queue_item_id"
+                  class="group hover:bg-white/5 transition-all cursor-pointer" @click="playFromPreview(index)">
+                  <!-- 这里的 click 触发“从预览列表播放并切换” -->
+                  <td class="w-10 text-center">
+                    <el-icon class="text-gray-600 group-hover:text-blue-400">
+                      <VideoPlay />
+                    </el-icon>
+                  </td>
+                  <td class="px-2 py-3">
+                    <div class="text-sm text-gray-200 group-hover:text-white">{{ item.song?.song_title }}</div>
+                    <div class="text-[10px] text-gray-500">{{ item.song?.artist }}</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-else>
+            <el-skeleton :loading="previewLoading" animated :rows="5">
+              <template #default>
+                <div v-for="q in userQueues" :key="q.queue_id"
+                  class="flex items-center justify-between p-3 mb-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer group"
+                  @click="handleSwitchQueue(q.queue_id)">
+                  <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="w-10 h-10 bg-gray-800 rounded flex items-center justify-center shrink-0">
+                      <el-icon v-if="currentQueueId === q.queue_id" class="text-blue-500">
+                        <Headset />
+                      </el-icon>
+                      <el-icon v-else class="text-gray-500">
+                        <List />
+                      </el-icon>
+                    </div>
+                    <div class="flex flex-col truncate">
+                      <span class="text-sm font-medium truncate"
+                        :class="{ 'text-blue-400': currentQueueId === q.queue_id }">
+                        {{ q.queue_name }}
+                      </span>
+                      <span class="text-[10px] text-gray-500">{{ q.song_count }} 首歌曲</span>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <el-button link type="primary" size="small"
+                      @click.stop="handlePreviewQueue(q.queue_id)">查看</el-button>
+                    <el-button v-if="currentQueueId !== q.queue_id" link type="danger" :icon="Delete"
+                      class="opacity-40 group-hover:opacity-100 transition-opacity"
+                      @click.stop="confirmDeleteQueue(q.queue_id)" />
+                  </div>
+                </div>
+                <el-empty v-if="userQueues.length === 0" description="没有其他队列" />
+              </template>
+            </el-skeleton>
+          </div>
         </div>
       </main>
     </div>
@@ -87,55 +143,43 @@
 
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, onMounted, onBeforeUpdate } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { VueDraggable } from 'vue-draggable-plus'
-import { Delete, Rank, Close, VideoPause, ArrowLeft } from '@element-plus/icons-vue'
-import { ElMessageBox, ElMessage } from 'element-plus'
+import { Delete, Rank, Close, VideoPause, ArrowLeft, Headset, List, VideoPlay } from '@element-plus/icons-vue'
+import { ElMessageBox } from 'element-plus'
 import { IQueue } from '../../type'
-import { queueApi } from '../../axios/queueApi'
-const playerStore = usePlayerStore()
-const { currentQueue, currentSong, isPlaying, isQueueVisible, currentQueueId } = storeToRefs(playerStore)
 
+const playerStore = usePlayerStore()
+const { currentQueue, currentSong, isPlaying, isQueueVisible, currentQueueId, userQueues } = storeToRefs(playerStore)
 
 const activeTab = ref('queue')
-const songRows = ref([])
-const previewQueueId = ref<number>()
-const previewData = ref<IQueue | null>()
+const previewQueueId = ref<number>(-1)
+const previewData = ref<IQueue | null>(null)
 const previewLoading = ref(false)
 
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
   if (tab === 'queue') {
     previewQueueId.value = -1
+    previewData.value = null
   }
 }
 
-const handlePreviewQueue = async (queueId: number) => {
-  if (queueId === currentQueueId.value) {
-    activeTab.value = 'queue'
-    return
-  }
-
+// 触发位置：列表页面的“查看”按钮
+const handlePreviewQueue = (queueId: number) => {
   previewQueueId.value = queueId
-  previewLoading.value = true
-  previewData.value = null
 
-  const res = await playerStore.fetchQueueDetails(queueId)
-  if (!res.success) {
-    previewLoading.value = false
-    return
+  const found = userQueues.value.find(q => q.queue_id === queueId)
+  if (found) {
+    previewData.value = found
   }
-  if (res.queue) previewData.value = res.queue
-
 }
 
 const playFromPreview = async (index: number) => {
-  if (!previewQueueId.value) return
-
+  if (previewQueueId.value === -1) return
   await playerStore.playSongInQueue(previewQueueId.value, index)
-
   activeTab.value = 'queue'
   previewQueueId.value = -1
 }
@@ -145,53 +189,28 @@ const backToQueueList = () => {
   previewData.value = null
 }
 
-onBeforeUpdate(() => {
-  songRows.value = []
-})
-
 const dragQueue = computed({
   get: () => currentQueue.value,
   set: (newVal) => playerStore.updateQueueOrder(newVal)
 })
 
+const playFromQueue = (index: number) => playerStore.playAtIndex(index)
 
-const playFromQueue = (index: number) => {
-  playerStore.playAtIndex(index)
-}
-
-const removeFromQueue = async (itemId: number | string) => {
-  await playerStore.removeQueueItem(itemId)
-}
-
-const clearQueue = async (queueId: number) => {
-  if (confirm('确定要清空队列吗？')) {
-    const res = await queueApi.clearQueue(queueId)
-    if (!res.success) {
-      ElMessage.error("清空失败")
-      return
-    }
-    await playerStore.fetchCurrentQueue()
-  }
-}
+const removeFromQueue = (itemId: number | string) => playerStore.removeQueueItem(itemId)
 
 const confirmClear = () => {
-  ElMessageBox.confirm(
-    '确定要清空播放队列吗？',
-    '提示',
-    {
-      confirmButtonText: '清空',
-      cancelButtonText: '取消',
-      type: 'warning',
+  ElMessageBox.confirm('确定要清空当前播放队列吗？', '提示', {
+    confirmButtonText: '清空',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
+    if (currentQueueId.value) {
+      await playerStore.clearQueue(currentQueueId.value)
     }
-  )
-    .then(() => {
-      clearQueue(currentQueueId.value || -1);
-    })
-    .catch(() => {
+  }).catch(() => { })
+}
 
-      console.log('用户取消了清空');
-    });
-};
+// 触发位置：点击整个队列卡片
 const handleSwitchQueue = async (queueId: number) => {
   if (queueId === currentQueueId.value) {
     activeTab.value = 'queue'
@@ -201,23 +220,15 @@ const handleSwitchQueue = async (queueId: number) => {
   activeTab.value = 'queue'
 }
 
-const handleDeleteQueue = async (queueId: number) => {
-  if (confirm('确定要永久删除这个歌单吗？')) {
+// 触发位置：队列列表右侧的“垃圾桶”图标
+const confirmDeleteQueue = (queueId: number) => {
+  ElMessageBox.confirm('确定要永久删除这个播放队列吗？', '警告', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning',
+  }).then(async () => {
     await playerStore.deleteQueue(queueId)
-  }
-}
-
-const formatDuration = (seconds: number) => {
-  if (!seconds) return '0:00'
-  const mins = Math.floor(seconds / 60)
-  const secs = Math.floor(seconds % 60)
-  return `${mins}:${secs.toString().padStart(2, '0')}`
-}
-
-const formatDate = (dateStr: Date) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  return `${date.getMonth() + 1}月${date.getDate()}日`
+  }).catch(() => { })
 }
 
 const scrollToCurrent = async () => {
@@ -231,13 +242,7 @@ const scrollToCurrent = async () => {
 }
 
 watch([isQueueVisible, () => currentSong.value?.song_id], () => {
-  if (isQueueVisible.value) setTimeout(scrollToCurrent, 200)
-})
-
-watch(() => currentSong.value?.song_id, () => {
-  if (isQueueVisible.value && activeTab.value === 'queue') {
-    scrollToCurrent()
-  }
+  if (isQueueVisible.value) setTimeout(scrollToCurrent, 250)
 })
 
 onMounted(() => {
@@ -256,7 +261,7 @@ onMounted(() => {
   display: inline-block;
   width: 12px;
   height: 12px;
-  background: currentColor;
+  background: #3b82f6;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='3' height='15' x='1' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='10.5' y='4.5'%3E%3Canimate attributeName='y' values='1;4.5;1' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='22;15;22' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='20' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3C/svg%3E");
 }
 
@@ -272,5 +277,11 @@ onMounted(() => {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: #333;
   border-radius: 10px;
+}
+
+.custom-segmented {
+  --el-segmented-bg-color: rgba(255, 255, 255, 0.05);
+  --el-segmented-item-selected-bg-color: #3b82f6;
+  --el-segmented-item-selected-color: #fff;
 }
 </style>

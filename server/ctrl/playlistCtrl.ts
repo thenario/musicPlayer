@@ -1,5 +1,7 @@
 import db from "../db.js";
+import fs from "fs";
 import type { Request, Response } from "express";
+import path from "path";
 
 const BASE_URL = "http://127.0.0.1:3000/static";
 
@@ -9,10 +11,11 @@ interface CustomRequest extends Request {
 }
 
 export const createPlaylist = async (req: CustomRequest, res: Response) => {
-  const { name, description, creator_id, created_date } = req.body;
+  const { name, description, created_date } = req.body;
+  const user_id = req.user?.user_id;
   const file = req.file;
 
-  if (!name || !creator_id || !file) {
+  if (!name || !user_id || !file) {
     return res.status(400).json({ message: "请输入完整上传信息", data: null });
   }
 
@@ -25,26 +28,30 @@ export const createPlaylist = async (req: CustomRequest, res: Response) => {
     const like_count = 0;
     const play_count = 0;
 
+    const formattedDate = new Date(created_date || Date.now())
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+
     const params = [
       name,
-      creator_id,
-      created_date,
+      user_id,
       playlist_cover_url,
       song_count,
       like_count,
       play_count,
       is_public,
-      created_date,
-      created_date,
-      description,
+      formattedDate,
+      formattedDate,
+      description || "",
     ];
 
     const playlist_sql = `
       INSERT INTO playlists (
-        playlist_name, creator_id, created_date, playlist_cover_url,
+        playlist_name, creator_id, playlist_cover_url,
         song_count, like_count, play_count, is_public,
         created_date, updated_date, description
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     await connection.beginTransaction();
@@ -54,17 +61,30 @@ export const createPlaylist = async (req: CustomRequest, res: Response) => {
 
     await connection.execute(
       `INSERT INTO users_playlists_relation (user_id, playlist_id) VALUES (?, ?)`,
-      [creator_id, playlist_id],
+      [user_id, playlist_id],
     );
 
     await connection.commit();
-    return res.status(200).json({ message: "创建成功", data: { playlist_id } });
+    return res
+      .status(200)
+      .json({ success: true, message: "创建成功", data: { playlist_id } });
   } catch (error) {
     console.error("Create playlist error:", error);
+
     await connection.rollback();
+
+    if (file && file.path && fs.existsSync(file.path)) {
+      try {
+        fs.unlinkSync(file.path);
+        console.log(`[清理成功] 歌单创建失败，已删除冗余封面: ${file.path}`);
+      } catch (unlinkError) {
+        console.error("清理文件失败:", unlinkError);
+      }
+    }
+
     return res
       .status(500)
-      .json({ message: "创建失败，请稍后重试", data: null });
+      .json({ success: false, message: "创建失败，请稍后重试", data: null });
   } finally {
     connection.release();
   }
@@ -72,22 +92,72 @@ export const createPlaylist = async (req: CustomRequest, res: Response) => {
 
 export const deletePlaylist = async (req: CustomRequest, res: Response) => {
   const playlist_id = req.params.id;
+  const user_id = req.user?.user_id;
+
   if (!playlist_id) {
     return res.status(400).json({ message: "缺少歌单ID参数", data: null });
   }
 
   try {
-    const sql = `DELETE FROM playlists WHERE playlist_id = ?`;
-    const [result]: any = await db.query(sql, [playlist_id]);
+    const [rows]: any = await db.query(
+      `SELECT playlist_cover_url, creator_id FROM playlists WHERE playlist_id = ?`,
+      [playlist_id],
+    );
 
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ message: "歌单不存在", data: null });
+    if (!rows || rows.length === 0) {
+      return res
+        .status(404)
+        .json({ success: false, message: "歌单不存在", data: null });
     }
 
-    return res.status(200).json({ message: "删除成功", data: null });
+    const playlist = rows[0];
+
+    if (String(playlist.creator_id) !== String(user_id)) {
+      return res
+        .status(403)
+        .json({ success: false, message: "无权删除此歌单" });
+    }
+
+    const [result]: any = await db.query(
+      `DELETE FROM playlists WHERE playlist_id = ?`,
+      [playlist_id],
+    );
+
+    if (result.affectedRows > 0) {
+      const coverUrl = playlist.playlist_cover_url;
+
+      if (coverUrl) {
+        try {
+          const urlParts = coverUrl.split("/static/");
+          if (urlParts.length > 1) {
+            const relativePath = urlParts[1];
+            const absolutePath = path.join(
+              process.cwd(),
+              "static",
+              relativePath,
+            );
+
+            if (fs.existsSync(absolutePath)) {
+              fs.unlinkSync(absolutePath);
+              console.log(`[清理成功] 已删除关联封面文件: ${absolutePath}`);
+            }
+          }
+        } catch (fileErr) {
+          console.error("物理文件删除失败:", fileErr);
+        }
+      }
+
+      return res
+        .status(200)
+        .json({ success: true, message: "删除成功", data: null });
+    }
+
+    return res.status(500).json({ success: false, message: "删除失败" });
   } catch (error) {
     console.error("Delete playlist error:", error);
-    return res.status(500).json({ message: "删除失败", data: null });
+    return res
+      .status(500)
+      .json({ success: false, message: "服务器内部错误", data: null });
   }
 };
 
@@ -96,9 +166,13 @@ export const likePlaylist = async (req: CustomRequest, res: Response) => {
   const user_id = req.user?.user_id;
 
   if (!playlist_id)
-    return res.status(400).json({ message: "缺少歌单ID", data: null });
+    return res
+      .status(400)
+      .json({ success: false, message: "缺少歌单ID", data: null });
   if (!user_id)
-    return res.status(401).json({ message: "用户未登录", data: null });
+    return res
+      .status(401)
+      .json({ success: false, message: "用户未登录", data: null });
 
   const connection = await db.getConnection();
 
@@ -114,11 +188,15 @@ export const likePlaylist = async (req: CustomRequest, res: Response) => {
     ]);
     await connection.commit();
 
-    return res.status(200).json({ message: "点赞成功", data: null });
+    return res
+      .status(200)
+      .json({ success: true, message: "点赞成功", data: null });
   } catch (error) {
     console.error("Like playlist error:", error);
     await connection.rollback();
-    return res.status(500).json({ message: "点赞失败", data: null });
+    return res
+      .status(500)
+      .json({ success: false, message: "点赞失败", data: null });
   } finally {
     connection.release();
   }
@@ -129,9 +207,13 @@ export const unlikePlaylist = async (req: CustomRequest, res: Response) => {
   const user_id = req.user?.user_id;
 
   if (!playlist_id)
-    return res.status(400).json({ message: "缺少歌单ID", data: null });
+    return res
+      .status(400)
+      .json({ success: false, message: "缺少歌单ID", data: null });
   if (!user_id)
-    return res.status(401).json({ message: "用户未登录", data: null });
+    return res
+      .status(401)
+      .json({ success: false, message: "用户未登录", data: null });
 
   const connection = await db.getConnection();
 
@@ -147,11 +229,15 @@ export const unlikePlaylist = async (req: CustomRequest, res: Response) => {
     ]);
     await connection.commit();
 
-    return res.status(200).json({ message: "点赞已取消", data: null });
+    return res
+      .status(200)
+      .json({ success: true, message: "点赞已取消", data: null });
   } catch (error) {
     console.error("Unlike playlist error:", error);
     await connection.rollback();
-    return res.status(500).json({ message: "取消点赞失败", data: null });
+    return res
+      .status(500)
+      .json({ success: false, message: "取消点赞失败", data: null });
   } finally {
     connection.release();
   }
@@ -160,119 +246,130 @@ export const unlikePlaylist = async (req: CustomRequest, res: Response) => {
 export const getMyPlaylists = async (req: CustomRequest, res: Response) => {
   const user_id = req.user?.user_id;
   if (!user_id)
-    return res.status(401).json({ message: "用户未登录", data: null });
+    return res
+      .status(401)
+      .json({ success: false, message: "用户未登录", data: null });
 
   try {
     const sql = `
-      SELECT p.creator_id, p.created_date, p.playlist_cover_url, p.song_count,
+      SELECT p.playlist_id, p.creator_id, p.created_date, p.playlist_cover_url, p.song_count,
              p.like_count, p.play_count, p.is_public, p.updated_date, p.description 
       FROM playlists p
       WHERE p.creator_id = ?
     `;
     const [rows]: any = await db.query(sql, [user_id]);
     return res.status(200).json({
+      success: true,
       message: "获取成功",
       data: { playlists: rows || [] },
     });
   } catch (error) {
     console.error("Get my playlists error:", error);
-    return res.status(500).json({ message: "获取歌单列表失败", data: null });
+    return res
+      .status(500)
+      .json({ success: false, message: "获取歌单列表失败", data: null });
   }
 };
 
 export const getPlaylistById = async (req: CustomRequest, res: Response) => {
   const playlist_id = req.params.id;
-  if (!playlist_id)
-    return res.status(400).json({ message: "缺少歌单ID", data: null });
+  const current_user_id = req.user?.user_id;
 
   try {
     const sql = `
       SELECT 
-        p.creator_id, p.created_date, p.playlist_cover_url, p.song_count,
-        p.like_count, p.play_count, p.is_public, p.updated_date, p.description,
-        IF(COUNT(s.song_id) = 0, JSON_ARRAY(),
-          JSON_ARRAYAGG(
+        p.*,
+        EXISTS(
+          SELECT 1 FROM users_likeplaylists_relation 
+          WHERE user_id = ? AND playlist_id = p.playlist_id
+        ) AS is_liked,
+        (
+          SELECT JSON_ARRAYAGG(
             JSON_OBJECT(
-              'song_id', s.song_id,
-              'song_title', s.song_title,
-              'song_cover_url', s.song_cover_url,
-              'song_url', s.song_url,
-              'artist', s.artist,
-              'album', s.album,
-              'play_count', s.play_count
+              'song_id', sg.song_id,
+              'song_title', sg.song_title,
+              'song_cover_url', sg.song_cover_url,
+              'song_url', sg.song_url,
+              'artist', sg.artist,
+              'album', sg.album,
+              'position', s.song_playlist_position,
+              'duration', sg.duration
             )
           )
+          FROM (
+            SELECT spr.song_id, spr.song_playlist_position 
+            FROM songs_playlists_relation spr 
+            WHERE spr.playlist_id = p.playlist_id 
+            ORDER BY spr.song_playlist_position ASC
+          ) AS s
+          JOIN songs sg ON s.song_id = sg.song_id
         ) AS songs
       FROM playlists p
-      LEFT JOIN songs_playlists_relation s ON p.playlist_id = s.playlist_id
       WHERE p.playlist_id = ?
-      GROUP BY p.playlist_id
     `;
-    const [rows]: any = await db.query(sql, [playlist_id]);
 
-    if (!rows || rows.length === 0) {
-      return res.status(404).json({ message: "歌单不存在", data: null });
-    }
-
+    const [rows]: any = await db.query(sql, [current_user_id, playlist_id]);
     const playlist = rows[0];
 
+    if (!playlist)
+      return res.status(404).json({ success: false, message: "歌单不存在" });
+
     return res.status(200).json({
-      message: "获取成功",
+      success: true,
       data: {
-        playlist: {
-          creator_id: playlist.creator_id,
-          created_date: playlist.created_date,
-          playlist_cover_url: playlist.playlist_cover_url,
-          song_count: playlist.song_count,
-          like_count: playlist.like_count,
-          play_count: playlist.play_count,
-          is_public: playlist.is_public,
-          updated_date: playlist.updated_date,
-          description: playlist.description,
-        },
-        songs: playlist.songs,
+        playlist: { ...playlist, songs: undefined },
+        songs:
+          typeof playlist.songs === "string"
+            ? JSON.parse(playlist.songs)
+            : playlist.songs || [],
+        is_liked: !!playlist.is_liked,
       },
     });
   } catch (error) {
-    console.error("Get playlist by id error:", error);
-    return res.status(500).json({ message: "获取歌单详情失败", data: null });
+    console.error("Get playlist detail error:", error);
+    return res.status(500).json({ success: false, message: "获取失败" });
   }
 };
 
 export const addSongToPlaylist = async (req: CustomRequest, res: Response) => {
   const { playlist_id, song_id } = req.params;
 
-  if (!playlist_id || !song_id) {
-    return res.status(400).json({ message: "缺少必要的ID参数", data: null });
-  }
-
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
+
     const [rows]: any = await connection.query(
       "SELECT IFNULL(MAX(song_playlist_position), 0) AS maxPos FROM songs_playlists_relation WHERE playlist_id = ?",
       [playlist_id],
     );
     const nextPosition = rows[0].maxPos + 1;
 
-    const sql = `
-      INSERT INTO songs_playlists_relation (song_id, playlist_id, song_playlist_position) 
+    const insertSql = `
+      INSERT INTO songs_playlists_relation (playlist_id, song_id, song_playlist_position) 
       VALUES (?, ?, ?)
     `;
+    await connection.query(insertSql, [playlist_id, song_id, nextPosition]);
+
     await connection.query(
       "UPDATE playlists SET song_count = song_count + 1 WHERE playlist_id = ?",
       [playlist_id],
     );
-    await connection.query(sql, [song_id, playlist_id, nextPosition]);
+
     await connection.commit();
     return res.status(200).json({
+      success: true,
       message: "添加成功",
       data: { position: nextPosition },
     });
-  } catch (error) {
+  } catch (error: any) {
     await connection.rollback();
+    if (error.code === "ER_DUP_ENTRY") {
+      return res
+        .status(409)
+        .json({ success: false, message: "歌曲已在歌单中" });
+    }
     console.error("Add song error:", error);
-    return res.status(500).json({ message: "添加失败", data: null });
+    return res.status(500).json({ success: false, message: "添加失败" });
   } finally {
     connection.release();
   }
@@ -284,13 +381,10 @@ export const removeSongFromPlaylist = async (
 ) => {
   const { playlist_id, song_id } = req.params;
 
-  if (!playlist_id || !song_id) {
-    return res.status(400).json({ message: "缺少必要的ID参数", data: null });
-  }
-
   const connection = await db.getConnection();
   try {
     await connection.beginTransaction();
+
     const [target]: any = await connection.query(
       "SELECT song_playlist_position FROM songs_playlists_relation WHERE playlist_id = ? AND song_id = ?",
       [playlist_id, song_id],
@@ -298,32 +392,35 @@ export const removeSongFromPlaylist = async (
 
     if (!target || target.length === 0) {
       await connection.rollback();
-      return res.status(404).json({ message: "歌曲不在该歌单中", data: null });
+      return res
+        .status(404)
+        .json({ success: false, message: "歌曲不在该歌单中" });
     }
 
-    const removedPosition = target[0].position;
+    const removedPosition = target[0].song_playlist_position;
 
     await connection.query(
       "DELETE FROM songs_playlists_relation WHERE playlist_id = ? AND song_id = ?",
       [playlist_id, song_id],
     );
+
     await connection.query(
-      "UPDATE playlists SET song_count = song_count - 1 WHERE playlist_id = ?",
-      [playlist_id],
-    );
-    await connection.query(
-      "UPDATE songs_playlists_relation SET song_playlist_position = song_playlist_position - 1 WHERE playlist_id = ? AND song_playlist_position > ?",
+      `UPDATE songs_playlists_relation SET song_playlist_position = song_playlist_position - 1 
+       WHERE playlist_id = ? AND song_playlist_position > ?`,
       [playlist_id, removedPosition],
     );
 
+    await connection.query(
+      "UPDATE playlists SET song_count = song_count - 1 WHERE playlist_id = ? AND song_count > 0",
+      [playlist_id],
+    );
+
     await connection.commit();
-    return res
-      .status(200)
-      .json({ message: "删除成功并已更新顺序", data: null });
+    return res.status(200).json({ success: true, message: "已移除" });
   } catch (error) {
     await connection.rollback();
     console.error("Remove song error:", error);
-    return res.status(500).json({ message: "删除失败", data: null });
+    return res.status(500).json({ success: false, message: "移除失败" });
   } finally {
     connection.release();
   }

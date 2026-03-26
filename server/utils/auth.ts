@@ -13,7 +13,7 @@ export const authMiddleWare = (
   next: NextFunction,
 ) => {
   const auth = req.headers["authorization"];
-  const token = auth?.split(" ")[1];
+  const token = auth?.split(" ")[1] || (req.query.token as string);
   if (!token) {
     return res.status(401).json({
       code: 401,

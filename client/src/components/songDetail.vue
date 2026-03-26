@@ -1,72 +1,105 @@
 <template>
-    <el-dialog v-model="playerStore.isSongDetailVisible" fullscreen :show-close="false" :modal="false"
-        class="song-detail-dialog">
-        <div class="full-page-player">
-            <transition name="fade">
-                <div :key="currentSongCover ? currentSongCover : ''"
-                    class="absolute inset-0 bg-cover bg-center transition-all duration-1000 blur-[100px] scale-125 opacity-50"
-                    :style="{ backgroundImage: `url(${currentSongCover})` }"></div>
-            </transition>
-            <div class="absolute inset-0 bg-linear-to-b from-black/20 via-black/60 to-black/80"></div>
+    <Teleport to="body">
+        <Transition name="slide-up">
+            <div v-if="playerStore.isSongDetailVisible" class="song-detail-overlay">
 
-            <div class="relative z-10 flex justify-between items-center p-8">
-                <el-button link class="text-white! opacity-60 hover:opacity-100" @click="playerStore.toggleSongDetail">
-                    <el-icon :size="32">
-                        <ArrowDownBold />
-                    </el-icon>
-                </el-button>
-
-                <div class="text-center">
-                    <p class="text-xs uppercase tracking-[0.2em] text-gray-400 mb-1">正在播放</p>
-                    <p class="text-sm font-medium text-white/80">{{ currentSong?.album || '未知专辑' }}</p>
+                <!-- 背景层：高斯模糊封面 -->
+                <div class="glass-bg">
+                    <div class="blur-image" :style="{ backgroundImage: `url(${currentSongCover})` }"></div>
+                    <div class="overlay-dark"></div>
                 </div>
 
-                <el-button link class="text-white! opacity-60"><el-icon :size="24">
-                        <Share />
-                    </el-icon></el-button>
-            </div>
+                <!-- 顶部：核心信息区 (Title, Artist, Album) -->
+                <header class="detail-header">
+                    <button class="action-btn exit-btn" @click="playerStore.toggleSongDetail">
+                        <el-icon :size="30">
+                            <ArrowDownBold />
+                        </el-icon>
+                    </button>
 
-            <el-row class="relative z-10 flex-1 overflow-hidden px-12 items-center">
-                <el-col :lg="12" class="hidden lg:flex justify-center items-center">
-                    <div class="vinyl-record-container">
-                        <div class="vinyl-disk" :class="{ 'is-playing': isPlaying }">
-                            <img :src="currentSongCover ? currentSongCover : ''" alt="cover" class="disk-cover" />
-                            <div class="disk-center-dot"></div>
-                        </div>
-                    </div>
-                </el-col>
-
-                <el-col :lg="12" :xs="24" class="h-full flex flex-col justify-center max-w-xl">
-                    <div class="song-info mb-10">
-                        <h1 class="text-5xl font-bold text-white mb-4 tracking-tight leading-tight">
-                            {{ currentSong?.song_title }}
-                        </h1>
-                        <div class="flex items-center gap-4 text-xl text-green-400 font-medium">
-                            <span>{{ currentSong?.artist }}</span>
-                            <el-tag size="small" effect="dark" type="info" round
-                                class="bg-white/10 border-none">Hi-Res</el-tag>
-                        </div>
+                    <div class="song-meta-center">
+                        <h1 class="main-title">{{ currentSong?.song_title }}</h1>
+                        <h2 class="sub-artist">{{ currentSong?.artist }}</h2>
+                        <h3 class="sub-album">{{ currentSong?.album || '未知专辑' }}</h3>
                     </div>
 
-                    <div class="lyric-wrapper relative">
-                        <el-scrollbar ref="lyricScroll" class="h-[50vh]">
-                            <div class="lyric-content whitespace-pre-wrap">
-                                {{ currentSong?.lyrics || '暂无歌词信息' }}
+                    <button class="action-btn">
+                        <el-icon :size="24">
+                            <Share />
+                        </el-icon>
+                    </button>
+                </header>
+
+                <!-- 中间主体：左右布局 -->
+                <main class="detail-content">
+                    <!-- 左侧：唱片 -->
+                    <div class="content-left">
+                        <div class="record-box">
+                            <div class="record-vinyl" :class="{ 'is-playing': isPlaying }">
+                                <img :src="currentSongCover || ''" class="record-img" />
+                                <div class="record-center"></div>
                             </div>
-                            <div class="h-40"></div>
-                        </el-scrollbar>
+                        </div>
                     </div>
-                </el-col>
-            </el-row>
-        </div>
-    </el-dialog>
+
+                    <!-- 右侧：歌词 -->
+                    <div class="content-right">
+                        <div class="lyrics-wrapper">
+                            <div class="lyrics-scroll">
+                                <div class="lyric-line-active">
+                                    {{ currentSong?.lyrics || '暂无歌词信息' }}
+                                </div>
+                                <!-- 占位填充，让歌词能滚上去 -->
+                                <div class="footer-spacer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+
+                <!-- 底部：快捷控制条 (增强全屏体验) -->
+                <footer class="detail-footer">
+                    <div class="footer-controls">
+                        <div class="progress-container">
+                            <span class="time">{{ formatTime(playerStore.currentTime) }}</span>
+                            <input type="range" class="progress-bar" :value="playerStore.currentTime"
+                                :max="playerStore.duration || 100"
+                                @input="(e: any) => playerStore.seek(Number(e.target.value))" />
+                            <span class="time">{{ formatTime(playerStore.duration) }}</span>
+                        </div>
+
+                        <div class="btn-group">
+                            <button @click="playerStore.previousSong" :disabled="!playerStore.hasPrevious"
+                                class="ctrl-icon"><el-icon>
+                                    <ArrowLeftBold />
+                                </el-icon></button>
+                            <button @click="playerStore.togglePlay" class="play-main">
+                                <el-icon v-if="isPlaying">
+                                    <VideoPause />
+                                </el-icon>
+                                <el-icon v-else>
+                                    <VideoPlay />
+                                </el-icon>
+                            </button>
+                            <button @click="() => playerStore.nextSong()" :disabled="!playerStore.hasNext"
+                                class="ctrl-icon"><el-icon>
+                                    <ArrowRightBold />
+                                </el-icon></button>
+                        </div>
+                    </div>
+                </footer>
+            </div>
+        </Transition>
+    </Teleport>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { storeToRefs } from 'pinia'
-import { ArrowDownBold, Share } from '@element-plus/icons-vue'
+import {
+    ArrowDownBold, Share, VideoPlay, VideoPause,
+    ArrowLeftBold, ArrowRightBold
+} from '@element-plus/icons-vue'
 
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying } = storeToRefs(playerStore)
@@ -75,47 +108,268 @@ const API_BASE_URL = 'http://127.0.0.1:3000'
 const currentSongCover = computed(() => {
     const url = currentSong.value?.song_cover_url
     if (!url) return null
-    if (url.startsWith('http')) return url
-    return `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+    return url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
 })
+
+const formatTime = (s: number) => {
+    const mins = Math.floor(s / 60) || 0
+    const secs = Math.floor(s % 60) || 0
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+}
 </script>
 
 <style scoped>
-@reference "../assets/index.css";
-
-:deep(.song-detail-dialog) {
-    padding: 0 !important;
-    background: #0f172a;
+/* 根容器 */
+.song-detail-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    background: #000;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    color: white;
 }
 
-.full-page-player {
-    @apply relative h-full w-full flex flex-col overflow-hidden text-white;
+/* 沉浸式背景 */
+.glass-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
 }
 
-.vinyl-disk {
-    @apply relative w-[450px] h-[450px] rounded-full border-3 border-white/5 shadow-2xl;
-    background: repeating-radial-gradient(circle, #111, #111 2px, #222 4px, #111 6px);
-    animation: spin 20s linear infinite;
+.blur-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(60px) brightness(0.3);
+    transform: scale(1.2);
+}
+
+.overlay-dark {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%);
+}
+
+/* 顶部信息 */
+.detail-header {
+    height: 120px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    flex-shrink: 0;
+}
+
+.song-meta-center {
+    text-align: center;
+}
+
+.main-title {
+    font-size: 32px;
+    font-weight: 900;
+    margin-bottom: 4px;
+}
+
+.sub-artist {
+    font-size: 18px;
+    color: #1DB954;
+    /* 这里的绿色增加视觉亮点 */
+    margin-bottom: 2px;
+}
+
+.sub-album {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* 主体内容 */
+.detail-content {
+    flex: 1;
+    display: flex;
+    padding: 0 10%;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* 左侧唱片区 */
+.content-left {
+    flex: 1.2;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.record-box {
+    width: 460px;
+    height: 460px;
+    position: relative;
+}
+
+.record-vinyl {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: #111;
+    background: radial-gradient(circle, #333 0%, #111 30%, #000 100%);
+    padding: 18px;
+    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+    animation: rotate-record 25s linear infinite;
     animation-play-state: paused;
+    will-change: transform;
+    /* 强制加速 */
+    transform: translateZ(0);
+    /* 开启3D加速解决卡顿 */
 }
 
-.vinyl-disk.is-playing {
+.record-vinyl.is-playing {
     animation-play-state: running;
 }
 
-.disk-cover {
-    @apply absolute inset-[15%] w-[70%] h-[70%] rounded-full object-cover border-4 border-black/50;
+.record-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
 }
 
-.disk-center-dot {
-    @apply absolute inset-[48%] w-[4%] h-[4%] bg-gray-900 rounded-full border border-white/20 shadow-inner;
+.record-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 50px;
+    height: 50px;
+    background: #111;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
-.lyric-content {
-    @apply text-2xl leading-14 text-white/40 transition-all duration-500;
+/* 右侧歌词区 */
+.content-right {
+    flex: 1;
+    height: 70%;
+    padding-left: 80px;
 }
 
-@keyframes spin {
+.lyrics-wrapper {
+    height: 100%;
+    mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent 100%);
+    overflow-y: auto;
+    scrollbar-width: none;
+}
+
+.lyrics-wrapper::-webkit-scrollbar {
+    display: none;
+}
+
+.lyric-line-active {
+    font-size: 28px;
+    font-weight: 700;
+    line-height: 1.8;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: pre-wrap;
+}
+
+/* 底部控制栏 */
+.detail-footer {
+    height: 160px;
+    display: flex;
+    justify-content: center;
+    padding: 0 15%;
+}
+
+.footer-controls {
+    width: 100%;
+    max-width: 800px;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.time {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    width: 40px;
+    font-family: monospace;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 4px;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 2px;
+    outline: none;
+}
+
+.progress-bar::-webkit-slider-thumb {
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.btn-group {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 40px;
+}
+
+.play-main {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fff;
+    color: #000;
+    border: none;
+    font-size: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.play-main:hover {
+    transform: scale(1.1);
+}
+
+.ctrl-icon {
+    background: none;
+    border: none;
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.ctrl-icon:hover {
+    color: #fff;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    opacity: 0.5;
+    cursor: pointer;
+}
+
+.action-btn:hover {
+    opacity: 1;
+}
+
+/* 动画效果 */
+@keyframes rotate-record {
     from {
         transform: rotate(0deg);
     }
@@ -125,19 +379,17 @@ const currentSongCover = computed(() => {
     }
 }
 
-.lyric-wrapper::before,
-.lyric-wrapper::after {
-    content: '';
-    @apply absolute left-0 right-0 h-20 z-10 pointer-events-none;
+.slide-up-enter-active,
+.slide-up-leave-active {
+    transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
-.lyric-wrapper::before {
-    top: 0;
-    background: linear-gradient(to bottom, #0f172a, transparent);
+.slide-up-enter-from,
+.slide-up-leave-to {
+    transform: translateY(100%);
 }
 
-.lyric-wrapper::after {
-    bottom: 0;
-    background: linear-gradient(to top, #0f172a, transparent);
+.footer-spacer {
+    height: 200px;
 }
 </style>

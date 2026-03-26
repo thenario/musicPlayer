@@ -62,7 +62,7 @@ export interface IQueueItem {
 export interface IQueue {
   queue_id: number;
   queue_name: string;
-  creator_id:string;
+  creator_id: string;
   song_count: number;
   is_current: boolean;
   created_date: Date;
@@ -71,7 +71,7 @@ export interface IQueue {
 }
 
 export interface IQueueState {
-  user_id:string;
+  user_id: string;
   current_queue_id: number;
   current_song_id: number;
   current_position: number;
@@ -125,12 +125,15 @@ export interface IGetMyPlaylists {
   success: boolean;
   playlits: IPlaylist[];
 }
+
 export interface IGetPlaylistById {
   message: string;
   success: boolean;
   playlist: IPlaylist;
   songs: ISong[];
+  is_liked: boolean;
 }
+
 export interface ICreatePlaylist {
   message: string;
   success: boolean;
