@@ -14,7 +14,7 @@
       <router-link v-for="item in playlists" :key="item.playlist_id" :to="`/playlists/${item.playlist_id}`"
         class="group cursor-pointer block">
         <div class="aspect-square bg-gray-800 rounded-lg overflow-hidden mb-2">
-          <img :src="item.playlist_cover_url || '/default-cover.png'"
+          <img :src="item.playlist_cover_url || '/default-cover.png'" alt="歌单封面"
             class="w-full h-full object-cover group-hover:scale-105 transition-transform">
         </div>
         <p class="font-medium truncate text-white">{{ item.playlist_name || item.name }}</p>
@@ -32,7 +32,7 @@
               <label class="block text-sm text-gray-400 mb-2">封面</label>
               <div @click="fileInput?.click()"
                 class="relative w-32 h-32 bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-blue-500">
-                <img v-if="previewUrl" :src="previewUrl" class="w-full h-full object-cover">
+                <img v-if="previewUrl" :src="previewUrl" alt="歌单封面" class="w-full h-full object-cover">
                 <div v-else class="flex items-center justify-center h-full text-gray-500 text-2xl">+</div>
                 <input type="file" ref="fileInput" hidden @change="handleFileChange" accept="image/*">
               </div>
@@ -107,16 +107,7 @@ const submitForm = async () => {
     formData.append('description', form.description)
     formData.append('creator_id', String(userStore.user?.user_id))
     if (selectedFile.value) formData.append('cover_image', selectedFile.value)
-
-    const res = await playlistApi.createPlaylist(formData)
-    if (res.success) {
-      ElMessage.success('创建成功')
-      closeModal()
-      loadPlaylists()
-    }
-    else {
-      ElMessage.error("创建失败")
-    }
+    await playlistApi.createPlaylist(formData)
   } catch (error) {
     console.log(error)
     ElMessage.error("创建失败")
@@ -127,8 +118,12 @@ const submitForm = async () => {
 
 const loadPlaylists = async () => {
   if (userStore.user) {
-    const res = await playlistApi.getMyPlaylists()
-    if (res.success) playlists.value = res.playlists || []
+    try {
+      await playlistApi.getMyPlaylists()
+    } catch (err: any) {
+      console.log(err)
+      ElMessage.error("加载歌单失败")
+    }
   }
 }
 

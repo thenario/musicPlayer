@@ -280,10 +280,7 @@ export const createQueueFromPlaylist = async (req: Request, res: Response) => {
       "SELECT playlist_name FROM playlists WHERE playlist_id = ?",
       [playlist_id],
     );
-    const queueName =
-      playlists && playlists[0]?.playlist_name
-        ? playlists[0].playlist_name
-        : "新播放队列";
+    const queueName = playlists?.[0]?.playlist_name ?? "新播放队列";
 
     const [queueRes]: any = await connection.execute(
       "INSERT INTO queues (queue_name, creator_id, is_current) VALUES (?, ?, 1)",
@@ -331,80 +328,30 @@ export const createQueueFromPlaylist = async (req: Request, res: Response) => {
 };
 
 export const addSongToQueue = async (req: Request, res: Response) => {
-  let { queue_id: paramQueueId } = req.params;
   const { song_id, mode } = req.body;
   const user_id = (req as any).user?.user_id;
+  const paramQueueId = Number(req.params.queue_id);
 
-  if (song_id === undefined || song_id === null) {
+  if (song_id == null)
     return res.status(400).json({ success: false, message: "缺少歌曲ID" });
-  }
-  if (!user_id) {
+  if (!user_id)
     return res.status(401).json({ success: false, message: "用户未登录" });
-  }
 
   const connection = await db.getConnection();
 
   try {
     await connection.beginTransaction();
 
-    let finalQueueId: number;
-    let isNewQueue = false;
-    const qId = Number(paramQueueId);
-
-    if (!qId || qId === 0 || isNaN(qId)) {
-      const [existing]: any = await connection.execute(
-        "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY created_date DESC LIMIT 1",
-        [user_id],
-      );
-
-      if (existing.length > 0) {
-        finalQueueId = existing[0].queue_id;
-      } else {
-        const [countRows]: any = await connection.execute(
-          "SELECT COUNT(*) as total FROM queues WHERE creator_id = ?",
-          [user_id],
-        );
-
-        if (countRows[0].total >= 5) {
-          const [oldest]: any = await connection.execute(
-            "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY created_date ASC LIMIT 1",
-            [user_id],
-          );
-
-          if (oldest.length > 0) {
-            const oldestId = oldest[0].queue_id;
-            await connection.execute(
-              "DELETE FROM queue_items WHERE queue_id = ?",
-              [oldestId],
-            );
-            await connection.execute("DELETE FROM queues WHERE queue_id = ?", [
-              oldestId,
-            ]);
-            console.log(
-              `[自动清理] 用户 ${user_id} 队列已满，已删除最旧队列: ${oldestId}`,
-            );
-          }
-        }
-
-        const [newQueue]: any = await connection.execute(
-          "INSERT INTO queues (queue_name, creator_id, song_count, created_date) VALUES (?, ?, 0, NOW())",
-          ["默认列表", user_id],
-        );
-        finalQueueId = newQueue.insertId;
-        isNewQueue = true;
-      }
-    } else {
-      finalQueueId = qId;
-    }
-
-    const [stateRows]: any = await connection.execute(
-      "SELECT current_position FROM play_state WHERE user_id = ?",
-      [user_id],
+    const { finalQueueId, isNewQueue } = await ensureQueueId(
+      connection,
+      user_id,
+      paramQueueId,
     );
 
-    const hasState = stateRows && stateRows.length > 0;
-    const currentPos = hasState ? stateRows[0].current_position : 0;
-
+    const { currentPos, hasState } = await getPlayerCurrentState(
+      connection,
+      user_id,
+    );
     const insertPos = mode ? currentPos + 1 : currentPos;
 
     const [delRes]: any = await connection.execute(
@@ -413,34 +360,15 @@ export const addSongToQueue = async (req: Request, res: Response) => {
     );
     const wasExisted = delRes.affectedRows > 0;
 
-    await connection.execute(
-      "UPDATE queue_items SET queue_item_position = queue_item_position + 1 WHERE queue_id = ? AND queue_item_position >= ?",
-      [finalQueueId, insertPos],
-    );
-
-    await connection.execute(
-      "INSERT INTO queue_items (queue_id, song_id, queue_item_position, added_date) VALUES (?, ?, ?, NOW())",
-      [finalQueueId, song_id, insertPos],
-    );
-
-    const [Res]: any = await connection.execute(
-      "SELECT queue_item_id FROM queue_items WHERE queue_id = ? AND song_id = ?",
-      [finalQueueId, song_id],
-    );
-    const final_queue_item_id = Res[0].queue_item_id;
+    await shiftAndInsertSong(connection, finalQueueId, song_id, insertPos);
 
     if (!mode || !hasState || isNewQueue) {
-      await connection.execute(
-        `INSERT INTO play_state 
-          (user_id, current_queue_id, current_song_id, current_position, current_progress, updated_date)
-        VALUES (?, ?, ?, ?, 0, NOW())
-        ON DUPLICATE KEY UPDATE
-          current_queue_id = VALUES(current_queue_id),
-          current_song_id = VALUES(current_song_id),
-          current_position = VALUES(current_position),
-          current_progress = 0,
-          updated_date = NOW()`,
-        [user_id, finalQueueId, song_id, insertPos],
+      await updatePlayerState(
+        connection,
+        user_id,
+        finalQueueId,
+        song_id,
+        insertPos,
       );
     }
 
@@ -451,24 +379,103 @@ export const addSongToQueue = async (req: Request, res: Response) => {
       );
     }
 
+    const [Res]: any = await connection.execute(
+      "SELECT queue_item_id FROM queue_items WHERE queue_id = ? AND song_id = ?",
+      [finalQueueId, song_id],
+    );
+
     await connection.commit();
+
     return res.status(200).json({
       success: true,
       message: mode ? "已添加到下一首" : "正在播放",
       data: {
         queue_id: finalQueueId,
         queue_item_position: insertPos,
-        queue_item_id: final_queue_item_id,
+        queue_item_id: Res[0].queue_item_id,
       },
     });
   } catch (error) {
+    console.log(error);
     await connection.rollback();
-    console.error("AddSongToQueue Error:", error);
     return res.status(500).json({ success: false, message: "服务器内部错误" });
   } finally {
     connection.release();
   }
 };
+
+async function ensureQueueId(conn: any, userId: number, qId: number) {
+  if (qId && !Number.isNaN(qId))
+    return { finalQueueId: qId, isNewQueue: false };
+
+  const [existing]: any = await conn.execute(
+    "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY created_date DESC LIMIT 1",
+    [userId],
+  );
+  if (existing.length > 0)
+    return { finalQueueId: existing[0].queue_id, isNewQueue: false };
+
+  const [countRows]: any = await conn.execute(
+    "SELECT COUNT(*) as total FROM queues WHERE creator_id = ?",
+    [userId],
+  );
+  if (countRows[0].total >= 5) {
+    const [oldest]: any = await conn.execute(
+      "SELECT queue_id FROM queues WHERE creator_id = ? ORDER BY created_date ASC LIMIT 1",
+      [userId],
+    );
+    if (oldest.length > 0) {
+      const oid = oldest[0].queue_id;
+      await conn.execute("DELETE FROM queue_items WHERE queue_id = ?", [oid]);
+      await conn.execute("DELETE FROM queues WHERE queue_id = ?", [oid]);
+    }
+  }
+
+  const [newQ]: any = await conn.execute(
+    "INSERT INTO queues (queue_name, creator_id, song_count, created_date) VALUES (?, ?, 0, NOW())",
+    ["默认列表", userId],
+  );
+  return { finalQueueId: newQ.insertId, isNewQueue: true };
+}
+
+async function getPlayerCurrentState(conn: any, userId: number) {
+  const [rows]: any = await conn.execute(
+    "SELECT current_position FROM play_state WHERE user_id = ?",
+    [userId],
+  );
+  const hasState = rows && rows.length > 0;
+  return { hasState, currentPos: hasState ? rows[0].current_position : 0 };
+}
+
+async function shiftAndInsertSong(
+  conn: any,
+  qId: number,
+  sId: number,
+  pos: number,
+) {
+  await conn.execute(
+    "UPDATE queue_items SET queue_item_position = queue_item_position + 1 WHERE queue_id = ? AND queue_item_position >= ?",
+    [qId, pos],
+  );
+  await conn.execute(
+    "INSERT INTO queue_items (queue_id, song_id, queue_item_position, added_date) VALUES (?, ?, ?, NOW())",
+    [qId, sId, pos],
+  );
+}
+
+async function updatePlayerState(
+  conn: any,
+  uId: number,
+  qId: number,
+  sId: number,
+  pos: number,
+) {
+  const sql = `INSERT INTO play_state (user_id, current_queue_id, current_song_id, current_position, current_progress, updated_date)
+               VALUES (?, ?, ?, ?, 0, NOW())
+               ON DUPLICATE KEY UPDATE current_queue_id = VALUES(current_queue_id), current_song_id = VALUES(current_song_id), 
+               current_position = VALUES(current_position), current_progress = 0, updated_date = NOW()`;
+  await conn.execute(sql, [uId, qId, sId, pos]);
+}
 
 export const removeSongFromQueue = async (req: Request, res: Response) => {
   const { queue_item_id } = req.params;

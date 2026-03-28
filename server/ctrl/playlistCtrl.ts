@@ -1,7 +1,7 @@
 import db from "../db.js";
-import fs from "fs";
+import fs from "node:fs";
 import type { Request, Response } from "express";
-import path from "path";
+import path from "node:path";
 
 const BASE_URL = "http://127.0.0.1:3000/static";
 
@@ -73,7 +73,7 @@ export const createPlaylist = async (req: CustomRequest, res: Response) => {
 
     await connection.rollback();
 
-    if (file && file.path && fs.existsSync(file.path)) {
+    if (file?.path && fs.existsSync(file.path)) {
       try {
         fs.unlinkSync(file.path);
         console.log(`[清理成功] 歌单创建失败，已删除冗余封面: ${file.path}`);
@@ -91,73 +91,82 @@ export const createPlaylist = async (req: CustomRequest, res: Response) => {
 };
 
 export const deletePlaylist = async (req: CustomRequest, res: Response) => {
-  const playlist_id = req.params.id;
-  const user_id = req.user?.user_id;
+  const playlistId = req.params.id;
+  const userId = req.user?.user_id;
 
-  if (!playlist_id) {
+  if (!playlistId) {
     return res.status(400).json({ message: "缺少歌单ID参数", data: null });
   }
 
   try {
-    const [rows]: any = await db.query(
-      `SELECT playlist_cover_url, creator_id FROM playlists WHERE playlist_id = ?`,
-      [playlist_id],
+    const playlist = await getPlaylistAndCheckAuth(
+      playlistId as string,
+      userId,
     );
-
-    if (!rows || rows.length === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "歌单不存在", data: null });
-    }
-
-    const playlist = rows[0];
-
-    if (String(playlist.creator_id) !== String(user_id)) {
+    if (!playlist) {
       return res
         .status(403)
-        .json({ success: false, message: "无权删除此歌单" });
+        .json({ success: false, message: "歌单不存在或无权删除" });
     }
 
     const [result]: any = await db.query(
       `DELETE FROM playlists WHERE playlist_id = ?`,
-      [playlist_id],
+      [playlistId],
     );
 
-    if (result.affectedRows > 0) {
-      const coverUrl = playlist.playlist_cover_url;
-
-      if (coverUrl) {
-        try {
-          const urlParts = coverUrl.split("/static/");
-          if (urlParts.length > 1) {
-            const relativePath = urlParts[1];
-            const absolutePath = path.join(
-              process.cwd(),
-              "static",
-              relativePath,
-            );
-
-            if (fs.existsSync(absolutePath)) {
-              fs.unlinkSync(absolutePath);
-              console.log(`[清理成功] 已删除关联封面文件: ${absolutePath}`);
-            }
-          }
-        } catch (fileErr) {
-          console.error("物理文件删除失败:", fileErr);
-        }
-      }
-
-      return res
-        .status(200)
-        .json({ success: true, message: "删除成功", data: null });
+    if (result.affectedRows === 0) {
+      return res.status(500).json({ success: false, message: "删除失败" });
     }
 
-    return res.status(500).json({ success: false, message: "删除失败" });
-  } catch (error) {
-    console.error("Delete playlist error:", error);
+    if (playlist.playlist_cover_url) {
+      cleanupPlaylistCover(playlist.playlist_cover_url);
+    }
+
     return res
-      .status(500)
-      .json({ success: false, message: "服务器内部错误", data: null });
+      .status(200)
+      .json({ success: true, message: "删除成功", data: null });
+  } catch (error: any) {
+    console.error("Delete playlist error:", error);
+    const status = error.status || 500;
+    return res.status(status).json({
+      success: false,
+      message: error.message || "服务器内部错误",
+      data: null,
+    });
+  }
+};
+
+const getPlaylistAndCheckAuth = async (playlistId: string, userId: any) => {
+  const [rows]: any = await db.query(
+    `SELECT playlist_cover_url, creator_id FROM playlists WHERE playlist_id = ?`,
+    [playlistId],
+  );
+
+  if (!rows?.length) return null;
+
+  const playlist = rows[0];
+  if (String(playlist.creator_id) !== String(userId)) {
+    const err: any = new Error("无权删除此歌单");
+    err.status = 403;
+    throw err;
+  }
+
+  return playlist;
+};
+
+const cleanupPlaylistCover = (coverUrl: string) => {
+  try {
+    const urlParts = coverUrl.split("/static/");
+    if (urlParts.length <= 1) return;
+
+    const absolutePath = path.join(process.cwd(), "static", urlParts[1]!);
+
+    if (fs.existsSync(absolutePath)) {
+      fs.unlinkSync(absolutePath);
+      console.log(`[清理成功] 已删除关联封面文件: ${absolutePath}`);
+    }
+  } catch (fileErr) {
+    console.error("物理文件删除失败:", fileErr);
   }
 };
 

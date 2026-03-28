@@ -27,8 +27,8 @@ export const authMiddleWare = (
       next();
     } catch (error) {
       console.log(error);
-      return res.status(403).json({
-        code: 403,
+      return res.status(401).json({
+        code: 401,
         success: false,
         message: "Token 无效或已过期",
       });

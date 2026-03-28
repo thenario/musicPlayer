@@ -40,7 +40,7 @@
               @click="coverInput?.click()">
               <input type="file" ref="coverInput" class="hidden" accept="image/*" @change="handleCoverSelect" />
 
-              <img v-if="coverPreview" :src="coverPreview" class="w-full h-full object-cover" />
+              <img v-if="coverPreview" :src="coverPreview" class="w-full h-full object-cover" alt="封面" />
               <div v-else class="text-center">
                 <span class="text-3xl text-gray-600">+</span>
                 <p class="text-xs text-gray-500 mt-1">选择封面</p>
@@ -144,16 +144,12 @@ const submitUpload = async () => {
     formData.append('album', form.value.album)
     formData.append('added_date', new Date().toISOString())
 
-    const res = await songApi.uploadSong(formData)
-    if (res.success) {
-      ElMessage.success('上传成功！')
-      resetForm()
-    } else {
-      ElMessage.error(res.message || '上传失败')
-    }
+    await songApi.uploadSong(formData)
+    ElMessage.success('上传成功！')
+    resetForm()
   } catch (error) {
     console.log(error);
-    ElMessage.error('网络错误，请稍后重试')
+    ElMessage.error('上传失败')
   } finally {
     uploading.value = false
   }

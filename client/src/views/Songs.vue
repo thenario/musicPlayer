@@ -94,24 +94,24 @@ const loadSongs = async () => {
   loading.value = true
   try {
     const res = await songApi.getSongs(currentPage.value, searchKeyword.value)
-    if (res.success) {
-      songs.value = res.songs || []
-      totalSongs.value = res.pagination?.total_items || (res.songs.length > 0 ? 100 : 0)
-    }
+    songs.value = res.songs || []
+    totalSongs.value = res.pagination?.total_items || (res.songs.length > 0 ? 100 : 0)
   } catch (err) {
-    console.error('Failed to load songs:', err)
+    console.error(err)
+    ElMessage.error("加载时出错")
   } finally {
     loading.value = false
   }
 }
 
-const handlePlayNow = (song: ISong) => {
-  playerStore.playSong(song, "now")
+const handlePlayNow = async (song: ISong) => {
+  const res = await playerStore.playSong(song, "now")
+  if (!res.success) ElMessage.error("播放失败")
 }
 
 const handlePlayNext = async (song: ISong) => {
   const res = await playerStore.playSong(song, "next")
-  if (res) {
+  if (res.success) {
     return ElMessage(
       `已将《${song.song_title}》添加到下一首播放`,
     )
@@ -133,7 +133,7 @@ const formatDuration = (seconds: number) => {
 
 const getImageUrl = (url: string) => {
   if (!url) return ''
-  return url.startsWith('http') ? url : `http://127.0.0.1:3000${url}`
+  return url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL}${url}`
 }
 
 onMounted(loadSongs)

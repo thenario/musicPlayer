@@ -148,7 +148,7 @@ import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { VueDraggable } from 'vue-draggable-plus'
 import { Delete, Rank, Close, VideoPause, ArrowLeft, Headset, List, VideoPlay } from '@element-plus/icons-vue'
-import { ElMessageBox } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { IQueue } from '../../type'
 
 const playerStore = usePlayerStore()
@@ -179,7 +179,8 @@ const handlePreviewQueue = (queueId: number) => {
 
 const playFromPreview = async (index: number) => {
   if (previewQueueId.value === -1) return
-  await playerStore.playSongInQueue(previewQueueId.value, index)
+  const res = await playerStore.playSongInQueue(previewQueueId.value, index)
+  if (!res.success) ElMessage.error("播放失败")
   activeTab.value = 'queue'
   previewQueueId.value = -1
 }
@@ -194,10 +195,15 @@ const dragQueue = computed({
   set: (newVal) => playerStore.updateQueueOrder(newVal)
 })
 
-const playFromQueue = (index: number) => playerStore.playAtIndex(index)
+const playFromQueue = async (index: number) => {
+  const res = await playerStore.playAtIndex(index)
+  if (!res.success) ElMessage.error("播放时出错")
+}
 
-const removeFromQueue = (itemId: number | string) => playerStore.removeQueueItem(itemId)
-
+const removeFromQueue = async (itemId: number | string) => {
+  const res = await playerStore.removeQueueItem(itemId)
+  if (!res.success) ElMessage.error("播放时出错")
+}
 const confirmClear = () => {
   ElMessageBox.confirm('确定要清空当前播放队列吗？', '提示', {
     confirmButtonText: '清空',
@@ -210,17 +216,21 @@ const confirmClear = () => {
   }).catch(() => { })
 }
 
-// 触发位置：点击整个队列卡片
 const handleSwitchQueue = async (queueId: number) => {
   if (queueId === currentQueueId.value) {
     activeTab.value = 'queue'
     return
   }
-  await playerStore.switchQueue(queueId)
-  activeTab.value = 'queue'
+  try {
+    await playerStore.switchQueue(queueId)
+    activeTab.value = 'queue'
+  }
+  catch (err: any) {
+    console.log(err)
+    ElMessage.error("切换失败")
+  }
 }
 
-// 触发位置：队列列表右侧的“垃圾桶”图标
 const confirmDeleteQueue = (queueId: number) => {
   ElMessageBox.confirm('确定要永久删除这个播放队列吗？', '警告', {
     confirmButtonText: '删除',
