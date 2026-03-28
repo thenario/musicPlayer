@@ -1,4 +1,21 @@
 import axios, { AxiosError, AxiosResponse } from 'axios'
+import { router } from '../src/router/index'
+
+class AxiosBusinessError extends Error {
+  code: number
+  data: any
+  success: boolean
+
+  constructor(message: string, code: number, data?: any) {
+    super(message)
+    this.name = 'AxiosBusinessError'
+    this.code = code
+    this.data = data
+    this.success = false
+
+    Object.setPrototypeOf(this, AxiosBusinessError.prototype)
+  }
+}
 
 const request = axios.create({
   baseURL: '/api',
@@ -30,12 +47,29 @@ request.interceptors.response.use(
   (error: AxiosError) => {
     let message = '网络连接异常'
     let status = 500
+    let backendData = null
 
     if (error.response) {
       status = error.response.status
+      backendData = error.response.data
+
       switch (status) {
         case 401:
-          message = '未授权，请重新登录'
+          message = (backendData as any)?.message || '登录已过期，请重新登录'
+
+          localStorage.removeItem('token')
+          localStorage.removeItem('user')
+          if (router) {
+            const currentPath = router.currentRoute.value.fullPath
+            if (router.currentRoute.value.path !== '/login') {
+              router.push({
+                path: '/login',
+                query: { redirect: currentPath },
+              })
+            }
+          } else {
+            globalThis.location.href = '/login'
+          }
           break
         case 403:
           message = '拒绝访问'
@@ -47,18 +81,13 @@ request.interceptors.response.use(
           message = '服务器内部错误'
           break
         default:
-          message = `网络错误: ${status}`
+          message = (backendData as any)?.message || `网络错误: ${status}`
       }
     } else if (error.request) {
       message = '服务器未响应，请检查网络'
     }
 
-    return Promise.resolve({
-      success: false,
-      data: null,
-      message: (error.response as any).data?.message || message,
-      code: status,
-    })
+    throw new AxiosBusinessError(message, status, backendData)
   },
 )
 

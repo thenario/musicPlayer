@@ -6,9 +6,9 @@
     <div v-else-if="playlist" class="h-full flex flex-col overflow-hidden">
       <!-- 歌单头部信息 -->
       <div
-        class="shrink-0 p-8 bg-gradient-to-b from-blue-900/40 to-gray-950 flex items-end gap-8 border-b border-white/5">
+        class="shrink-0 p-8 bg-linear-to-b from-blue-900/40 to-gray-950 flex items-end gap-8 border-b border-white/5">
         <div class="w-56 h-56 rounded-xl shadow-2xl overflow-hidden shrink-0 group relative">
-          <img v-if="playlist.playlist_cover_url" :src="getImageUrl(playlist.playlist_cover_url)"
+          <img v-if="playlist.playlist_cover_url" :src="getImageUrl(playlist.playlist_cover_url)" alt="歌曲封面"
             class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
           <div v-else class="w-full h-full bg-gray-800 flex flex-col items-center justify-center text-gray-500">
             <el-icon :size="64">
@@ -206,7 +206,7 @@ const getImageUrl = (url: string) => {
 
 const loadPlaylist = async () => {
   const idParam = route.params.id as string
-  if (!idParam || isNaN(Number(idParam))) {
+  if (!idParam || Number.isNaN(Number(idParam))) {
     loading.value = false
     return
   }
@@ -214,16 +214,13 @@ const loadPlaylist = async () => {
   loading.value = true
   try {
     const res = await playlistApi.getPlaylistById(Number(idParam))
-    if (res.success) {
-      playlist.value = res.playlist
-      songs.value = res.songs || []
-      is_liked.value = (res as any).is_liked
-    } else {
-      ElMessage.error(res.message || "获取列表失败")
-      router.push('/playlists')
-    }
+    playlist.value = res.playlist
+    songs.value = res.songs || []
+    is_liked.value = (res as any).is_liked
   } catch (error) {
-    console.error('Failed to load playlist:', error)
+    console.error(error)
+    ElMessage.error("获取列表失败")
+    router.push('/playlists')
   } finally {
     loading.value = false
   }
@@ -234,21 +231,25 @@ const playAll = async () => {
     ElMessage.warning("歌单是空的")
     return
   }
-  await playerStore.playPlaylist(playlist.value.playlist_id)
+  const res = await playerStore.playPlaylist(playlist.value.playlist_id)
+  if (!res.success) ElMessage.error("播放时出错")
 }
 
-const playSong = (song: ISong) => {
-  playerStore.playSong(song, "now")
+const playSong = async (song: ISong) => {
+  const res = await playerStore.playSong(song, "now")
+  if (!res.success) ElMessage.error("播放时出错")
 }
 
 const handlePlayNext = async (song: ISong) => {
   const res = await playerStore.addToQueue(song, true)
   if (res.success) ElMessage.success(`《${song.song_title}》已设为下一首播放`)
+  else ElMessage.error("设置时出错")
 }
 
 const handleAddToQueue = async (song: ISong) => {
   const res = await playerStore.addToQueue(song, false)
   if (res.success) ElMessage.success("已添加到播放队列")
+  else ElMessage.error("添加时出错")
 }
 
 const toggleLike = async () => {
@@ -287,14 +288,11 @@ const confirmDeletePlaylist = () => {
 const deletePlaylistAction = async () => {
   if (!playlist.value) return
   try {
-    const res = await playlistApi.deletePlaylist(playlist.value.playlist_id)
-    if (res.success) {
-      ElMessage.success("歌单已删除")
-      router.push('/playlists')
-    } else {
-      ElMessage.error(res.message || "删除失败")
-    }
+    await playlistApi.deletePlaylist(playlist.value.playlist_id)
+    ElMessage.success("歌单已删除")
+    router.push('/playlists')
   } catch (error) {
+    ElMessage.error("删除失败")
     console.error('Delete error:', error)
   }
 }
@@ -302,15 +300,12 @@ const deletePlaylistAction = async () => {
 const handleRemoveSong = async (songId: number) => {
   if (!playlist.value) return
   try {
-    const res = await playlistApi.removeSongFromPlaylist(playlist.value.playlist_id, songId)
-    if (res.success) {
-      ElMessage.success("已从歌单移除")
-      songs.value = songs.value.filter(s => s.song_id !== songId)
-      playlist.value.song_count--
-    } else {
-      ElMessage.error(res.message || "移除失败")
-    }
+    await playlistApi.removeSongFromPlaylist(playlist.value.playlist_id, songId)
+    ElMessage.success("已从歌单移除")
+    songs.value = songs.value.filter(s => s.song_id !== songId)
+    playlist.value.song_count--
   } catch (error) {
+    ElMessage.error("移除失败")
     console.error('Remove error:', error)
   }
 }
@@ -322,9 +317,7 @@ const searchSongs = async () => {
   }
   try {
     const res = await songApi.getSongs(1, songSearchQuery.value)
-    if (res.success) {
-      searchResults.value = res.songs || []
-    }
+    searchResults.value = res.songs || []
   } catch (error) {
     console.error('Search error:', error)
   }
@@ -335,15 +328,12 @@ const debouncedSearch = debounce(searchSongs, 500)
 const addSongToPlaylist = async (songId: number) => {
   if (!playlist.value) return
   try {
-    const res = await playlistApi.addSongToPlaylist(playlist.value.playlist_id, songId)
-    if (res.success) {
-      ElMessage.success("添加成功")
-      await loadPlaylist()
-    } else {
-      ElMessage.warning(res.message || "添加失败")
-    }
+    await playlistApi.addSongToPlaylist(playlist.value.playlist_id, songId)
+    ElMessage.success("添加成功")
+    await loadPlaylist()
   } catch (error: any) {
-    ElMessage.error(error.response?.data?.message || "网络请求错误")
+    console.log(error)
+    ElMessage.warning("添加失败")
   }
 }
 

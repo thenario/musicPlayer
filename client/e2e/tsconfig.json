@@ -1,4 +1,7 @@
 {
   "extends": "@tsconfig/node22/tsconfig.json",
-  "include": ["./**/*"]
+  "compilerOptions": {
+    "types": ["vite/client", "node"]
+  },
+  "include": ["src/**/*", "env.d.ts"]
 }

@@ -1,13 +1,13 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-slate-950">
-    <div class="absolute inset-0 bg-gradient-to-tr from-blue-950 via-indigo-900 to-pink-900"></div>
+    <div class="absolute inset-0 bg-linear-to-tr from-blue-950 via-indigo-900 to-pink-900"></div>
     <div class="absolute inset-0 opacity-10"
       style="background-image: linear-gradient(to right, #ffffff0a 1px, transparent 1px), linear-gradient(to bottom, #ffffff0a 1px, transparent 1px); background-size: 50px 50px;">
     </div>
 
     <div class="w-full max-w-md z-10">
       <div class="text-center mb-8">
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-cyan-400 to-blue-300 bg-clip-text text-transparent">加入我们
+        <h1 class="text-4xl font-bold bg-linear-to-r from-cyan-400 to-blue-300 bg-clip-text text-transparent">加入我们
         </h1>
         <p class="text-gray-300 mt-2">创建账号，开启您的音乐之旅</p>
       </div>
@@ -38,7 +38,7 @@
           </div>
 
           <button type="submit" :disabled="loading"
-            class="w-full h-12 mt-4 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg transform transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+            class="w-full h-12 mt-4 bg-linear-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold rounded-xl shadow-lg transform transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
             <span v-if="loading">注册中...</span>
             <span v-else>创建账号</span>
           </button>
@@ -73,7 +73,7 @@ let redirectTimer: number | null = null
 const validate = () => {
   let isValid = true
   errors.user_name = form.user_name.length < 3 ? '用户名至少3个字符' : ''
-  errors.user_email = !/^\S+@\S+\.\S+$/.test(form.user_email) ? '邮箱格式不正确' : ''
+  errors.user_email = /^\S+@\S+\.\S+$/.test(form.user_email) ? '' : '邮箱格式不正确'
   errors.password = form.password.length < 8 ? '密码至少8位' : ''
 
   if (errors.user_name || errors.user_email || errors.password) isValid = false
@@ -82,20 +82,20 @@ const validate = () => {
 
 const handleRegister = async () => {
   if (!validate()) return
-
   loading.value = true
   try {
     const result = await userStore.register(form)
     if (result.success) {
       ElMessage.success('注册成功！即将跳转登录页')
-      redirectTimer = window.setTimeout(() => {
+      redirectTimer = globalThis.setTimeout(() => {
         router.push('/login')
       }, 2000)
     } else {
       ElMessage.error(result.message || '注册失败')
     }
   } catch (err) {
-    alert('网络请求失败，请稍后再试')
+    console.log(err)
+    ElMessage.error('网络请求失败，请稍后再试')
   } finally {
     loading.value = false
   }

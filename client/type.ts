@@ -199,6 +199,7 @@ export interface IAddSongToQueue {
   song_position: number
   action: string
   queue_item: IQueueItem
+  data?: any
 }
 export interface IRemoveSongFromQueue {
   message: string

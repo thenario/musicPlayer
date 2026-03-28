@@ -9,7 +9,7 @@
       <div class="relative group cursor-pointer shrink-0" @click="playerStore.toggleSongDetail">
         <div
           class="w-16 h-16 rounded-lg shadow-2xl overflow-hidden transition-transform group-hover:scale-105 bg-gray-800">
-          <img v-if="currentSongCover" :src="currentSongCover" class="w-full h-full object-cover" />
+          <img v-if="currentSongCover" :src="currentSongCover" alt="歌曲封面" class="w-full h-full object-cover" />
           <div v-else class="w-full h-full flex items-center justify-center">
             <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -121,9 +121,10 @@ import { usePlayerStore } from '../stores/player'
 import { useMagicKeys, useActiveElement } from '@vueuse/core'
 import { ArrowUpBold } from '@element-plus/icons-vue'
 import SongDetail from './songDetail.vue'
+import { ElMessage } from 'element-plus'
 
 const playerStore = usePlayerStore()
-const API_BASE_URL = 'http://127.0.0.1:3000'
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const isDragging = ref(false)
 const sliderValue = ref(0)
@@ -143,10 +144,11 @@ const volumeValue = ref(playerStore.volume)
 watch(() => playerStore.volume, (val) => { volumeValue.value = val })
 
 const togglePlay = () => playerStore.togglePlay()
-const togglePlayMode = () => {
+const togglePlayMode = async () => {
   const modes = ['repeat_all', 'repeat_one', 'shuffle']
   const currentIdx = modes.indexOf(playerStore.playMode === 'sequential' ? 'repeat_all' : playerStore.playMode)
-  playerStore.setPlayMode(modes[(currentIdx + 1) % modes.length])
+  const res = await playerStore.setPlayMode(modes[(currentIdx + 1) % modes.length])
+  if (!res.success) ElMessage.error("切换失败")
 }
 const playModeTitle = computed(() => ({
   repeat_all: '列表循环', sequential: '顺序播放', repeat_one: '单曲循环', shuffle: '随机播放'
@@ -155,7 +157,11 @@ const playModeTitle = computed(() => ({
 const currentSongCover = computed(() => {
   const url = playerStore.currentSong?.song_cover_url
   if (!url) return ''
-  return url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+  if (url.startsWith('http')) {
+    return url
+  }
+  const separator = url.startsWith('/') ? '' : '/'
+  return `${API_BASE_URL}${separator}${url}`
 })
 
 const formatTime = (s: number) => {

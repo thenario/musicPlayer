@@ -12,31 +12,37 @@ export const useUserStore = defineStore('user', () => {
   const isAuthenticated = ref(!!localuser)
 
   const login = async (user_name: string, password: string) => {
-    const res = await userApi.login(user_name, password)
-    if (!res.success) {
-      return { success: false, message: res.message }
+    try {
+      const res = await userApi.login(user_name, password)
+      user.value = res.user || null
+      isAuthenticated.value = true
+      return { success: true, message: res.message }
+    } catch (err: any) {
+      console.log(err)
+      return { success: false, message: err.message }
     }
-    user.value = res.user || null
-    isAuthenticated.value = true
-    return { success: true, message: res.message }
   }
 
   const register = async (userData: any) => {
-    const res = await userApi.register(userData)
-    if (!res.success) {
-      return { success: false, message: res.message }
+    try {
+      const res = await userApi.register(userData)
+      return { success: true, message: res.message }
+    } catch (err: any) {
+      console.log(err)
+      return { success: false, message: err.message }
     }
-    return { success: true, message: res.message }
   }
 
   const logout = async (user_id: number) => {
-    const res = await userApi.logout()
-    if (!res.success) {
-      return { success: false, message: res.message }
+    try {
+      const res = await userApi.logout()
+      user.value = null
+      isAuthenticated.value = false
+      return { success: true, message: res.message }
+    } catch (err: any) {
+      console.log(err)
+      return { success: false, message: err.message }
     }
-    user.value = null
-    isAuthenticated.value = false
-    return { success: true, message: res.message }
   }
 
   return { user, isAuthenticated, login, register, logout }

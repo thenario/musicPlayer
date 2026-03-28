@@ -103,12 +103,16 @@ import {
 
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying } = storeToRefs(playerStore)
-const API_BASE_URL = 'http://127.0.0.1:3000'
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const currentSongCover = computed(() => {
-    const url = currentSong.value?.song_cover_url
-    if (!url) return null
-    return url.startsWith('http') ? url : `${API_BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`
+    const url = playerStore.currentSong?.song_cover_url
+    if (!url) return ''
+    if (url.startsWith('http')) {
+        return url
+    }
+    const separator = url.startsWith('/') ? '' : '/'
+    return `${API_BASE_URL}${separator}${url}`
 })
 
 const formatTime = (s: number) => {

@@ -2,5 +2,5 @@ projectKey=musicPlayer
 serverUrl=http://localhost:9000
 serverVersion=26.1.0.118079
 dashboardUrl=http://localhost:9000/dashboard?id=musicPlayer
-ceTaskId=0cb97efc-b10d-4003-843e-d054e582bb8d
-ceTaskUrl=http://localhost:9000/api/ce/task?id=0cb97efc-b10d-4003-843e-d054e582bb8d
+ceTaskId=4a2d339c-1ed9-488f-a77a-73ec37d4943a
+ceTaskUrl=http://localhost:9000/api/ce/task?id=4a2d339c-1ed9-488f-a77a-73ec37d4943a

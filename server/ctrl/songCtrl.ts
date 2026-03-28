@@ -1,6 +1,7 @@
 import path from "node:path";
 import db from "../db.js";
-import { URL } from "url";
+import fs from "node:fs";
+import { URL } from "node:url";
 import * as mm from "music-metadata";
 import type { Request, Response } from "express";
 
@@ -14,8 +15,8 @@ export const getSongs = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "缺少页码参数", data: null });
   }
 
-  const sqlPage = parseInt(page as string);
-  if (isNaN(sqlPage) || sqlPage < 1) {
+  const sqlPage = Number.parseInt(page as string);
+  if (Number.isNaN(sqlPage) || sqlPage < 1) {
     return res.status(400).json({ message: "请输入正确页码", data: null });
   }
 
@@ -60,8 +61,6 @@ export const getSongs = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "歌曲查询失败", data: null });
   }
 };
-
-import fs from "fs"; // 记得引入 fs
 
 export const uploadSong = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
@@ -173,8 +172,8 @@ export const streamSong = async (req: Request, res: Response) => {
 
     if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
-      const start = parseInt(parts[0]!, 10);
-      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+      const start = Number.parseInt(parts[0]!, 10);
+      const end = parts[1] ? Number.parseInt(parts[1], 10) : fileSize - 1;
 
       if (start >= fileSize || end >= fileSize) {
         res
