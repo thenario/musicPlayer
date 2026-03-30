@@ -1,10 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-
-import 'element-plus/dist/index.css'
-
 import { userApi } from '../../axios/userApi'
-import { IUser } from '../../type'
+import type { IUser } from '../../type'
 
 export const useUserStore = defineStore('user', () => {
   const localuser = localStorage.getItem('user') || null

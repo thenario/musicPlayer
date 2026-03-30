@@ -66,8 +66,6 @@
 <script setup lang="ts">
 import { useUserStore } from '../stores/user'
 import { useRouter, useRoute } from 'vue-router'
-import { Upload } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
 
 const userStore = useUserStore()
 const router = useRouter()

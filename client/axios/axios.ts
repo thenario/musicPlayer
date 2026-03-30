@@ -1,4 +1,5 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios, { AxiosError } from 'axios'
+import type { AxiosResponse } from 'axios'
 import { router } from '../src/router/index'
 
 class AxiosBusinessError extends Error {

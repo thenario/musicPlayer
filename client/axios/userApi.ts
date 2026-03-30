@@ -1,9 +1,15 @@
 import request from './axios'
-import { ILogin, ILogout, IRegister, IAxiosRes } from '../type'
-import { encryptPassword } from '../src/utils/crypto'
+import type { ILogin, ILogout, IRegister, IAxiosRes } from '../type'
+
+export async function encryptPassword(password: string) {
+  const msgUint8 = new TextEncoder().encode(password)
+  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8)
+  const hashArray = Array.from(new Uint8Array(hashBuffer))
+  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
+}
 
 async function login(user_name: string, password: string) {
-  const encryptedPassword = encryptPassword(password)
+  const encryptedPassword = await encryptPassword(password)
 
   const res = await request.post<any, IAxiosRes<any>>('/users/login', {
     user_name: user_name,
@@ -30,7 +36,7 @@ async function register(registerFormdata: {
   password: string
   user_email: string
 }) {
-  const encryptedPassword = encryptPassword(registerFormdata.password)
+  const encryptedPassword = await encryptPassword(registerFormdata.password)
 
   const res = await request.post<any, IAxiosRes<any>>('/users/register', {
     user_name: registerFormdata.user_name,

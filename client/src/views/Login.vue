@@ -74,7 +74,6 @@
 import { ref, reactive } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 import { usePlayerStore } from '../stores/player'
 
 const userStore = useUserStore()

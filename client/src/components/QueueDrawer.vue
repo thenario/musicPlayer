@@ -147,10 +147,10 @@ import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { VueDraggable } from 'vue-draggable-plus'
-import { Delete, Rank, Close, VideoPause, ArrowLeft, Headset, List, VideoPlay } from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { IQueue } from '../../type'
+import { ElMessageBox } from 'element-plus'
+import { Close, ArrowLeft, Delete } from '@element-plus/icons-vue'
 
+import type { IQueue } from '../../type'
 const playerStore = usePlayerStore()
 const { currentQueue, currentSong, isPlaying, isQueueVisible, currentQueueId, userQueues } = storeToRefs(playerStore)
 
@@ -167,7 +167,6 @@ const handleTabChange = (tab: string) => {
   }
 }
 
-// 触发位置：列表页面的“查看”按钮
 const handlePreviewQueue = (queueId: number) => {
   previewQueueId.value = queueId
 

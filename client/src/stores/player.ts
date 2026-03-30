@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { IQueue, IQueueItem, ISong } from '../../type'
+import type { IQueue, IQueueItem, ISong } from '../../type'
 import { queueApi } from '../../axios/queueApi'
-import { ElMessage } from 'element-plus'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
@@ -142,7 +141,7 @@ export const usePlayerStore = defineStore('player', () => {
     if (index < 0 || index >= currentQueue.value.length) return { success: false }
     try {
       const item = currentQueue.value[index]
-      const song = item.song
+      const song = item!.song
       currentIndex.value = index
       currentSong.value = song
       isPlaying.value = true
@@ -268,7 +267,7 @@ export const usePlayerStore = defineStore('player', () => {
 
     for (let i = others.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))
-      ;[others[i], others[j]] = [others[j], others[i]]
+      ;[others[i]!, others[j]!] = [others[j]!, others[i]!]
     }
 
     if (currentItem) {
@@ -465,7 +464,7 @@ export const usePlayerStore = defineStore('player', () => {
     if (idx === -1) return
 
     currentIndex.value = idx
-    currentSong.value = currentQueue.value[idx].song
+    currentSong.value = currentQueue.value[idx]!.song
 
     if (audioElement.value && currentSong.value) {
       prepareAudioSource(currentSong.value.song_id, state.current_progress || 0)

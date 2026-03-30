@@ -1,4 +1,4 @@
-import { IGetSongs, IUploadSong, IAxiosRes } from '../type'
+import type { IGetSongs, IUploadSong, IAxiosRes } from '../type'
 import request from './axios'
 
 const getSongs = async (search_page: number, searchKeyword: string) => {
