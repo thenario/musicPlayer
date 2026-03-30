@@ -43,7 +43,6 @@ async function register(registerFormdata: {
   return {
     success: true,
     message: res.message,
-    user: res.data.user,
   }
 }
 
