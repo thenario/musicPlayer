@@ -68,7 +68,6 @@
 import { ref, reactive, onMounted, onUnmounted } from 'vue'
 import { playlistApi } from '../../axios/playlistApi'
 import { useUserStore } from '../stores/user'
-import { ElMessage } from 'element-plus'
 
 const userStore = useUserStore()
 const playlists = ref<any[]>([])

@@ -168,15 +168,12 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePlayerStore } from '../stores/player'
 import { useUserStore } from '../stores/user'
 import { storeToRefs } from 'pinia'
-import {
-  Plus, Delete, Picture, CaretRight, Star, StarFilled,
-  MoreFilled, Search, VideoPlay, CirclePlus, List
-} from '@element-plus/icons-vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import { debounce } from 'lodash-es'
-import { IPlaylist, ISong } from '../../type'
+import type { IPlaylist, ISong } from '../../type'
 import { playlistApi } from '../../axios/playlistApi'
 import { songApi } from '../../axios/songApi'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Delete, Plus, Search } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()

@@ -73,8 +73,7 @@ import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { songApi } from '../../axios/songApi'
-import { ISong } from '../../type'
-import { ElMessage } from 'element-plus'
+import type { ISong } from '../../type'
 import { debounce } from 'lodash-es'
 import {
   Search, VideoPlay, List, Headset

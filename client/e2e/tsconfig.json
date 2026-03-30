@@ -3,5 +3,10 @@
   "compilerOptions": {
     "types": ["vite/client", "node"]
   },
-  "include": ["src/**/*", "env.d.ts"]
+  "include": ["src/**/*", "env.d.ts", "client/*.d.ts"],
+  "files": [],
+  "references": [
+    { "path": "./client/tsconfig.app.json" },
+    { "path": "./client/tsconfig.node.json" }
+  ]
 }

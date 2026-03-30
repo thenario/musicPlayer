@@ -59,7 +59,6 @@
 import { ref, reactive, onUnmounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
 
 const userStore = useUserStore()
 const router = useRouter()

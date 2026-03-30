@@ -70,7 +70,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { songApi } from '../../axios/songApi'
-import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { storeToRefs } from 'pinia'
 
@@ -110,11 +109,11 @@ const validateAndSetAudio = (file: File) => {
 
   audioFile.value = file
   if (!form.value.title && file.name.includes('_')) {
-    const parts = file.name.split('.')[0].split('_')
-    form.value.title = parts[0]
+    const parts = file.name.split('.')[0]!.split('_')
+    form.value.title = parts[0]!
     form.value.artist = parts[1] || ''
   } else if (!form.value.title) {
-    form.value.title = file.name.split('.')[0]
+    form.value.title = file.name.split('.')[0]!
   }
 }
 
