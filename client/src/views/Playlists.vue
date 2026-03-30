@@ -108,6 +108,8 @@ const submitForm = async () => {
     formData.append('creator_id', String(userStore.user?.user_id))
     if (selectedFile.value) formData.append('cover_image', selectedFile.value)
     await playlistApi.createPlaylist(formData)
+    await loadPlaylists()
+    closeModal()
   } catch (error) {
     console.log(error)
     ElMessage.error("创建失败")
@@ -119,7 +121,8 @@ const submitForm = async () => {
 const loadPlaylists = async () => {
   if (userStore.user) {
     try {
-      await playlistApi.getMyPlaylists()
+      const res = await playlistApi.getMyPlaylists()
+      playlists.value = res.playlists
     } catch (err: any) {
       console.log(err)
       ElMessage.error("加载歌单失败")

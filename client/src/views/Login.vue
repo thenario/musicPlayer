@@ -1,27 +1,27 @@
 <template>
   <div class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-gray-950 text-white">
-    <div class="absolute inset-0 bg-gradient-to-br from-gray-900 via-purple-900 to-blue-900"></div>
+    <div class="absolute inset-0 bg-linear-to-br from-gray-900 via-purple-900 to-blue-900"></div>
     <div class="absolute inset-0 opacity-10"
       style="background-image: linear-gradient(to right, #ffffff0a 1px, transparent 1px), linear-gradient(to bottom, #ffffff0a 1px, transparent 1px); background-size: 50px 50px;">
     </div>
 
     <div
-      class="absolute top-20 left-10 w-64 h-64 bg-gradient-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse-slow">
+      class="absolute top-20 left-10 w-64 h-64 bg-linear-to-r from-cyan-500/20 to-blue-500/20 rounded-full blur-3xl animate-pulse-slow">
     </div>
     <div
-      class="absolute bottom-20 right-10 w-80 h-80 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse-slow">
+      class="absolute bottom-20 right-10 w-80 h-80 bg-linear-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl animate-pulse-slow">
     </div>
 
     <div class="w-full max-w-md z-10 animate-fade-in">
       <div class="text-center mb-10">
         <div
-          class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+          class="inline-flex items-center justify-center w-16 h-16 bg-linear-to-r from-blue-500 to-purple-600 rounded-2xl shadow-lg mb-4">
           <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8 text-white" viewBox="0 0 24 24" fill="currentColor">
             <path
               d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
           </svg>
         </div>
-        <h1 class="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">欢迎回来
+        <h1 class="text-4xl font-bold bg-linear-to-r from-blue-400 to-purple-300 bg-clip-text text-transparent">欢迎回来
         </h1>
         <p class="text-gray-300 mt-2">登录您的音乐空间，发现更多精彩</p>
       </div>
@@ -48,7 +48,7 @@
           </div>
 
           <button type="submit" :disabled="loading"
-            class="w-full h-12 mt-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transform transition-all active:scale-95 disabled:opacity-50">
+            class="w-full h-12 mt-2 bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg transform transition-all active:scale-95 disabled:opacity-50">
             <span v-if="loading">登录中...</span>
             <span v-else>立即登录</span>
           </button>
@@ -75,8 +75,10 @@ import { ref, reactive } from 'vue'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
+import { usePlayerStore } from '../stores/player'
 
 const userStore = useUserStore()
+const playStore = usePlayerStore()
 const router = useRouter()
 const loading = ref(false)
 
@@ -107,6 +109,8 @@ const handleLogin = async () => {
     const result = await userStore.login(form.user_name, form.password)
     if (result.success) {
       ElMessage.success("登录成功，欢迎回来！")
+      playStore.fetchUserQueues()
+      playStore.fetchCurrentQueue()
       router.push('/')
     } else {
       ElMessage.error(result.message || "登录失败，请检查用户名或密码")
