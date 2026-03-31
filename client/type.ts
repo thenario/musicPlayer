@@ -223,3 +223,9 @@ export interface ISetPlayMode {
   message: string
   success: boolean
 }
+
+export interface LyricLine {
+  time: number
+  content: string
+  translation?: string
+}
