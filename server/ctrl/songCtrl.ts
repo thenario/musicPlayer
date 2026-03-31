@@ -64,15 +64,17 @@ export const getSongs = async (req: Request, res: Response) => {
 
 export const uploadSong = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-  const { added_date, title, artist, album, uploader_id, uploader_name } =
-    req.body;
 
-  if (
-    !files?.["coverfile"] ||
-    !files?.["audiofile"] ||
-    !uploader_id ||
-    !uploader_name
-  ) {
+  const { added_date, title, artist, album, uploader_id, lyrics } = req.body;
+
+  if (!files?.["coverfile"] || !files?.["audiofile"] || !uploader_id) {
+    if (files) {
+      Object.values(files)
+        .flat()
+        .forEach((file) => {
+          if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+        });
+    }
     return res
       .status(400)
       .json({ message: "请上传完整信息(包含封面与音频文件)", data: null });
@@ -90,6 +92,16 @@ export const uploadSong = async (req: Request, res: Response) => {
     const song_url = `${BASE_URL}/songs/${audioFile!.filename}`;
     const file_format = path.extname(audioFile!.filename).replace(".", "");
 
+    const [userRows] = await db.query<any[]>(
+      "SELECT user_name FROM users WHERE user_id = ?",
+      [uploader_id],
+    );
+
+    if (!userRows || userRows.length === 0) {
+      return res.status(404).json({ message: "上传用户不存在" });
+    }
+    const uploader_name = userRows[0].user_name;
+
     const dateToInsert = new Date(added_date || Date.now())
       .toISOString()
       .slice(0, 19)
@@ -97,23 +109,24 @@ export const uploadSong = async (req: Request, res: Response) => {
 
     const sql = ` 
       INSERT INTO songs 
-      (song_title, artist, album, file_size, uploader_id, uploader_name, duration, bitrate, song_cover_url, song_url, date_added, file_format)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      (uploader_name,song_title, artist, album, file_size, uploader_id, duration, bitrate, song_cover_url, song_url, date_added, file_format, lyrics)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const params = [
+      uploader_name,
       title || audioFile!.originalname,
       artist || "未知艺术家",
       album || "未知专辑",
       audioFile!.size,
       uploader_id,
-      uploader_name,
       duration,
       bitrate,
       song_cover_url,
       song_url,
       dateToInsert,
       file_format,
+      lyrics || null,
     ];
 
     await db.query(sql, params);

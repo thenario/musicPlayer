@@ -21,15 +21,14 @@ const getSongs = async (search_page: number, searchKeyword: string) => {
   }
 }
 
-const uploadSong = async (uploaFormdata: any) => {
-  const res = await request.post<any, IAxiosRes<any>>('/songs', uploaFormdata)
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IUploadSong
-  }
+export const uploadSong = async (
+  formData: FormData,
+  onProgress?: (progressEvent: any) => void,
+): Promise<IUploadSong> => {
+  const res = await request.post<any, IAxiosRes<any>>('/songs', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    onUploadProgress: onProgress,
+  })
 
   return {
     success: true,
