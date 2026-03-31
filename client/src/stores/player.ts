@@ -10,6 +10,7 @@ export const usePlayerStore = defineStore('player', () => {
   const currentSong = ref<ISong | null>(null)
   const isPlaying = ref<boolean>(false)
   const audioElement = ref<HTMLAudioElement | null>(null)
+  let fadeTimer: ReturnType<typeof setInterval> | null = null
 
   const progress = ref<number>(0)
   const currentTime = ref<number>(0)
@@ -72,7 +73,15 @@ export const usePlayerStore = defineStore('player', () => {
     if (playMode.value === 'repeat_one') {
       if (audioElement.value) {
         audioElement.value.currentTime = 0
-        audioElement.value.play()
+        audioElement.value
+          .play()
+          .then(() => {
+            fadeIn(audioElement.value!, 1500)
+          })
+          .catch((e) => {
+            console.warn('单曲循环播放被拦截', e)
+            audioElement.value!.volume = 1
+          })
       }
     } else {
       nextSong(true)
@@ -138,7 +147,6 @@ export const usePlayerStore = defineStore('player', () => {
     element.addEventListener('progress', () => {
       if (element.duration > 0) {
         for (let i = 0; i < element.buffered.length; i++) {
-          // 寻找当前播放时间所在的缓冲段
           if (element.buffered.start(element.buffered.length - 1 - i) < element.currentTime) {
             const bufferEnd = element.buffered.end(element.buffered.length - 1 - i)
             bufferPercent.value = (bufferEnd / element.duration) * 100
@@ -149,6 +157,56 @@ export const usePlayerStore = defineStore('player', () => {
     })
 
     element.volume = volume.value / 100
+  }
+
+  const fadeIn = (audio: HTMLAudioElement, duration: number = 1500) => {
+    if (fadeTimer) clearInterval(fadeTimer)
+
+    const targetVolume = volume.value / 100
+    const step = 0.05 * targetVolume
+    const interval = duration / 20
+
+    fadeTimer = setInterval(() => {
+      if (!audio) {
+        if (fadeTimer) clearInterval(fadeTimer)
+        return
+      }
+
+      const nextVolume = audio.volume + step
+      if (nextVolume < targetVolume) {
+        audio.volume = nextVolume
+      } else {
+        audio.volume = targetVolume
+        if (fadeTimer) {
+          clearInterval(fadeTimer)
+          fadeTimer = null
+        }
+      }
+    }, interval)
+  }
+
+  const fadeOut = (audio: HTMLAudioElement, duration: number = 1000, onComplete?: () => void) => {
+    if (fadeTimer) clearInterval(fadeTimer)
+
+    const step = (0.1 * volume.value) / 100
+    const interval = duration / 10
+
+    fadeTimer = setInterval(() => {
+      if (!audio) {
+        clearInterval(fadeTimer!)
+        return
+      }
+
+      const nextVolume = audio.volume - step
+      if (nextVolume > 0.01) {
+        audio.volume = nextVolume
+      } else {
+        audio.volume = 0
+        clearInterval(fadeTimer!)
+        fadeTimer = null
+        if (onComplete) onComplete()
+      }
+    }, interval)
   }
 
   const playAtIndex = async (index: number) => {
@@ -162,7 +220,15 @@ export const usePlayerStore = defineStore('player', () => {
       if (audioElement.value) {
         const token = localStorage.getItem('token')
         audioElement.value.src = `${API_BASE_URL}/api/songs/${song.song_id}/stream?token=${token}`
-        audioElement.value.play().catch((e) => console.warn('自动播放被拦截', e))
+        audioElement.value
+          .play()
+          .then(() => {
+            fadeIn(audioElement.value!, 1500)
+          })
+          .catch((e) => {
+            console.warn('自动播放被拦截', e)
+            audioElement.value!.volume = 1
+          })
       }
       updateMediaSession()
       syncPlayStateToBackend()
@@ -176,12 +242,29 @@ export const usePlayerStore = defineStore('player', () => {
   const togglePlay = () => (isPlaying.value ? pauseSong() : resumeSong())
 
   const pauseSong = () => {
-    audioElement.value?.pause()
+    if (currentSong.value && audioElement.value) {
+      const audio = audioElement.value
+      isPlaying.value = false
+      fadeOut(audio, 800, () => {
+        audio.pause()
+      })
+    }
   }
 
   const resumeSong = () => {
-    if (currentSong.value) {
-      audioElement.value?.play()
+    if (currentSong.value && audioElement.value) {
+      const audio = audioElement.value
+
+      audio.volume = 0
+      audio
+        .play()
+        .then(() => {
+          fadeIn(audio, 1000)
+        })
+        .catch((e) => {
+          console.warn('恢复播放失败', e)
+          audio.volume = 1
+        })
     }
   }
 
