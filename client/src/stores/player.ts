@@ -6,6 +6,7 @@ import { queueApi } from '../../axios/queueApi'
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
 export const usePlayerStore = defineStore('player', () => {
+  const bufferPercent = ref(0)
   const currentSong = ref<ISong | null>(null)
   const isPlaying = ref<boolean>(false)
   const audioElement = ref<HTMLAudioElement | null>(null)
@@ -132,6 +133,19 @@ export const usePlayerStore = defineStore('player', () => {
     element.addEventListener('play', () => {
       isPlaying.value = true
       updateMediaSession()
+    })
+
+    element.addEventListener('progress', () => {
+      if (element.duration > 0) {
+        for (let i = 0; i < element.buffered.length; i++) {
+          // 寻找当前播放时间所在的缓冲段
+          if (element.buffered.start(element.buffered.length - 1 - i) < element.currentTime) {
+            const bufferEnd = element.buffered.end(element.buffered.length - 1 - i)
+            bufferPercent.value = (bufferEnd / element.duration) * 100
+            break
+          }
+        }
+      }
     })
 
     element.volume = volume.value / 100
@@ -620,6 +634,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   return {
     currentSong,
+    bufferPercent,
     isPlaying,
     progress,
     currentTime,

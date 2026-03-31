@@ -49,11 +49,21 @@
 
         <div class="w-full flex items-center gap-3 group">
             <span class="text-[10px] font-mono text-gray-500 w-10 text-right">{{ formatTime(sliderValue) }}</span>
-            <div class="relative flex-1 flex items-center">
+
+            <div class="relative flex-1 h-6 flex items-center">
+
+                <div class="absolute w-full h-1 bg-gray-700 rounded-full"></div>
+
+                <div class="absolute h-1 bg-gray-500 rounded-full transition-all duration-300"
+                    :style="{ width: bufferPercent + '%' }"></div>
+
+                <div class="absolute h-1 bg-green-500 rounded-full"
+                    :style="{ width: (sliderValue / (safeDuration || 1)) * 100 + '%' }"></div>
+
                 <input type="range" v-model="sliderValue" :max="safeDuration" step="0.1" @input="handleSeekInput"
-                    @change="handleSeekChange" class="custom-range"
-                    :style="{ '--progress': (sliderValue / (safeDuration || 1)) * 100 + '%' }" />
+                    @change="handleSeekChange" class="custom-range absolute w-full h-full cursor-pointer z-10" />
             </div>
+
             <span class="text-[10px] font-mono text-gray-500 w-10">{{ formatTime(safeDuration) }}</span>
         </div>
     </div>
@@ -62,9 +72,10 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { usePlayerStore } from '../stores/player'
+import { storeToRefs } from 'pinia'
 
 const playerStore = usePlayerStore()
-
+const { bufferPercent } = storeToRefs(playerStore);
 const isDragging = ref(false)
 const sliderValue = ref(0)
 
@@ -101,20 +112,32 @@ const formatTime = (s: number) => {
 <style scoped>
 @reference "../assets/index.css";
 
-.ctrl-btn {
-    @apply text-gray-400 hover:text-white transition-all active:scale-90 disabled:opacity-20;
+.custom-range {
+    appearance: none;
+    background: transparent;
+    margin: 0;
+    outline: none;
 }
 
-.custom-range {
-    @apply w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500;
-    background-image: linear-gradient(to right, #10b981 var(--progress), transparent var(--progress));
+.custom-range::-webkit-slider-runnable-track {
+    background: transparent;
+    height: 4px;
 }
 
 .custom-range::-webkit-slider-thumb {
-    @apply appearance-none w-3 h-3 bg-white rounded-full opacity-0 transition-opacity;
+    -webkit-appearance: none;
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background: #ffffff;
+    cursor: pointer;
+    margin-top: -4px;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transition: opacity 0.2s;
 }
 
 .group:hover .custom-range::-webkit-slider-thumb {
-    @apply opacity-100;
+    opacity: 1;
 }
 </style>
