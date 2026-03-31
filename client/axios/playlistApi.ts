@@ -28,6 +28,22 @@ const createPlaylist = async (formData: any) => {
   }
 }
 
+const editPlaylistDetails = async (formData: any) => {
+  const res = await request.patch<any, IAxiosRes<any>>('/playlists', formData)
+
+  if (!res.success) {
+    return {
+      success: false,
+      message: res.message,
+    } as ICreatePlaylist
+  }
+
+  return {
+    success: true,
+    message: res.message,
+  }
+}
+
 const deletePlaylist = async (playlistId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
@@ -154,4 +170,5 @@ export const playlistApi = {
   unlikePlaylist,
   removeSongFromPlaylist,
   addSongToPlaylist,
+  editPlaylistDetails,
 }

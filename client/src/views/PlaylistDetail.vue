@@ -1,10 +1,9 @@
 <template>
   <div class="h-full flex flex-col bg-gray-950 text-white">
-    <!-- 加载状态 -->
+
     <div v-if="loading" v-loading="true" element-loading-background="transparent" class="flex-1"></div>
 
     <div v-else-if="playlist" class="h-full flex flex-col overflow-hidden">
-      <!-- 歌单头部信息 -->
       <div
         class="shrink-0 p-8 bg-linear-to-b from-blue-900/40 to-gray-950 flex items-end gap-8 border-b border-white/5">
         <div class="w-56 h-56 rounded-xl shadow-2xl overflow-hidden shrink-0 group relative">
@@ -34,7 +33,6 @@
         </div>
       </div>
 
-      <!-- 控制栏 -->
       <div class="p-6 flex items-center justify-between">
         <div class="flex items-center gap-6">
           <button @click="playAll"
@@ -52,7 +50,6 @@
             </el-icon>
           </el-tooltip>
 
-          <!-- 歌单管理下拉菜单 -->
           <el-dropdown v-if="isOwner" trigger="click">
             <el-icon :size="28" class="text-gray-400 hover:text-white cursor-pointer">
               <MoreFilled />
@@ -62,13 +59,15 @@
                 <el-dropdown-item @click="showAddSongModal = true" :icon="Plus">添加歌曲到歌单</el-dropdown-item>
                 <el-dropdown-item @click="confirmDeletePlaylist" :icon="Delete" divided
                   class="text-red-500">删除歌单</el-dropdown-item>
+                <router-link :to="`/playlists/${playlist.playlist_id}/edit`" class="no-underline">
+                  <el-dropdown-item :icon="Edit">编辑歌单信息</el-dropdown-item>
+                </router-link>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
         </div>
       </div>
 
-      <!-- 歌曲列表表格 -->
       <div class="flex-1 overflow-hidden px-6">
         <el-table :data="songs" style="width: 100%" row-class-name="song-row group" @row-dblclick="playSong"
           class="playlist-table">
@@ -94,19 +93,16 @@
             <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
           </el-table-column>
 
-          <!-- 操作列：队列、下一首、移除 -->
           <el-table-column label="操作" width="180" align="right">
             <template #default="{ row }">
               <div
                 class="flex justify-end items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
-                <!-- 立即播放 -->
                 <el-tooltip content="立即播放">
                   <el-icon class="cursor-pointer text-blue-400 hover:text-blue-300" :size="20" @click="playSong(row)">
                     <VideoPlay />
                   </el-icon>
                 </el-tooltip>
 
-                <!-- 下一首播放 -->
                 <el-tooltip content="下一首播放">
                   <el-icon class="cursor-pointer text-gray-400 hover:text-white" :size="20"
                     @click="handlePlayNext(row)">
@@ -114,7 +110,6 @@
                   </el-icon>
                 </el-tooltip>
 
-                <!-- 添加到队列 -->
                 <el-tooltip content="添加到队列">
                   <el-icon class="cursor-pointer text-gray-400 hover:text-white" :size="20"
                     @click="handleAddToQueue(row)">
@@ -122,7 +117,6 @@
                   </el-icon>
                 </el-tooltip>
 
-                <!-- 仅所有者可见：从歌单移除歌曲 -->
                 <el-tooltip v-if="isOwner" content="从歌单移除">
                   <el-icon class="cursor-pointer text-gray-500 hover:text-red-500" :size="18"
                     @click="handleRemoveSong(row.song_id)">
@@ -136,12 +130,10 @@
       </div>
     </div>
 
-    <!-- 空状态 -->
     <div v-else class="flex-1 flex items-center justify-center">
       <el-empty description="暂无歌单详情" />
     </div>
 
-    <!-- 弹窗：搜索并添加歌曲 -->
     <el-dialog v-model="showAddSongModal" title="向歌单添加歌曲" width="500px" destroy-on-close>
       <el-input v-model="songSearchQuery" placeholder="搜索歌名或歌手..." :prefix-icon="Search" clearable
         @input="debouncedSearch" />
@@ -173,7 +165,11 @@ import type { IPlaylist, ISong } from '../../type'
 import { playlistApi } from '../../axios/playlistApi'
 import { songApi } from '../../axios/songApi'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Delete, Plus, Search } from '@element-plus/icons-vue'
+import {
+  Delete, Plus, Search, Edit,
+  MoreFilled, Star, StarFilled,
+  CaretRight, VideoPlay, List, CirclePlus
+} from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -198,7 +194,7 @@ const isOwner = computed(() => {
 const getImageUrl = (url: string) => {
   if (!url) return ''
   if (url.startsWith('http')) return url
-  return `http://127.0.0.1:3000${url.startsWith('/') ? '' : '/'}${url}`
+  return `${import.meta.env.VITE_API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
 const loadPlaylist = async () => {

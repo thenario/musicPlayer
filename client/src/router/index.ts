@@ -35,6 +35,11 @@ const routes = [
     component: () => import('../views/PlaylistDetail.vue'),
   },
   {
+    path: '/playlists/:id/edit',
+    name: 'EditPlaylistDetail',
+    component: () => import('../views/EditPlaylistDetail.vue'),
+  },
+  {
     path: '/upload',
     name: 'Upload',
     component: () => import('../views/Upload.vue'),

@@ -90,6 +90,113 @@ export const createPlaylist = async (req: CustomRequest, res: Response) => {
   }
 };
 
+const API_BASE = "http://127.0.0.1:3000";
+
+export const editPlaylistDetail = async (req: any, res: Response) => {
+  const { playlist_id, name, description } = req.body;
+  const user_id = req.user?.user_id;
+  const file = req.file;
+
+  if (!playlist_id) {
+    return res.status(400).json({ success: false, message: "缺少歌单ID" });
+  }
+
+  const connection = await db.getConnection();
+
+  try {
+    // 1. 查询旧资料
+    const [rows]: any = await connection.execute(
+      "SELECT creator_id, playlist_cover_url FROM playlists WHERE playlist_id = ?",
+      [playlist_id],
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ success: false, message: "歌单不存在" });
+    }
+
+    const oldPlaylist = rows[0];
+
+    if (String(oldPlaylist.creator_id) !== String(user_id)) {
+      return res
+        .status(403)
+        .json({ success: false, message: "无权修改此歌单" });
+    }
+
+    let newCoverUrl = oldPlaylist.playlist_cover_url;
+    let oldFilePath: string | null = null;
+    let oldFileName: string | null = null;
+
+    if (file) {
+      newCoverUrl = `${API_BASE}/static/playlist_covers/${file.filename}`;
+
+      const oldFileName = oldPlaylist.playlist_cover_url?.split("/").pop();
+      if (oldFileName && oldFileName.includes("cover_image")) {
+        // 使用 process.cwd() 确保路径从项目根目录开始
+        oldFilePath = path.join(
+          process.cwd(),
+          "static/playlist_covers",
+          oldFileName,
+        );
+      }
+    }
+
+    const updateFields = [];
+    const params = [];
+
+    if (name) {
+      updateFields.push("playlist_name = ?");
+      params.push(name);
+    }
+    if (description !== undefined) {
+      updateFields.push("description = ?");
+      params.push(description);
+    }
+    if (file) {
+      updateFields.push("playlist_cover_url = ?");
+      params.push(newCoverUrl);
+    }
+
+    if (updateFields.length === 0) {
+      return res.status(200).json({ success: true, message: "资料未变动" });
+    }
+
+    updateFields.push("updated_date = NOW()");
+    params.push(playlist_id);
+
+    const sql = `UPDATE playlists SET ${updateFields.join(", ")} WHERE playlist_id = ?`;
+
+    await connection.beginTransaction();
+    await connection.execute(sql, params);
+    await connection.commit();
+
+    if (oldFilePath && fs.existsSync(oldFilePath)) {
+      try {
+        fs.unlinkSync(oldFilePath);
+        console.log(`[清理成功] 已删除旧封面文件: ${oldFileName}`);
+      } catch (e) {
+        console.error("删除旧文件失败:", e);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "歌单信息已更新",
+      data: { cover_url: newCoverUrl },
+    });
+  } catch (error) {
+    await connection.rollback();
+    console.error("Edit playlist error:", error);
+
+    if (file?.path && fs.existsSync(file.path)) {
+      fs.unlinkSync(file.path);
+    }
+
+    return res.status(500).json({ success: false, message: "服务器错误" });
+  } finally {
+    connection.release();
+  }
+};
+
 export const deletePlaylist = async (req: CustomRequest, res: Response) => {
   const playlistId = req.params.id;
   const userId = req.user?.user_id;
