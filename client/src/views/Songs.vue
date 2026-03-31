@@ -12,12 +12,11 @@
     <div class="flex-1 overflow-hidden">
       <el-table v-loading="loading" element-loading-background="rgba(0, 0, 0, 0.5)" :data="songs" style="width: 100%"
         height="100%" row-class-name="song-row group" @row-dblclick="handlePlayNow" class="all-songs-table">
-        <!-- ... 列定义保持不变 ... -->
         <el-table-column label="标题" min-width="250">
           <template #default="{ row }">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 rounded overflow-hidden shrink-0 bg-gray-800">
-                <img v-if="row.song_cover_url" :src="getImageUrl(row.song_cover_url)"
+                <img v-if="row.song_cover_url" :src="getImageUrl(row.song_cover_url)" alt="歌曲封面"
                   class="w-full h-full object-cover" />
                 <el-icon v-else class="w-full h-full flex items-center justify-center text-gray-600">
                   <Headset />
@@ -69,7 +68,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { songApi } from '../../axios/songApi'
