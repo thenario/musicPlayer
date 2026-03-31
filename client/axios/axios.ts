@@ -1,5 +1,4 @@
-import axios, { AxiosError } from 'axios'
-import type { AxiosResponse } from 'axios'
+import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { router } from '../src/router/index'
 
 class AxiosBusinessError extends Error {
@@ -18,6 +17,26 @@ class AxiosBusinessError extends Error {
   }
 }
 
+const pendingMap = new Map<string, AbortController>()
+
+const getRequestKey = (config: InternalAxiosRequestConfig) => {
+  return [
+    config.method,
+    config.url,
+    JSON.stringify(config.params),
+    JSON.stringify(config.data),
+  ].join('&')
+}
+
+const removePendingRequest = (config: InternalAxiosRequestConfig) => {
+  const key = getRequestKey(config)
+  if (pendingMap.has(key)) {
+    const controller = pendingMap.get(key)
+    controller?.abort()
+    pendingMap.delete(key)
+  }
+}
+
 const request = axios.create({
   baseURL: '/api',
   timeout: 5000,
@@ -25,6 +44,11 @@ const request = axios.create({
 
 request.interceptors.request.use(
   (config) => {
+    removePendingRequest(config)
+
+    const controller = new AbortController()
+    config.signal = controller.signal
+    pendingMap.set(getRequestKey(config), controller)
     const token = localStorage.getItem('token')
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
@@ -38,6 +62,7 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   (response: AxiosResponse): any => {
+    removePendingRequest(response.config)
     return {
       success: response.data?.success,
       data: response.data?.data || null,
@@ -46,6 +71,14 @@ request.interceptors.response.use(
     }
   },
   (error: AxiosError) => {
+    if (error.config) {
+      removePendingRequest(error.config)
+    }
+
+    if (axios.isCancel(error)) {
+      console.log('请求被取消:', error.message)
+      return new Promise(() => {})
+    }
     let message = '网络连接异常'
     let status = 500
     let backendData = null

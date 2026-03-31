@@ -42,6 +42,24 @@ playlistRt.post(
   playlistCtrl.createPlaylist,
 );
 
+playlistRt.patch(
+  "",
+  (req, res, next) => {
+    upload.single("cover_image")(req, res, (err: any) => {
+      if (err instanceof multer.MulterError) {
+        return res
+          .status(400)
+          .json({ message: `上传工具错误: ${err.message}` });
+      } else if (err) {
+        return res.status(400).json({ message: err.message });
+      }
+      next();
+    });
+  },
+  authMiddleWare,
+  playlistCtrl.editPlaylistDetail,
+);
+
 playlistRt.delete("/:id", authMiddleWare, playlistCtrl.deletePlaylist);
 
 playlistRt.post("/:id/likes", authMiddleWare, playlistCtrl.likePlaylist);
