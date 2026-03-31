@@ -36,7 +36,24 @@ export const uploadSong = async (
   }
 }
 
+export const getLyrics = async (songId: number) => {
+  const res = await request.get<any, any>(`/songs/${songId}/lyrics`)
+  if (!res.success) {
+    return {
+      success: false,
+      message: res.message,
+    }
+  }
+
+  return {
+    success: true,
+    lyrics: res.lyrics,
+    t_lyrics: res.t_lyrics,
+  }
+}
+
 export const songApi = {
   getSongs,
   uploadSong,
+  getLyrics,
 }

@@ -13,14 +13,14 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(express.json());
 app.use(cors());
-app.use("/static", express.static(path.join(process.cwd(), "static")));
-app.use(express.static(path.join(process.cwd(), "dist")));
 app.use("/api/users", userRt);
 app.use("/api/songs", songRt);
 app.use("/api/playlists", playlistRt);
 app.use("/api/queues", queueRt);
 app.use("/api/stats", choreRt);
 
+app.use("/static", express.static(path.join(process.cwd(), "static")));
+app.use(express.static(path.join(process.cwd(), "dist")));
 app.get(/.*/, (req, res) => {
   res.sendFile(path.join(process.cwd(), "dist", "index.html"));
 });

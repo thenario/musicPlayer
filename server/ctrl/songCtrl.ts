@@ -62,6 +62,41 @@ export const getSongs = async (req: Request, res: Response) => {
   }
 };
 
+export const getLyricsById = async (req: Request, res: Response) => {
+  const { song_id } = req.params;
+
+  if (!song_id) {
+    return res.status(400).json({ success: false, message: "缺少歌曲ID" });
+  }
+
+  try {
+    const [rows]: any = await db.query(
+      "SELECT lyrics, t_lyrics FROM songs WHERE song_id = ?",
+      [song_id],
+    );
+
+    if (!rows || rows.length === 0) {
+      return res.status(404).json({ success: false, message: "未找到该歌曲" });
+    }
+
+    const song = rows[0];
+
+    res.json({
+      success: true,
+      data: {
+        lyric: song.lyrics || "",
+        tlyric: song.t_lyrics || "",
+      },
+    });
+  } catch (err) {
+    console.error("获取歌词失败:", err);
+    res.status(500).json({
+      success: false,
+      message: "服务器内部错误，无法获取歌词",
+    });
+  }
+};
+
 export const uploadSong = async (req: Request, res: Response) => {
   const files = req.files as { [fieldname: string]: Express.Multer.File[] };
 

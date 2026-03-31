@@ -1,8 +1,9 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { IQueue, IQueueItem, ISong } from '../../type'
+import { ref, computed, watch } from 'vue'
+import type { IQueue, IQueueItem, ISong, LyricLine } from '../../type'
 import { queueApi } from '../../axios/queueApi'
-
+import { songApi } from '../../axios/songApi'
+import { parseLyrics } from '../utils/lrcParser'
 const API_BASE_URL = import.meta.env.VITE_API_URL
 
 export const usePlayerStore = defineStore('player', () => {
@@ -11,6 +12,9 @@ export const usePlayerStore = defineStore('player', () => {
   const isPlaying = ref<boolean>(false)
   const audioElement = ref<HTMLAudioElement | null>(null)
   let fadeTimer: ReturnType<typeof setInterval> | null = null
+
+  const lyrics = ref<LyricLine[]>()
+  const isLoadingLyrics = ref(false)
 
   const progress = ref<number>(0)
   const currentTime = ref<number>(0)
@@ -715,6 +719,32 @@ export const usePlayerStore = defineStore('player', () => {
   const closeQueue = () => (isQueueVisible.value = false)
   const toggleSongDetail = () => (isSongDetailVisible.value = !isSongDetailVisible.value)
 
+  watch(
+    () => currentSong.value?.song_id,
+    async (id) => {
+      if (!id) {
+        lyrics.value = []
+        return
+      }
+
+      try {
+        isLoadingLyrics.value = true
+        const res = await songApi.getLyrics(id)
+
+        if (res.success) {
+          lyrics.value = parseLyrics(res.lyrics, res.t_lyrics)
+        } else {
+          lyrics.value = [{ time: 0, content: '未找到歌词' }]
+        }
+      } catch (error) {
+        console.error('获取歌词发生硬错误:', error)
+        lyrics.value = [{ time: 0, content: '歌词加载失败' }]
+      } finally {
+        isLoadingLyrics.value = false
+      }
+    },
+  )
+
   return {
     currentSong,
     bufferPercent,
@@ -729,6 +759,7 @@ export const usePlayerStore = defineStore('player', () => {
     userQueues,
     isQueueVisible,
     isSongDetailVisible,
+    lyrics,
 
     hasNext,
     hasPrevious,

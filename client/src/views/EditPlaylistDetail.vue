@@ -64,7 +64,7 @@
                         <div class="aspect-square relative overflow-hidden">
                             <img :src="previewImage || '/default-cover.png'" alt="封面图片"
                                 class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+                            <div class="absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent">
                             </div>
                             <div class="absolute bottom-4 left-4 right-4">
                                 <h3 class="text-xl font-bold truncate">{{ form.name || '未命名歌单' }}</h3>
