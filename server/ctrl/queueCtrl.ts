@@ -37,7 +37,8 @@ SELECT
                             'song_title', s.song_title,
                             'song_cover_url', s.song_cover_url,
                             'song_url', s.song_url,
-                            'artist', s.artist
+                            'artist', s.artist,
+                            'album', s.album
                         )
                     )
                 )
@@ -107,14 +108,15 @@ SELECT
                     'song_title', ordered_items.song_title,
                     'song_cover_url', ordered_items.song_cover_url,
                     'song_url', ordered_items.song_url,
-                    'artist', ordered_items.artist
+                    'artist', ordered_items.artist,
+                    'album', ordered_items.album
                 )
             )
         )
     ) AS queue_items
 FROM queues q
 LEFT JOIN (
-    SELECT qi.*, s.song_title, s.song_cover_url, s.song_url, s.artist 
+    SELECT qi.*, s.song_title, s.song_cover_url, s.song_url, s.artist ,s.album
     FROM queue_items qi
     LEFT JOIN songs s ON qi.song_id = s.song_id
     ORDER BY qi.queue_item_position ASC
@@ -164,7 +166,8 @@ export const getQueueById = async (req: Request, res: Response) => {
               'song_title', s.song_title,
               'song_cover_url', s.song_cover_url,
               'song_url', s.song_url,
-              'artist', s.artist
+              'artist', s.artist,
+              'album',s.album
             )
           ))
         ) AS queue_items

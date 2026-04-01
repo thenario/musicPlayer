@@ -19,12 +19,6 @@ app.use("/api/playlists", playlistRt);
 app.use("/api/queues", queueRt);
 app.use("/api/stats", choreRt);
 
-app.use("/static", express.static(path.join(process.cwd(), "static")));
-app.use(express.static(path.join(process.cwd(), "dist")));
-app.get(/.*/, (req, res) => {
-  res.sendFile(path.join(process.cwd(), "dist", "index.html"));
-});
-
 const PORT = 3000;
 const HOST = "127.0.0.1";
 

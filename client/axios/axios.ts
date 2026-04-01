@@ -70,7 +70,7 @@ request.interceptors.response.use(
       code: response.data?.code || 200,
     }
   },
-  (error: AxiosError) => {
+  (error: any) => {
     if (error.config) {
       removePendingRequest(error.config)
     }
