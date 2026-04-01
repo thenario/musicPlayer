@@ -222,8 +222,7 @@ export const usePlayerStore = defineStore('player', () => {
       currentSong.value = song
       isPlaying.value = true
       if (audioElement.value) {
-        const token = localStorage.getItem('token')
-        audioElement.value.src = `${API_BASE_URL}/api/songs/${song.song_id}/stream?token=${token}`
+        audioElement.value.src = currentSong.value.song_url
         audioElement.value
           .play()
           .then(() => {
@@ -574,9 +573,8 @@ export const usePlayerStore = defineStore('player', () => {
 
   const prepareAudioSource = (songId: number, savedProgress: number) => {
     const el = audioElement.value!
-    const token = localStorage.getItem('token')
 
-    el.src = `${API_BASE_URL}/api/songs/${songId}/stream?token=${token}`
+    el.src = currentSong.value!.song_url
 
     el.addEventListener(
       'loadedmetadata',

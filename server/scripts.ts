@@ -4,22 +4,21 @@ import * as mm from "music-metadata";
 import "dotenv/config";
 import db from "./db.js";
 
+// 确保路径指向服务器上的真实位置
 const SONGS_DIR = path.resolve("static/songs");
 const COVERS_DIR = path.resolve("static/song_covers");
 
 async function syncSongs() {
   console.log("\n" + "=".repeat(40));
-  console.log("🚀 音乐库重置并同步启动...");
+  console.log("🚀 音乐库重置并同步启动 (Nginx 优化版)...");
   console.log("=".repeat(40));
 
   try {
     // --- 1. 环境清理 ---
-
-    // 清空数据库表 (TRUNCATE 会重置自增 ID)
     console.log("🧹 正在清空数据库 songs 表...");
+    // 使用 TRUNCATE 清空数据并重置 ID
     await db.query("TRUNCATE TABLE songs");
 
-    // 清空封面文件夹
     if (fs.existsSync(COVERS_DIR)) {
       console.log("📂 正在清理旧封面图片...");
       const oldCovers = fs.readdirSync(COVERS_DIR);
@@ -30,8 +29,7 @@ async function syncSongs() {
       fs.mkdirSync(COVERS_DIR, { recursive: true });
     }
 
-    // --- 2. 扫描音乐文件 ---
-
+    // --- 2. 扫描文件 ---
     if (!fs.existsSync(SONGS_DIR)) {
       throw new Error(`找不到音乐目录: ${SONGS_DIR}`);
     }
@@ -48,23 +46,17 @@ async function syncSongs() {
     console.log(`📂 发现 ${totalFiles} 首音乐，开始重新导入...\n`);
 
     let successCount = 0;
-    let failCount = 0;
 
     // --- 3. 遍历处理 ---
-
     for (let i = 0; i < totalFiles; i++) {
       const file = musicFiles[i]!;
-      const currentIndex = i + 1;
       const filePath = path.join(SONGS_DIR, file);
       const fileStat = fs.statSync(filePath);
       const fileNameWithoutExt = path.parse(file).name;
 
+      // 解析文件名: 歌曲名_歌手
       let [title, artist] = fileNameWithoutExt.split("_");
       if (!artist) artist = "未知歌手";
-
-      process.stdout.write(
-        `[${currentIndex}/${totalFiles}] 正在处理: ${title!.trim()}... `,
-      );
 
       try {
         const metadata = await mm.parseFile(filePath);
@@ -75,51 +67,62 @@ async function syncSongs() {
         let coverUrl = "";
         const picture = metadata.common.picture?.[0];
 
+        // 生成适配 Nginx 的相对路径
         if (picture) {
-          // 使用时间戳确保唯一，但因为这次是清空后运行，文件夹是干净的
           const timestamp = Date.now();
           const coverFileName = `${fileNameWithoutExt}_${timestamp}.jpg`;
-          coverUrl = `http://127.0.0.1:3000/static/song_covers/${coverFileName}`;
+          // 核心修改：不带 http 和端口
+          coverUrl = `/static/song_covers/${coverFileName}`;
           fs.writeFileSync(path.join(COVERS_DIR, coverFileName), picture.data);
         }
+
+        // 歌曲路径：同样使用相对路径
+        // 注意：如果文件名含特殊字符，Nginx 访问时浏览器会自动编码，存原始文件名即可
+        const songUrl = `/static/songs/${file}`;
 
         const songData = [
           title!.trim(),
           artist.trim(),
-          "空与风的收藏",
+          "我的收藏",
           (fileStat.size / (1024 * 1024)).toFixed(2) + "MB",
           1,
-          "空与风",
+          "Admin",
           duration,
           bitrate,
-          coverUrl,
-          `http://127.0.0.1:3000/static/songs/${file}`,
+          coverUrl, // 存入 /static/song_covers/xxx.jpg
+          songUrl, // 存入 /static/songs/xxx.mp3
           new Date(),
           fileFormat,
         ];
 
         const sql = `
-          INSERT INTO songs 
-          (song_title, artist, album, file_size, uploader_id, uploader_name, duration, bitrate, song_cover_url, song_url, date_added, file_format) 
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `;
+                    INSERT INTO songs 
+                    (song_title, artist, album, file_size, uploader_id, uploader_name, duration, bitrate, song_cover_url, song_url, date_added, file_format) 
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                `;
 
         await db.query(sql, songData);
-        process.stdout.write(`✅\n`);
+
+        // 打印前几条数据用于实时校验
+        if (successCount < 3) {
+          console.log(`[验证] ${title} -> URL: ${songUrl}`);
+        }
+
         successCount++;
       } catch (err) {
-        process.stdout.write(`❌\n`);
-        console.error(`   原因: ${err instanceof Error ? err.message : err}`);
-        failCount++;
+        console.error(`❌ 处理 ${file} 失败:`, err);
       }
     }
 
     console.log("\n" + "=".repeat(40));
-    console.log(`✨ 重置同步完成！`);
-    console.log(`✅ 成功导入: ${successCount} 首`);
-    console.log("=".repeat(40) + "\n");
+    console.log(`✨ 同步完成！共导入 ${successCount} 首。`);
+    console.log("=".repeat(40));
   } catch (error) {
-    console.error("\n🔴 重大错误:", error);
+    console.error("\n🔴 脚本运行崩溃:", error);
+  } finally {
+    // 重要：关闭数据库连接，确保所有 INSERT 事务已提交并退出进程
+    if (db.end) await db.end();
+    process.exit(0);
   }
 }
 
