@@ -726,13 +726,12 @@ export const usePlayerStore = defineStore('player', () => {
         lyrics.value = []
         return
       }
-
       try {
         isLoadingLyrics.value = true
         const res = await songApi.getLyrics(id)
 
         if (res.success) {
-          lyrics.value = parseLyrics(res.lyrics, res.t_lyrics)
+          lyrics.value = parseLyrics(res.lyrics || '', res.t_lyrics || '')
         } else {
           lyrics.value = [{ time: 0, content: '未找到歌词' }]
         }

@@ -1,144 +1,146 @@
 <template>
-  <el-drawer v-model="isQueueVisible" direction="rtl" size="450px" :with-header="false" destroy-on-close
-    class="queue-drawer-container">
-    <div class="flex flex-col h-full bg-gray-950 text-gray-100 font-sans">
+  <Teleport to="body">
+    <el-drawer v-model="isQueueVisible" direction="rtl" size="450px" :with-header="false" destroy-on-close
+      class="queue-drawer-container" :z-index="4000">
+      <div class="flex flex-col h-full bg-gray-950 text-gray-100 font-sans">
 
-      <header class="h-16 flex items-center justify-between px-4 border-b border-white/5 bg-white/5 shrink-0">
-        <el-segmented v-model="activeTab" :options="[
-          { label: '当前播放', value: 'queue' },
-          { label: '队列列表', value: 'lists' }
-        ]" @change="handleTabChange" class="custom-segmented" />
+        <header class="h-16 flex items-center justify-between px-4 border-b border-white/5 bg-white/5 shrink-0">
+          <el-segmented v-model="activeTab" :options="[
+            { label: '当前播放', value: 'queue' },
+            { label: '队列列表', value: 'lists' }
+          ]" @change="handleTabChange" class="custom-segmented" />
 
-        <div class="flex items-center gap-2">
-          <transition name="el-fade-in" mode="out-in">
-            <div v-if="activeTab === 'queue'" class="flex items-center gap-3">
-              <span class="text-[10px] text-gray-500 tracking-tighter">{{ currentQueue.length }} 首</span>
-              <el-button link type="danger" :icon="Delete" @click="confirmClear" size="small"
-                :disabled="currentQueue.length === 0">清空</el-button>
-            </div>
-            <div v-else-if="previewQueueId !== -1" class="flex items-center">
-              <el-button link :icon="ArrowLeft" @click="backToQueueList" size="small">返回列表</el-button>
-            </div>
-          </transition>
-        </div>
-      </header>
+          <div class="flex items-center gap-2">
+            <transition name="el-fade-in" mode="out-in">
+              <div v-if="activeTab === 'queue'" class="flex items-center gap-3">
+                <span class="text-[10px] text-gray-500 tracking-tighter">{{ currentQueue.length }} 首</span>
+                <el-button link type="danger" :icon="Delete" @click="confirmClear" size="small"
+                  :disabled="currentQueue.length === 0">清空</el-button>
+              </div>
+              <div v-else-if="previewQueueId !== -1" class="flex items-center">
+                <el-button link :icon="ArrowLeft" @click="backToQueueList" size="small">返回列表</el-button>
+              </div>
+            </transition>
+          </div>
+        </header>
 
-      <main class="flex-1 overflow-y-auto custom-scrollbar">
-        <div v-show="activeTab === 'queue'" class="p-2">
-          <el-empty v-if="currentQueue.length === 0" description="队列空空如也" :image-size="80" />
+        <main class="flex-1 overflow-y-auto custom-scrollbar">
+          <div v-show="activeTab === 'queue'" class="p-2">
+            <el-empty v-if="currentQueue.length === 0" description="队列空空如也" :image-size="80" />
 
-          <table v-else class="w-full border-separate border-spacing-y-1">
-            <VueDraggable v-model="dragQueue" target="tbody" handle=".drag-handle" :animation="200"
-              ghost-class="drag-ghost">
-              <tbody class="divide-y divide-transparent">
-                <tr v-for="(item, index) in currentQueue" :key="item.queue_item_id" :id="`song-${item.song?.song_id}`"
-                  class="group transition-all hover:bg-white/5 cursor-default"
-                  :class="{ 'bg-blue-600/10 active-row': item.song?.song_id === currentSong?.song_id }"
-                  @dblclick="playFromQueue(index)">
+            <table v-else class="w-full border-separate border-spacing-y-1">
+              <VueDraggable v-model="dragQueue" target="tbody" handle=".drag-handle" :animation="200"
+                ghost-class="drag-ghost">
+                <tbody class="divide-y divide-transparent">
+                  <tr v-for="(item, index) in currentQueue" :key="item.queue_item_id" :id="`song-${item.song?.song_id}`"
+                    class="group transition-all hover:bg-white/5 cursor-default"
+                    :class="{ 'bg-blue-600/10 active-row': item.song?.song_id === currentSong?.song_id }"
+                    @dblclick="playFromQueue(index)">
 
-                  <td class="w-12 py-3 text-center">
-                    <div class="relative flex justify-center items-center h-5">
-                      <!-- 拖拽手柄 -->
-                      <el-icon
-                        class="drag-handle opacity-0 group-hover:opacity-100 cursor-grab text-gray-500 hover:text-white transition-opacity">
-                        <Rank />
-                      </el-icon>
-                      <!-- 播放状态动画 -->
-                      <div v-if="item.song?.song_id === currentSong?.song_id" class="absolute text-blue-500">
-                        <span v-if="isPlaying" class="playing-bar-animation"></span>
-                        <el-icon v-else>
-                          <VideoPause />
+                    <td class="w-12 py-3 text-center">
+                      <div class="relative flex justify-center items-center h-5">
+                        <!-- 拖拽手柄 -->
+                        <el-icon
+                          class="drag-handle opacity-0 group-hover:opacity-100 cursor-grab text-gray-500 hover:text-white transition-opacity">
+                          <Rank />
                         </el-icon>
+                        <!-- 播放状态动画 -->
+                        <div v-if="item.song?.song_id === currentSong?.song_id" class="absolute text-blue-500">
+                          <span v-if="isPlaying" class="playing-bar-animation"></span>
+                          <el-icon v-else>
+                            <VideoPause />
+                          </el-icon>
+                        </div>
                       </div>
-                    </div>
-                  </td>
+                    </td>
 
-                  <td class="px-2">
-                    <div class="flex flex-col truncate max-w-60">
-                      <span class="text-sm truncate font-medium"
-                        :class="item.song?.song_id === currentSong?.song_id ? 'text-blue-400' : 'text-gray-200'">
-                        {{ item.song?.song_title }}
-                      </span>
-                      <span class="text-[10px] text-gray-500 truncate">{{ item.song?.artist }}</span>
-                    </div>
-                  </td>
+                    <td class="px-2">
+                      <div class="flex flex-col truncate max-w-60">
+                        <span class="text-sm truncate font-medium"
+                          :class="item.song?.song_id === currentSong?.song_id ? 'text-blue-400' : 'text-gray-200'">
+                          {{ item.song?.song_title }}
+                        </span>
+                        <span class="text-[10px] text-gray-500 truncate">{{ item.song?.artist }}</span>
+                      </div>
+                    </td>
 
-                  <td class="pr-4 text-right">
-                    <el-button link type="info" :icon="Close"
-                      class="opacity-0 group-hover:opacity-100 transition-opacity"
-                      @click="removeFromQueue(item.queue_item_id)" />
-                  </td>
-                </tr>
-              </tbody>
-            </VueDraggable>
-          </table>
-        </div>
-
-        <div v-show="activeTab === 'lists'" class="p-2">
-          <div v-if="previewQueueId !== -1">
-            <div class="px-2 py-4 border-b border-white/5 mb-2 flex justify-between items-center">
-              <h3 class="text-blue-400 font-bold">{{ previewData?.queue_name || '队列详情' }}</h3>
-              <span class="text-[10px] text-gray-500">{{ previewData?.queue_items?.length }} 首歌</span>
-            </div>
-            <table class="w-full border-separate border-spacing-y-1">
-              <tbody>
-                <tr v-for="(item, index) in previewData?.queue_items" :key="item.queue_item_id"
-                  class="group hover:bg-white/5 transition-all cursor-pointer" @click="playFromPreview(index)">
-                  <!-- 这里的 click 触发“从预览列表播放并切换” -->
-                  <td class="w-10 text-center">
-                    <el-icon class="text-gray-600 group-hover:text-blue-400">
-                      <VideoPlay />
-                    </el-icon>
-                  </td>
-                  <td class="px-2 py-3">
-                    <div class="text-sm text-gray-200 group-hover:text-white">{{ item.song?.song_title }}</div>
-                    <div class="text-[10px] text-gray-500">{{ item.song?.artist }}</div>
-                  </td>
-                </tr>
-              </tbody>
+                    <td class="pr-4 text-right">
+                      <el-button link type="info" :icon="Close"
+                        class="opacity-0 group-hover:opacity-100 transition-opacity"
+                        @click="removeFromQueue(item.queue_item_id)" />
+                    </td>
+                  </tr>
+                </tbody>
+              </VueDraggable>
             </table>
           </div>
 
-          <div v-else>
-            <el-skeleton :loading="previewLoading" animated :rows="5">
-              <template #default>
-                <div v-for="q in userQueues" :key="q.queue_id"
-                  class="flex items-center justify-between p-3 mb-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer group"
-                  @click="handleSwitchQueue(q.queue_id)">
-                  <div class="flex items-center gap-3 overflow-hidden">
-                    <div class="w-10 h-10 bg-gray-800 rounded flex items-center justify-center shrink-0">
-                      <el-icon v-if="currentQueueId === q.queue_id" class="text-blue-500">
-                        <Headset />
+          <div v-show="activeTab === 'lists'" class="p-2">
+            <div v-if="previewQueueId !== -1">
+              <div class="px-2 py-4 border-b border-white/5 mb-2 flex justify-between items-center">
+                <h3 class="text-blue-400 font-bold">{{ previewData?.queue_name || '队列详情' }}</h3>
+                <span class="text-[10px] text-gray-500">{{ previewData?.queue_items?.length }} 首歌</span>
+              </div>
+              <table class="w-full border-separate border-spacing-y-1">
+                <tbody>
+                  <tr v-for="(item, index) in previewData?.queue_items" :key="item.queue_item_id"
+                    class="group hover:bg-white/5 transition-all cursor-pointer" @click="playFromPreview(index)">
+                    <!-- 这里的 click 触发“从预览列表播放并切换” -->
+                    <td class="w-10 text-center">
+                      <el-icon class="text-gray-600 group-hover:text-blue-400">
+                        <VideoPlay />
                       </el-icon>
-                      <el-icon v-else class="text-gray-500">
-                        <List />
-                      </el-icon>
-                    </div>
-                    <div class="flex flex-col truncate">
-                      <span class="text-sm font-medium truncate"
-                        :class="{ 'text-blue-400': currentQueueId === q.queue_id }">
-                        {{ q.queue_name }}
-                      </span>
-                      <span class="text-[10px] text-gray-500">{{ q.song_count }} 首歌曲</span>
-                    </div>
-                  </div>
+                    </td>
+                    <td class="px-2 py-3">
+                      <div class="text-sm text-gray-200 group-hover:text-white">{{ item.song?.song_title }}</div>
+                      <div class="text-[10px] text-gray-500">{{ item.song?.artist }}</div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
 
-                  <div class="flex items-center gap-2">
-                    <el-button link type="primary" size="small"
-                      @click.stop="handlePreviewQueue(q.queue_id)">查看</el-button>
-                    <el-button v-if="currentQueueId !== q.queue_id" link type="danger" :icon="Delete"
-                      class="opacity-40 group-hover:opacity-100 transition-opacity"
-                      @click.stop="confirmDeleteQueue(q.queue_id)" />
+            <div v-else>
+              <el-skeleton :loading="previewLoading" animated :rows="5">
+                <template #default>
+                  <div v-for="q in userQueues" :key="q.queue_id"
+                    class="flex items-center justify-between p-3 mb-2 rounded-lg bg-white/5 hover:bg-white/10 transition-all cursor-pointer group"
+                    @click="handleSwitchQueue(q.queue_id)">
+                    <div class="flex items-center gap-3 overflow-hidden">
+                      <div class="w-10 h-10 bg-gray-800 rounded flex items-center justify-center shrink-0">
+                        <el-icon v-if="currentQueueId === q.queue_id" class="text-blue-500">
+                          <Headset />
+                        </el-icon>
+                        <el-icon v-else class="text-gray-500">
+                          <List />
+                        </el-icon>
+                      </div>
+                      <div class="flex flex-col truncate">
+                        <span class="text-sm font-medium truncate"
+                          :class="{ 'text-blue-400': currentQueueId === q.queue_id }">
+                          {{ q.queue_name }}
+                        </span>
+                        <span class="text-[10px] text-gray-500">{{ q.song_count }} 首歌曲</span>
+                      </div>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                      <el-button link type="primary" size="small"
+                        @click.stop="handlePreviewQueue(q.queue_id)">查看</el-button>
+                      <el-button v-if="currentQueueId !== q.queue_id" link type="danger" :icon="Delete"
+                        class="opacity-40 group-hover:opacity-100 transition-opacity"
+                        @click.stop="confirmDeleteQueue(q.queue_id)" />
+                    </div>
                   </div>
-                </div>
-                <el-empty v-if="userQueues.length === 0" description="没有其他队列" />
-              </template>
-            </el-skeleton>
+                  <el-empty v-if="userQueues.length === 0" description="没有其他队列" />
+                </template>
+              </el-skeleton>
+            </div>
           </div>
-        </div>
-      </main>
-    </div>
-  </el-drawer>
+        </main>
+      </div>
+    </el-drawer>
+  </Teleport>
 </template>
 
 

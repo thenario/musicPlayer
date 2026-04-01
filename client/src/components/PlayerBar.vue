@@ -28,7 +28,7 @@
       </div>
     </div>
 
-    <PlayerControl />
+    <PlayerControl z-index="2" />
 
     <div class="w-[30%] flex items-center justify-end gap-4">
       <div class="flex items-center w-32 gap-2 group">
@@ -56,6 +56,7 @@
 import { ref, computed, watch } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { useMagicKeys, useActiveElement } from '@vueuse/core'
+import { ArrowUpBold } from '@element-plus/icons-vue'
 import PlayerControl from './playerControl.vue'
 import SongDetail from './songDetail.vue'
 
