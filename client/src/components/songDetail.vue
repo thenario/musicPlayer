@@ -1,16 +1,13 @@
-<!-- SongDetail.vue -->
 <template>
     <Teleport to="body">
         <Transition name="slide-up">
             <div v-if="playerStore.isSongDetailVisible" class="song-detail-overlay">
 
-                <!-- 背景层 -->
                 <div class="glass-bg">
                     <div class="blur-image" :style="{ backgroundImage: `url(${currentSongCover})` }"></div>
                     <div class="overlay-dark"></div>
                 </div>
 
-                <!-- 顶部信息：曲名、Artist、Album -->
                 <header class="detail-header">
                     <button class="action-btn exit-btn" @click="playerStore.toggleSongDetail">
                         <el-icon :size="30">
@@ -20,18 +17,22 @@
 
                     <div class="song-meta-center">
                         <h1 class="main-title">{{ currentSong?.song_title }}</h1>
-                        <h2 class="sub-artist">{{ currentSong?.artist }}</h2>
-                        <h3 class="sub-album">{{ currentSong?.album || '未知专辑' }}</h3>
+                        <div class="meta-sub">
+                            <span class="sub-artist">{{ currentSong?.artist }}</span>
+                            <span class="dot">•</span>
+                            <span class="sub-album">{{ currentSong?.album || '未知专辑' }}</span>
+                        </div>
                     </div>
 
-                    <button class="action-btn"><el-icon :size="24">
+                    <button class="action-btn">
+                        <el-icon :size="24">
                             <Share />
-                        </el-icon></button>
+                        </el-icon>
+                    </button>
                 </header>
 
-                <!-- 中间主体布局 -->
                 <main class="detail-content">
-                    <!-- 左侧：唱片旋转 -->
+                    <!-- 左侧：唱片区域（已缩小） -->
                     <div class="content-left">
                         <div class="record-box">
                             <div class="record-vinyl" :class="{ 'is-playing': isPlaying }">
@@ -41,21 +42,28 @@
                         </div>
                     </div>
 
-                    <!-- 右侧：歌词展示 -->
                     <div class="content-right">
-                        <div class="lyrics-wrapper">
-                            <div class="lyrics-scroll">
-                                <div class="lyric-line-active">
-                                    {{ currentSong?.lyrics || '暂无歌词信息' }}
+                        <div class="lyrics-wrapper" ref="lyricsContainer">
+                            <div v-if="lyrics && lyrics.length > 0" class="lyrics-scroll">
+                                <div class="scroll-spacer"></div>
+                                <div v-for="(line, index) in lyrics" :key="index"
+                                    :ref="(el) => lyricRefs[index] = el as HTMLDivElement" class="lyric-line"
+                                    :class="{ 'active': currentLineIndex === index }">
+                                    <p class="text">{{ line.content }}</p>
+                                    <p v-if="line.translation" class="translation">{{ line.translation }}</p>
                                 </div>
-                                <div class="footer-spacer"></div>
+                                <div class="scroll-spacer"></div>
+                            </div>
+
+                            <div v-else class="lyrics-empty">
+                                <p>暂无歌词内容</p>
                             </div>
                         </div>
                     </div>
                 </main>
 
                 <footer class="detail-footer">
-                    <PlayerControl style="--width-control: 1200px" class="player-control-container" />
+                    <PlayerControl style="--width-control: 85%" class="player-control-container" />
                 </footer>
             </div>
         </Transition>
@@ -63,40 +71,110 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
-import { usePlayerStore } from '../stores/player'
+import { ref, watch, onBeforeUpdate, nextTick, computed } from 'vue'
 import { storeToRefs } from 'pinia'
+import { usePlayerStore } from '../stores/player'
 import { ArrowDownBold, Share } from '@element-plus/icons-vue'
 import PlayerControl from './playerControl.vue'
 
 const playerStore = usePlayerStore()
-const { currentSong, isPlaying } = storeToRefs(playerStore)
-const API_BASE_URL = import.meta.env.VITE_API_URL
+const { currentSong, isPlaying, lyrics, currentTime } = storeToRefs(playerStore)
 
-const currentSongCover = computed(() => {
+const lyricsContainer = ref<HTMLDivElement | null>(null)
+const lyricRefs = ref<(HTMLDivElement | null)[]>([])
+const currentLineIndex = ref(0)
 
-    const url = playerStore.currentSong?.song_cover_url
+onBeforeUpdate(() => {
+    lyricRefs.value = []
+})
 
-    if (!url) return ''
+const scrollToActiveLine = (index: number) => {
+    const activeEl = lyricRefs.value[index]
+    const container = lyricsContainer.value
 
-    if (url.startsWith('http')) {
+    if (activeEl && container) {
+        // 居中滚动计算
+        const targetScrollTop = activeEl.offsetTop - container.clientHeight / 2 + activeEl.clientHeight / 2
 
-        return url
+        container.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+        })
+    }
+}
 
+watch(() => playerStore.currentSong?.song_id, () => {
+    currentLineIndex.value = 0
+    lyricRefs.value = []
+
+    nextTick(() => {
+        if (lyricsContainer.value) {
+            lyricsContainer.value.scrollTop = 0
+        }
+    })
+}, { immediate: true })
+
+watch(currentTime, (newTime) => {
+    if (!lyrics.value || lyrics.value.length === 0) return
+
+    let index = lyrics.value.findIndex((line, i) => {
+        const nextLine = lyrics.value![i + 1]
+        return newTime >= line.time && (!nextLine || newTime < nextLine.time)
+    })
+
+    if (index === -1 && newTime < lyrics.value[0]!.time) {
+        index = 0
     }
 
+    if (index !== -1 && index !== currentLineIndex.value) {
+        currentLineIndex.value = index
+        scrollToActiveLine(index)
+    }
+})
+
+const API_BASE_URL = import.meta.env.VITE_API_URL
+const currentSongCover = computed(() => {
+    const url = playerStore.currentSong?.song_cover_url
+    if (!url) return ''
+    if (url.startsWith('http')) return url
     const separator = url.startsWith('/') ? '' : '/'
-
     return `${API_BASE_URL}${separator}${url}`
-
 })
 </script>
 
 <style scoped>
-.player-control-container {
-    width: var(--width-control, 40%);
-    flex-grow: 1;
-    max-width: 90vw;
+.lyric-line {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.3);
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    text-align: left;
+    padding: 12px 0;
+    max-width: 90%;
+}
+
+.lyric-line.active {
+    color: #fff;
+    font-size: 26px;
+    font-weight: 700;
+    opacity: 1;
+    transform: translateX(10px);
+}
+
+.translation {
+    font-size: 16px;
+    margin-top: 4px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.lyrics-empty {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.2);
 }
 
 .song-detail-overlay {
@@ -110,29 +188,8 @@ const currentSongCover = computed(() => {
     color: white;
 }
 
-.glass-bg {
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-}
-
-.blur-image {
-    width: 100%;
-    height: 100%;
-    background-size: cover;
-    background-position: center;
-    filter: blur(60px) brightness(0.3);
-    transform: scale(1.2);
-}
-
-.overlay-dark {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(180deg, rgba(0, 0, 0, 0.4) 0%, rgba(0, 0, 0, 0.8) 100%);
-}
-
 .detail-header {
-    height: 120px;
+    height: 100px;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -145,40 +202,42 @@ const currentSongCover = computed(() => {
 }
 
 .main-title {
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 900;
-    margin-bottom: 4px;
-}
-
-.sub-artist {
-    font-size: 18px;
-    color: #1DB954;
     margin-bottom: 2px;
 }
 
-.sub-album {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.4);
+.meta-sub {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.sub-artist {
+    color: #1DB954;
 }
 
 .detail-content {
     flex: 1;
     display: flex;
-    padding: 0 10%;
+    padding: 0 8%;
     align-items: center;
     overflow: hidden;
 }
 
 .content-left {
-    flex: 1.2;
+    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
 .record-box {
-    width: 460px;
-    height: 460px;
+    width: 380px;
+    height: 380px;
     position: relative;
 }
 
@@ -188,12 +247,11 @@ const currentSongCover = computed(() => {
     border-radius: 50%;
     background: #111;
     background: radial-gradient(circle, #333 0%, #111 30%, #000 100%);
-    padding: 18px;
-    box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
     animation: rotate-record 25s linear infinite;
     animation-play-state: paused;
     will-change: transform;
-    transform: translateZ(0);
 }
 
 .record-vinyl.is-playing {
@@ -212,22 +270,22 @@ const currentSongCover = computed(() => {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 50px;
-    height: 50px;
+    width: 40px;
+    height: 40px;
     background: #111;
     border-radius: 50%;
     border: 2px solid rgba(255, 255, 255, 0.1);
 }
 
 .content-right {
-    flex: 1;
-    height: 70%;
-    padding-left: 80px;
+    flex: 1.2;
+    height: 80%;
+    padding-left: 40px;
 }
 
 .lyrics-wrapper {
     height: 100%;
-    mask-image: linear-gradient(to bottom, transparent, #000 15%, #000 85%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
     overflow-y: auto;
     scrollbar-width: none;
 }
@@ -236,20 +294,37 @@ const currentSongCover = computed(() => {
     display: none;
 }
 
-.lyric-line-active {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.8;
-    color: rgba(255, 255, 255, 0.8);
-    white-space: pre-wrap;
-}
-
 .detail-footer {
-    height: 160px;
+    height: 140px;
     display: flex;
     justify-content: center;
-    padding: 0 15%;
+    padding: 0 10%;
     flex-shrink: 0;
+}
+
+.scroll-spacer {
+    height: 40%;
+}
+
+.glass-bg {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+}
+
+.blur-image {
+    width: 100%;
+    height: 100%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(80px) brightness(0.2);
+    transform: scale(1.1);
+}
+
+.overlay-dark {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
 }
 
 @keyframes rotate-record {
@@ -272,19 +347,17 @@ const currentSongCover = computed(() => {
     transform: translateY(100%);
 }
 
-.footer-spacer {
-    height: 200px;
-}
-
 .action-btn {
     background: none;
     border: none;
     color: #fff;
     opacity: 0.5;
     cursor: pointer;
+    transition: 0.3s;
 }
 
 .action-btn:hover {
     opacity: 1;
+    transform: scale(1.1);
 }
 </style>

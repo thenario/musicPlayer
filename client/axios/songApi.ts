@@ -37,18 +37,26 @@ export const uploadSong = async (
 }
 
 export const getLyrics = async (songId: number) => {
-  const res = await request.get<any, any>(`/songs/${songId}/lyrics`)
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    }
-  }
+  console.log('=== [DEBUG] 1. 进入 getLyrics 函数, ID:', songId)
 
-  return {
-    success: true,
-    lyrics: res.lyrics,
-    t_lyrics: res.t_lyrics,
+  try {
+    const res = await request.get<any, any>(`/songs/${songId}/lyrics`)
+
+    console.log('=== [DEBUG] 2. await 请求结束, 收到 res:', res)
+
+    if (!res.success) {
+      console.log('=== [DEBUG] 3. 业务逻辑失败:', res.message)
+      return { success: false, message: res.message }
+    }
+
+    return {
+      success: true,
+      lyrics: res.data.lyrics,
+      t_lyrics: res.data.t_lyrics,
+    }
+  } catch (err: any) {
+    console.error('=== [DEBUG] 4. 函数内部捕获到崩坏:', err)
+    throw err // 继续抛出给组件
   }
 }
 

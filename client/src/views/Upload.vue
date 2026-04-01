@@ -48,7 +48,6 @@
             </div>
           </div>
 
-          <!-- 信息填写区 -->
           <div class="flex flex-col space-y-4">
             <input v-model="form.title" placeholder="歌曲标题" class="input-style" />
             <input v-model="form.artist" placeholder="艺术家" class="input-style" />
@@ -106,7 +105,6 @@ const form = ref({
   lyrics: ''
 })
 
-// --- 逻辑处理 ---
 
 const handleAudioSelect = (e: Event) => {
   const files = (e.target as HTMLInputElement).files

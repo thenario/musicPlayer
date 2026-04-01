@@ -1,5 +1,5 @@
 <template>
-    <div class="w-[40%] flex flex-col items-center gap-2">
+    <div class="flex flex-col items-center gap-2" :style="{ width: 'var(--width-control, 40%)' }">
         <div class="flex items-center gap-6">
             <button @click="togglePlayMode" class="ctrl-btn" :title="playModeTitle">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

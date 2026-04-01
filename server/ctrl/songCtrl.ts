@@ -84,8 +84,8 @@ export const getLyricsById = async (req: Request, res: Response) => {
     res.json({
       success: true,
       data: {
-        lyric: song.lyrics || "",
-        tlyric: song.t_lyrics || "",
+        lyrics: song.lyrics || "",
+        t_lyrics: song.t_lyrics || "",
       },
     });
   } catch (err) {
