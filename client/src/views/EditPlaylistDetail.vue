@@ -88,7 +88,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router' // 🚩 引入 useRouter
+import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
 import { playlistApi } from "../../axios/playlistApi"
@@ -96,7 +96,7 @@ import { storeToRefs } from 'pinia'
 import { Edit, Camera, Plus } from '@element-plus/icons-vue'
 
 const route = useRoute()
-const router = useRouter() // 🚩 获取 router 实例
+const router = useRouter()
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 

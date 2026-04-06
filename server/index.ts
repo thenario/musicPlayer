@@ -9,7 +9,6 @@ import choreRt from "./router/choreRt.js";
 import { fileURLToPath } from "node:url";
 
 const app = express();
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(express.json());
 app.use(cors());
