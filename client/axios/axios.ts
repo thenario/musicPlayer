@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { router } from '../src/router/index'
 
+// 自定义错误类
 class AxiosBusinessError extends Error {
   code: number
   data: any
@@ -45,10 +46,10 @@ const request = axios.create({
 request.interceptors.request.use(
   (config) => {
     removePendingRequest(config)
-
     const controller = new AbortController()
     config.signal = controller.signal
     pendingMap.set(getRequestKey(config), controller)
+
     const token = localStorage.getItem('token')
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`
@@ -63,11 +64,18 @@ request.interceptors.request.use(
 request.interceptors.response.use(
   (response: AxiosResponse): any => {
     removePendingRequest(response.config)
+
+    const res = response.data // 后端返回的 JSON 数据 { code, message, data }
+    if (res.code !== 200) {
+      const errorMsg = res.message || '业务逻辑错误'
+      throw new AxiosBusinessError(errorMsg, res.code || 500, res.data)
+    }
+
     return {
-      success: response.data?.success,
-      data: response.data?.data || null,
-      message: response.data?.message || '请求成功',
-      code: response.data?.code || 200,
+      success: true,
+      data: res.data || null,
+      message: res.message || '请求成功',
+      code: 200,
     }
   },
   (error: any) => {
@@ -76,9 +84,9 @@ request.interceptors.response.use(
     }
 
     if (axios.isCancel(error)) {
-      console.log('请求被取消:', error.message)
       return new Promise(() => {})
     }
+
     let message = '网络连接异常'
     let status = 500
     let backendData = null
@@ -87,38 +95,31 @@ request.interceptors.response.use(
       status = error.response.status
       backendData = error.response.data
 
-      switch (status) {
-        case 401:
-          message = (backendData as any)?.message || '登录已过期，请重新登录'
+      if (status === 401) {
+        message = backendData?.message || '登录已过期，请重新登录'
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
 
-          localStorage.removeItem('token')
-          localStorage.removeItem('user')
-          if (router) {
-            const currentPath = router.currentRoute.value.fullPath
-            if (router.currentRoute.value.path !== '/login') {
-              router.push({
-                path: '/login',
-                query: { redirect: currentPath },
-              })
-            }
-          } else {
-            globalThis.location.href = '/login'
-          }
-          break
-        case 403:
-          message = '拒绝访问'
-          break
-        case 404:
-          message = '资源未找到'
-          break
-        case 500:
-          message = '服务器内部错误'
-          break
-        default:
-          message = (backendData as any)?.message || `网络错误: ${status}`
+        if (router && router.currentRoute.value.path !== '/login') {
+          router.push({
+            path: '/login',
+            query: { redirect: router.currentRoute.value.fullPath },
+          })
+        }
+      } else {
+        const statusMap: Record<number, string> = {
+          403: '拒绝访问',
+          404: '资源未找到',
+          500: '服务器内部错误',
+          502: '网关错误',
+          504: '网关超时',
+        }
+        message = backendData?.message || statusMap[status] || `网络错误: ${status}`
       }
     } else if (error.request) {
       message = '服务器未响应，请检查网络'
+    } else {
+      message = error.message
     }
 
     throw new AxiosBusinessError(message, status, backendData)

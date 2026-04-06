@@ -48,7 +48,6 @@ songRt.post(
 
 songRt.get("/", songCtrl.getSongs);
 
-songRt.get("/:id/stream", authMiddleWare, songCtrl.streamSong);
 
 songRt.get("/:song_id/lyrics", authMiddleWare, songCtrl.getLyricsById);
 

@@ -19,7 +19,7 @@ async function login(user_name: string, password: string) {
   if (!res.success) {
     return { success: false, message: res.message } as ILogin
   }
-
+  console.log('后端返回全貌:', res)
   localStorage.setItem('user', JSON.stringify(res.data.user))
   localStorage.setItem('token', res.data.token)
 
