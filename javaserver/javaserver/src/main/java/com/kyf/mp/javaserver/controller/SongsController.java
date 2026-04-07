@@ -38,7 +38,7 @@ public class SongsController {
         return songsService.getSongsPage(page, keyword);
     }
 
-    // 2. 获取歌词
+    // 获取歌词
 
     @GetMapping("/{song_id}/lyrics")
     public ResultModel<LyricsVO> getLyrics(@PathVariable("song_id") Integer songId) {
@@ -48,7 +48,7 @@ public class SongsController {
         return songsService.getLyrics(songId);
     }
 
-    // 3. 上传歌曲
+    // 上传歌曲
     @PostMapping
     public ResultModel<Void> upload(@RequestParam("audiofile") MultipartFile audioFile,
             @RequestParam("coverfile") MultipartFile coverFile,

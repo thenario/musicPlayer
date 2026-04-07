@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 public class GetSongsVO {
-    private List<Songs> songs;
+    private List<Songs> songs;// 此处的song是不包括lyrics的
     private PaginationVO pagination;
 
     @Data

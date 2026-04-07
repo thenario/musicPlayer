@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyf.mp.javaserver.mapper.PlaylistsMapper">
-
+    <insert id="insertAndGetId" useGeneratedKeys="true" keyProperty="playlistId"> INSERT INTO
+        playlists (playlist_name, creator_id, playlist_cover_url, description) VALUES
+        (#{playlistName}, #{creatorId}, #{playlistCoverUrl}, #{description}) </insert>
 </mapper>

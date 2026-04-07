@@ -19,7 +19,7 @@ import com.kyf.mp.javaserver.modelVO.LyricsVO;
 public interface ISongsService extends IService<Songs> {
     ResultModel<GetSongsVO> getSongsPage(Integer page, String keyword);
 
-    ResultModel<LyricsVO> getLyrics(Integer songId);// 定义在ctrl
+    ResultModel<LyricsVO> getLyrics(Integer songId);
 
     ResultModel<Void> uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
             String title, String artist, String album, String lyrics);
