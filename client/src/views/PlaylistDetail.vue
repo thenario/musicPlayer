@@ -208,7 +208,7 @@ const loadPlaylist = async () => {
   try {
     const res = await playlistApi.getPlaylistById(Number(idParam))
     playlist.value = res.playlist
-    songs.value = res.songs || []
+    songs.value = res.songs ? res.songs.sort((a: any, b: any) => a.song_playlist_position - b.song_playlist_position) : []
     is_liked.value = (res as any).is_liked
   } catch (error) {
     console.error(error)

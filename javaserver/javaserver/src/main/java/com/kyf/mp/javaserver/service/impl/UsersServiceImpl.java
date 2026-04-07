@@ -1,5 +1,6 @@
 package com.kyf.mp.javaserver.service.impl;
 
+import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.entity.Users;
 import com.kyf.mp.javaserver.mapper.UsersMapper;
@@ -9,6 +10,7 @@ import com.kyf.mp.javaserver.service.IUsersService;
 import com.kyf.mp.javaserver.utils.JwtUtils;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -27,24 +29,31 @@ import org.springframework.beans.BeanUtils;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements IUsersService {
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
     public ResultModel<LoginVO> login(String username, String password) {
         Users user = this.getOne(new LambdaQueryWrapper<Users>().eq(Users::getUserName, username));
+
         if (user == null) {
-            return ResultModel.error("账号不存在", 404);
+            throw new BusinessException(404, "账号不存在");
         }
+
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            return ResultModel.error("密码错误", 401);
+            throw new BusinessException(401, "密码错误");
         }
+
         UserVO cleanUser = new UserVO();
         BeanUtils.copyProperties(user, cleanUser);
+
         String token = JwtUtils.createToken(user.getUserId(), user.getUserName());
+
         LoginVO vo = new LoginVO();
         vo.setUser(cleanUser);
         vo.setToken(token);
+
         return ResultModel.success(vo);
     }
 
@@ -56,12 +65,17 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
                 .eq(Users::getUserEmail, user.getUserEmail()));
 
         if (count > 0) {
-            return ResultModel.error("该用户名或邮箱已被注册", 409);
+            throw new BusinessException(409, "该用户名或邮箱已被注册");
         }
+
         String hashed = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashed);
-        this.save(user);
-        return ResultModel.success("注册成功");
 
+        boolean saved = this.save(user);
+        if (!saved) {
+            throw new BusinessException(500, "注册失败，数据库写入异常");
+        }
+
+        return ResultModel.success(null);
     }
 }
