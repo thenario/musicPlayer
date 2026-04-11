@@ -242,7 +242,7 @@ export const deletQueue = async (req: Request, res: Response) => {
     await connection.commit();
     return res.status(200).json({
       success: true,
-      data: { newQueueId, wasActive: isActive },
+      data: { new_queue_id: newQueueId, was_active: isActive },
       message: "删除成功",
     });
   } catch (error: any) {
