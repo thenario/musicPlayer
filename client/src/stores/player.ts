@@ -594,6 +594,11 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       const res = await queueApi.getMyQueues()
       const rawQueues = res.queues ?? []
+      rawQueues.sort((a: any, b: any) => {
+        const timeA = new Date(a.updated_date).getTime()
+        const timeB = new Date(b.updated_date).getTime()
+        return timeB - timeA
+      })
       rawQueues.forEach((queue: any) => {
         if (queue.queue_items && Array.isArray(queue.queue_items)) {
           queue.queue_items.sort((a: any, b: any) => {
@@ -654,13 +659,13 @@ export const usePlayerStore = defineStore('player', () => {
   const deleteQueue = async (queueId: number) => {
     try {
       const res = await queueApi.deletQueue(queueId)
-      const { newQueueId, wasActive } = res.data
-      if (wasActive) {
+      const { new_queue_id, was_active } = res.data
+      if (was_active) {
         currentSong.value = null
         currentQueue.value = []
         pauseSong()
-        if (newQueueId) {
-          await switchQueue(newQueueId)
+        if (new_queue_id) {
+          await switchQueue(new_queue_id)
         } else {
           currentQueueId.value = null
         }

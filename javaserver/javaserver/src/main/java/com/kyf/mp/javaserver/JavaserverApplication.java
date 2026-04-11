@@ -5,7 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan("com.kyf.mp.javaserver.mapper")
+@MapperScan("com.kyf.mp.javaserver.modules.**.mapper")
 public class JavaserverApplication {
 
 	public static void main(String[] args) {
