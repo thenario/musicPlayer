@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,7 +40,7 @@ public class PlaylistsController {
             @RequestParam("cover_image") MultipartFile file,
             @RequestParam("name") String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam("user_id") Integer userId) {
+            @RequestAttribute("userId") Integer userId) {
 
         // 参数检查
         if (file == null || file.isEmpty())
@@ -59,7 +60,7 @@ public class PlaylistsController {
             @RequestParam("playlist_id") Integer playlistId,
             @RequestParam(value = "name", required = false) String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestParam("user_id") Integer userId) {
+            @RequestAttribute("userId") Integer userId) {
 
         // 参数检查
         if (playlistId == null)
@@ -77,7 +78,7 @@ public class PlaylistsController {
     @DeleteMapping("/{id}")
     public ResultModel<Void> deletePlaylist(
             @PathVariable("id") Integer id,
-            @RequestParam("user_id") Integer userId) {
+            @RequestAttribute("userId") Integer userId) {
 
         if (id == null)
             return ResultModel.error("歌单ID不能为空", 400);
@@ -89,7 +90,7 @@ public class PlaylistsController {
 
     // 4. 获取我的歌单列表
     @GetMapping
-    public ResultModel<MyPlaylistsVO> getMyPlaylists(@RequestParam("user_id") Integer userId) {
+    public ResultModel<MyPlaylistsVO> getMyPlaylists(@RequestAttribute("userId") Integer userId) {
 
         if (userId == null)
             return ResultModel.error("用户ID不能为空", 400);
@@ -101,7 +102,7 @@ public class PlaylistsController {
     @GetMapping("/{id}")
     public ResultModel<PlaylistDetailVO> getPlaylistById(
             @PathVariable("id") Integer id,
-            @RequestParam(value = "user_id", required = false) Integer userId) {
+            @RequestAttribute("userId") Integer userId) {
 
         if (id == null)
             return ResultModel.error("歌单ID不能为空", 400);
@@ -113,7 +114,7 @@ public class PlaylistsController {
     @PostMapping("/{id}/likes")
     public ResultModel<Void> like(
             @PathVariable("id") Integer id,
-            @RequestParam("user_id") Integer userId) {
+            @RequestAttribute("userId") Integer userId) {
 
         if (id == null || userId == null)
             return ResultModel.error("参数不完整", 400);
@@ -124,7 +125,7 @@ public class PlaylistsController {
     @DeleteMapping("/{id}/unlikes")
     public ResultModel<Void> unlike(
             @PathVariable("id") Integer id,
-            @RequestParam("user_id") Integer userId) {
+            @RequestAttribute("userId") Integer userId) {
 
         if (id == null || userId == null)
             return ResultModel.error("参数不完整", 400);

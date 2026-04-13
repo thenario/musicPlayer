@@ -4,6 +4,11 @@ server:
 spring:
   application:
     name: javaserver
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 12MB
 
   jackson:
     property-naming-strategy: SNAKE_CASE
@@ -38,3 +43,8 @@ file:
     song-url: "http://127.0.0.1/static/songs/"
     song-cover-url: "http://127.0.0.1/static/song_covers/"
     playlist-cover-url: "http://127.0.0.1/static/playlist_covers/"
+
+mybatis-plus:
+  mapper-locations: classpath*:com/kyf/mp/javaserver/modules/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

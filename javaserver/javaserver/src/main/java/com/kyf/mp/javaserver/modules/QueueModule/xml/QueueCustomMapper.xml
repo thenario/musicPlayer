@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.kyf.mp.javaserver.modules.QueueModule.mapper.QueueCustomMapper">
 
-    <resultMap id="SongVOMap" type="com.kyf.mp.javaserver.modelVO.SongVO">
+    <resultMap id="SongVOMap" type="com.kyf.mp.javaserver.modules.SongModule.VO.SongVO">
         <id property="songId" column="song_id" />
         <result property="songTitle" column="song_title" />
         <result property="songCoverUrl" column="song_cover_url" />
@@ -11,7 +11,7 @@
         <result property="album" column="album" />
     </resultMap>
 
-    <resultMap id="QueueItemVOMap" type="com.kyf.mp.javaserver.modelVO.QueueItemVO">
+    <resultMap id="QueueItemVOMap" type="com.kyf.mp.javaserver.modules.QueueModule.VO.QueueItemVO">
         <id property="queueItemId" column="queue_item_id" />
         <result property="queueItemPosition" column="queue_item_position" />
         <result property="queueId" column="qi_queue_id" />
@@ -19,7 +19,7 @@
         <association property="song" resultMap="SongVOMap" />
     </resultMap>
 
-    <resultMap id="ReturnQueueMap" type="com.kyf.mp.javaserver.modelVO.ReturnQueue">
+    <resultMap id="ReturnQueueMap" type="com.kyf.mp.javaserver.modules.QueueModule.VO.ReturnQueue">
         <id property="queueId" column="queue_id" />
         <result property="queueName" column="queue_name" />
         <result property="creatorId" column="creator_id" />
@@ -30,15 +30,30 @@
         <collection property="queueItems" resultMap="QueueItemVOMap" />
     </resultMap>
 
-    <resultMap id="CurrentQueueMap" type="com.kyf.mp.javaserver.modelVO.CurrentQueue">
-        <association property="queueState" javaType="com.kyf.mp.javaserver.modelVO.QueueStateVO">
-            <result property="currentQueueId" column="current_queue_id" />
+    <resultMap id="CurrentQueueMap" type="com.kyf.mp.javaserver.modules.QueueModule.VO.CurrentQueue">
+        <id column="current_queue_id" />
+
+        <association property="queueState"
+            javaType="com.kyf.mp.javaserver.modules.QueueModule.VO.QueueStateVO">
+            <id property="currentQueueId" column="current_queue_id" />
             <result property="currentSongId" column="current_song_id" />
             <result property="currentPosition" column="current_position" />
             <result property="currentProgress" column="current_progress" />
             <result property="playmode" column="playmode" />
         </association>
-        <association property="queue" resultMap="ReturnQueueMap" />
+
+        <association property="queue"
+            javaType="com.kyf.mp.javaserver.modules.QueueModule.VO.ReturnQueue">
+            <id property="queueId" column="queue_id" />
+            <result property="queueName" column="queue_name" />
+            <result property="creatorId" column="creator_id" />
+            <result property="songCount" column="song_count" />
+            <result property="isCurrent" column="is_current" />
+            <result property="createdDate" column="created_date" />
+            <result property="updatedDate" column="updated_date" />
+
+            <collection property="queueItems" resultMap="QueueItemVOMap" />
+        </association>
     </resultMap>
 
     <select id="selectCurrentQueueDetail" resultMap="CurrentQueueMap"> SELECT ps.current_queue_id,
@@ -47,8 +62,8 @@
         qi.queue_item_id, qi.queue_item_position, qi.queue_id as qi_queue_id, qi.added_date,
         s.song_id, s.song_title, s.song_cover_url, s.song_url, s.artist, s.album FROM play_state ps
         LEFT JOIN queues q ON ps.user_id = q.creator_id AND ps.current_queue_id = q.queue_id LEFT
-        JOIN queue_items qi ON q.queue_id = qi.queue_id LEFT JOIN songs s ON qi.song_id = s.song_id
-        WHERE ps.user_id = #{userId} </select>
+        JOIN queue_items qi ON q.queue_id = qi.queue_id JOIN songs s ON qi.song_id = s.song_id WHERE
+        ps.user_id = #{userId} </select>
 
     <select id="selectMyQueues" resultMap="ReturnQueueMap"> SELECT q.queue_id, q.queue_name,
         q.creator_id, q.song_count, q.is_current, q.created_date, q.updated_date, qi.queue_item_id,

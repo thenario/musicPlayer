@@ -28,6 +28,8 @@ public class Songs implements Serializable {
 
     private String artist;
 
+    private String fileMd5;
+
     private String album;
 
     private String fileSize;

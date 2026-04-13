@@ -70,7 +70,7 @@ const getCurrentQueue = async () => {
 
 const alterQueueToCurrent = async (queueId: number) => {
   const res = await request.put<any, IAxiosRes<any>>('/queues/player/current-queue', {
-    queueId,
+    queue_id: queueId,
   })
 
   if (!res.success) {

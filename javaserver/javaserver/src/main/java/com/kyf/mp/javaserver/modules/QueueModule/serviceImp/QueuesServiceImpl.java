@@ -64,7 +64,13 @@ public class QueuesServiceImpl extends ServiceImpl<QueuesMapper, Queues> impleme
         }
 
         try {
-            CurrentQueue result = queueCustomMapper.selectCurrentQueueDetail(userId);
+            List<CurrentQueue> list = queueCustomMapper.selectCurrentQueueDetail(userId);
+
+            if (list == null || list.isEmpty()) {
+                return ResultModel.success(null);
+            }
+
+            CurrentQueue result = list.get(0);
 
             if (result == null || result.getQueueState() == null) {
                 return ResultModel.success(null);
@@ -107,7 +113,7 @@ public class QueuesServiceImpl extends ServiceImpl<QueuesMapper, Queues> impleme
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<DeleteQueueVO> deleteQueue(Integer queueId, Integer userId) {
+    public ResultModel<DeleteQueueVO> deleteQueue(Integer userId, Integer queueId) {
         if (queueId == null || userId == null) {
             throw new BusinessException(400, "参数错误");
         }
