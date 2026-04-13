@@ -15,7 +15,7 @@ public interface QueueCustomMapper {
     /**
      * 根据用户ID查询当前播放状态、队列信息及歌曲列表
      */
-    CurrentQueue selectCurrentQueueDetail(@Param("userId") Integer userId);
+    List<CurrentQueue> selectCurrentQueueDetail(@Param("userId") Integer userId);
 
     List<ReturnQueue> selectMyQueues(@Param("userId") Integer userId);
 

@@ -35,6 +35,7 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
 
     @Override
     public ResultModel<LoginVO> login(String username, String password) {
+        log.info("===> 收到登录请求: username={}", username);
         Users user = this.getOne(new LambdaQueryWrapper<Users>().eq(Users::getUserName, username));
 
         if (user == null) {
@@ -54,6 +55,11 @@ public class UsersServiceImpl extends ServiceImpl<UsersMapper, Users> implements
         vo.setUser(cleanUser);
         vo.setToken(token);
 
+        log.info("===> 业务逻辑执行完毕，准备返回 ResultModel: {}", vo);
+        ResultModel<LoginVO> result = ResultModel.success(vo);
+
+        // 增加一步：手动检查 result 对象
+        log.info("===> 封装后的数据: code={}, message={}", result.getCode(), result.getMessage());
         return ResultModel.success(vo);
     }
 

@@ -93,7 +93,7 @@ const unlikePlaylist = async (playlistId: number) => {
 }
 
 const getMyPlaylists = async () => {
-  const res = await request.get<any, IAxiosRes<any>>(`/playlists/`, {})
+  const res = await request.get<any, IAxiosRes<any>>(`/playlists`, {})
 
   if (!res.success) {
     return {
