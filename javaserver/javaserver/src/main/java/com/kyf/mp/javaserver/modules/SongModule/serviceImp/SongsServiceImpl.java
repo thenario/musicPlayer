@@ -9,21 +9,25 @@ import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
-import org.jaudiotagger.tag.Tag;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.ResultModel;
+import com.kyf.mp.javaserver.modules.SongModule.DTO.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.SongModule.VO.GetSongsVO;
 import com.kyf.mp.javaserver.modules.SongModule.VO.LyricsVO;
+import com.kyf.mp.javaserver.modules.SongModule.VO.UploadsVO;
 import com.kyf.mp.javaserver.modules.SongModule.entity.Songs;
 import com.kyf.mp.javaserver.modules.SongModule.mapper.SongsMapper;
 import com.kyf.mp.javaserver.modules.SongModule.service.ISongsService;
@@ -217,5 +221,94 @@ public class SongsServiceImpl extends ServiceImpl<SongsMapper, Songs> implements
             boolean d2 = cover.delete();
             log.info("清理异常封面文件: {}", d2);
         }
+    }
+
+    @Override
+    public ResultModel<IPage<UploadsVO>> getUploadSongs(Integer userId, Integer page, Integer size) {
+        Page<Songs> songPage = new Page<>(page, size);
+
+        LambdaQueryWrapper<Songs> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Songs::getUploaderId, userId).orderByDesc(Songs::getDateAdded);
+
+        IPage<Songs> result = baseMapper.selectPage(songPage, wrapper);
+
+        IPage<UploadsVO> voResult = result.convert(song -> {
+            UploadsVO vo = new UploadsVO();
+            BeanUtils.copyProperties(song, vo);
+            return vo;
+        });
+
+        return ResultModel.success(voResult);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ResultModel<Void> editUploadSong(EDitSongDTO dto, Integer userId, Integer songId) {
+        // 1. 获取原数据
+        Songs oldSong = baseMapper.selectById(songId);
+        if (oldSong == null)
+            throw new BusinessException(404, "歌曲不存在");
+
+        // 2. 权限校验（核心安全逻辑）
+        if (!oldSong.getUploaderId().equals(userId)) {
+            throw new BusinessException(403, "你没有权限修改这首歌");
+        }
+
+        Songs updateEntity = new Songs();
+        updateEntity.setSongId(songId);
+        boolean needUpdate = false;
+
+        // 3. 处理文本更新
+        if (StringUtils.hasText(dto.getSong_name())) {
+            updateEntity.setSongTitle(dto.getSong_name());
+            needUpdate = true;
+        }
+        // 允许歌词传空字符串进行清空
+        if (dto.getLyrics() != null) {
+            updateEntity.setLyrics(dto.getLyrics());
+            needUpdate = true;
+        }
+
+        // 4. 【核心难点】处理封面物理替换
+        MultipartFile newCover = dto.getSong_cover();
+        if (newCover != null && !newCover.isEmpty()) {
+            // A. 生成新物理文件名 (延续你 UUID 逻辑，防止浏览器缓存)
+            String ext = StringUtils.getFilenameExtension(newCover.getOriginalFilename());
+            String newFileName = "cover-" + UUID.randomUUID().toString().substring(0, 8) + "." + ext;
+            File destFile = new File(songCoverPath, newFileName);
+
+            try {
+                // B. 保存新文件
+                if (!destFile.getParentFile().exists())
+                    destFile.getParentFile().mkdirs();
+                newCover.transferTo(destFile);
+
+                // C. 【处理旧文件】
+                String oldUrl = oldSong.getSongCoverUrl();
+                if (StringUtils.hasText(oldUrl)) {
+                    // 从 URL 中提取文件名 (例如从 http://127.0.0.1/static/cover-xxx.jpg 提取 cover-xxx.jpg)
+                    String oldFileName = oldUrl.substring(oldUrl.lastIndexOf("/") + 1);
+                    File oldFile = new File(songCoverPath, oldFileName);
+                    if (oldFile.exists() && oldFile.isFile()) {
+                        oldFile.delete(); // 物理删除，释放空间
+                        log.info("用户ID: {} 修改歌曲，已清理旧封面: {}", userId, oldFileName);
+                    }
+                }
+
+                // D. 更新数据库字段为新 URL
+                updateEntity.setSongCoverUrl(songCoverUrl + newFileName);
+                needUpdate = true;
+            } catch (IOException e) {
+                log.error("封面物理保存失败", e);
+                throw new BusinessException(500, "文件保存失败");
+            }
+        }
+
+        // 5. 执行数据库更新
+        if (needUpdate) {
+            baseMapper.updateById(updateEntity);
+        }
+
+        return ResultModel.success(null);
     }
 }

@@ -1,16 +1,21 @@
 package com.kyf.mp.javaserver.modules.SongModule.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kyf.mp.javaserver.common.ResultModel;
+import com.kyf.mp.javaserver.modules.SongModule.DTO.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.SongModule.VO.GetSongsVO;
 import com.kyf.mp.javaserver.modules.SongModule.VO.LyricsVO;
+import com.kyf.mp.javaserver.modules.SongModule.VO.UploadsVO;
 import com.kyf.mp.javaserver.modules.SongModule.service.ISongsService;
 
 import lombok.RequiredArgsConstructor;
@@ -62,4 +67,18 @@ public class SongsController {
         }
         return songsService.uploadSong(audioFile, coverFile, uploaderId, title, artist, album, lyrics);
     }
+
+    @GetMapping("/my-uploads")
+    public ResultModel<IPage<UploadsVO>> getMethodName(@RequestAttribute("userId") Integer userId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        return songsService.getUploadSongs(userId, page, size);
+    }
+
+    @PatchMapping("/my-uploads/{song_id}")
+    public ResultModel<Void> editUploadSong(EDitSongDTO dto, @RequestAttribute("userId") Integer userId,
+            @PathVariable("song_id") Integer songId) {
+        return songsService.editUploadSong(dto, userId, songId);
+    }
+
 }

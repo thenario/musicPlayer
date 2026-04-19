@@ -52,8 +52,32 @@ export const getLyrics = async (songId: number) => {
   }
 }
 
+export const getUserUploadSongs = async (page: number, size: number) => {
+  const res = await request.get<any, any>(`/songs/my-uploads`, {
+    params: {
+      page: page,
+      size: size,
+    },
+  })
+
+  return {
+    success: res.success,
+    songs: res.data.records,
+    message: res.message,
+    total: res.data.total,
+  }
+}
+
+export const EditUserUploadSongs = async (formdata: FormData, song_id: number) => {
+  const res = await request.patch<any, any>(`/songs/my-uploads/${song_id}`, formdata)
+
+  return { success: res.success, message: res.message }
+}
+
 export const songApi = {
   getSongs,
   uploadSong,
   getLyrics,
+  getUserUploadSongs,
+  EditUserUploadSongs,
 }
