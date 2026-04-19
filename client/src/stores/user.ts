@@ -7,12 +7,14 @@ export const useUserStore = defineStore('user', () => {
   const localuser = localStorage.getItem('user') || null
   const user = ref<IUser | null>(localuser ? JSON.parse(localuser) : null)
   const isAuthenticated = ref(!!localuser)
+  const userCoverUrl = ref<string>()
 
   const login = async (user_name: string, password: string) => {
     try {
       const res = await userApi.login(user_name, password)
       user.value = res.user || null
       isAuthenticated.value = true
+      fetchUserCoverUrl()
       return { success: true, message: res.message }
     } catch (err: any) {
       console.log(err)
@@ -42,5 +44,14 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  return { user, isAuthenticated, login, register, logout }
+  const fetchUserCoverUrl = async () => {
+    try {
+      const res = await userApi.getUSerCover()
+      userCoverUrl.value = res.user_cover_url
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  return { user, isAuthenticated, userCoverUrl, login, register, logout }
 })

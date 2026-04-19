@@ -11,22 +11,16 @@
 
     <div class="flex items-center px-4 gap-4">
       <template v-if="userStore.isAuthenticated">
-        <el-button type="success" round size="small" @click="router.push('/upload')">
-          <el-icon class="mr-1">
-            <Upload />
-          </el-icon>上传歌曲
-        </el-button>
-
         <el-sub-menu index="user-submenu" class="user-sub">
           <template #title>
             <div class="flex items-center gap-2">
-              <el-avatar :size="32" class="bg-blue-500">
+              <el-avatar :size="32" class="bg-blue-500" :src="userStore.user?.user_cover">
                 {{ userStore.user?.user_name?.charAt(0) || 'U' }}
               </el-avatar>
               <span class="username">{{ userStore.user?.user_name || "用户" }}</span>
             </div>
           </template>
-          <el-menu-item index="/profile">个人中心</el-menu-item>
+          <el-menu-item index="/userProfile">个人中心</el-menu-item>
           <el-menu-item @click="logout" class="logout-item">
             <span class="text-red-400">退出登录</span>
           </el-menu-item>

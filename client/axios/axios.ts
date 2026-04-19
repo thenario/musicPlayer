@@ -65,7 +65,7 @@ request.interceptors.response.use(
   (response: AxiosResponse): any => {
     removePendingRequest(response.config)
 
-    const res = response.data // 后端返回的 JSON 数据 { code, message, data }
+    const res = response.data
     if (res.code !== 200) {
       const errorMsg = res.message || '业务逻辑错误'
       throw new AxiosBusinessError(errorMsg, res.code || 500, res.data)

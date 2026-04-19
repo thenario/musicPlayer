@@ -2,10 +2,13 @@ package com.kyf.mp.javaserver.modules.SongModule.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.kyf.mp.javaserver.common.ResultModel;
+import com.kyf.mp.javaserver.modules.SongModule.DTO.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.SongModule.VO.GetSongsVO;
 import com.kyf.mp.javaserver.modules.SongModule.VO.LyricsVO;
+import com.kyf.mp.javaserver.modules.SongModule.VO.UploadsVO;
 import com.kyf.mp.javaserver.modules.SongModule.entity.Songs;
 
 /**
@@ -23,4 +26,8 @@ public interface ISongsService extends IService<Songs> {
 
     ResultModel<Void> uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
             String title, String artist, String album, String lyrics);
+
+    ResultModel<IPage<UploadsVO>> getUploadSongs(Integer userId, Integer page, Integer size);
+
+    ResultModel<Void> editUploadSong(EDitSongDTO dto, Integer userId, Integer songID);
 }

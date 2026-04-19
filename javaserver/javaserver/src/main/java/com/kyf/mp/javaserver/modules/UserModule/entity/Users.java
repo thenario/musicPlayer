@@ -31,5 +31,8 @@ public class Users implements Serializable {
     @JsonProperty("user_email")
     private String userEmail;
 
+    @JsonProperty("user_cover_url")
+    private String userCoverUrl;
+
     private String password;
 }

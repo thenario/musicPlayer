@@ -63,4 +63,27 @@ async function logout() {
   return { success: true, message: res.message }
 }
 
-export const userApi = { login, logout, register }
+async function getUSerCover() {
+  const res = await request.get<any, IAxiosRes<any>>(`/users/cover`)
+
+  if (!res.success) return { success: false, message: res.message }
+
+  return {
+    success: res.success,
+    user_cover_url: res.data.user_cover_url,
+  }
+}
+
+async function editUserProfile(formdata: FormData) {
+  const res = await request.patch<any, IAxiosRes<any>>('/users/me', formdata)
+
+  if (!res.success) return { success: false, message: res.message }
+
+  return {
+    success: true,
+    user_name: res.data.user_name,
+    user_cover_url: res.data.user_cover_url,
+  }
+}
+
+export const userApi = { login, logout, register, editUserProfile, getUSerCover }
