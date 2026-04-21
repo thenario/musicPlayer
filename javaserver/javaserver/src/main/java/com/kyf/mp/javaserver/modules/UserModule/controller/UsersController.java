@@ -58,7 +58,7 @@ public class UsersController {
         return userService.editUserProfile(editData, userId);
     }
 
-    @GetMapping("path")
+    @GetMapping("/users/cover")
     public ResultModel<Map<String, String>> getUserCoverUrl(@RequestAttribute("userId") Integer userId) {
         return userService.getUserCoverUrl(userId);
     }

@@ -131,7 +131,8 @@ const formatDuration = (seconds: number) => {
 
 const getImageUrl = (url: string) => {
   if (!url) return ''
-  return url.startsWith('http') ? url : `${import.meta.env.VITE_API_URL}${url}`
+  if (url.startsWith('http')) return url
+  return `${import.meta.env.VITE_API_URL}${url.startsWith('/') ? '' : '/'}${url}`
 }
 
 onMounted(loadSongs)

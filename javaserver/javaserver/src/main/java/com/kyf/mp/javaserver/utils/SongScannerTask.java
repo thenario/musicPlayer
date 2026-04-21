@@ -159,8 +159,10 @@ public class SongScannerTask {
                 byte[] data = artwork.getBinaryData();
                 String coverName = "auto-" + UUID.randomUUID().toString().substring(0, 8) + ".jpg";
                 File coverFile = new File(songCoverPath, coverName);
-                if (!coverFile.getParentFile().exists())
-                    coverFile.getParentFile().mkdirs();
+                if (!coverFile.getParentFile().exists()) {
+                    boolean created = coverFile.getParentFile().mkdirs();
+                    log.info("创建封面目录: {}, 结果: {}", coverFile.getParentFile().getAbsolutePath(), created);
+                }
                 try (FileOutputStream fos = new FileOutputStream(coverFile)) {
                     fos.write(data);
                 }

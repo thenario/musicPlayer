@@ -109,7 +109,11 @@ const submitting = ref(false)
 const getImageUrl = (url: string) => {
     if (!url) return ''
     if (url.startsWith('http')) return url
-    return `${import.meta.env.VITE_API_URL}${url.startsWith('/') ? '' : '/'}${url}`
+
+    const baseUrl = import.meta.env.VITE_API_URL || ''
+    const normalizedUrl = url.startsWith('/') ? url : `/${url}`
+
+    return `${baseUrl}${normalizedUrl}`
 }
 
 onMounted(async () => {

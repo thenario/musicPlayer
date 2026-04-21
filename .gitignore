@@ -82,6 +82,22 @@ build/
 
 .env
 .env.local
-.env.development.local
+.env.development
 .env.test.local
-.env.production.local
+.env.production
+
+nginx-1.26.3/
+
+
+mysql/data/
+*.sock
+
+# 忽略 Node.js 依赖
+node_modules/
+
+# 忽略 Java 编译产物
+target/
+*.class
+
+# 忽略日志文件
+*.log
