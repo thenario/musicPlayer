@@ -10,7 +10,7 @@
                 class="w-full max-w-3xl mx-auto border-none shadow-lg rounded-3xl overflow-hidden animate-fade-in mb-10"
                 :body-style="{ padding: '0px' }">
                 <!-- 顶部装饰栏 -->
-                <div class="h-24 bg-gradient-to-r from-indigo-600 to-purple-600 flex items-center px-8 shrink-0">
+                <div class="h-24 bg-linear-to-r from-indigo-600 to-purple-600 flex items-center px-8 shrink-0">
                     <el-button circle @click="router.back()" class="hover:scale-110 transition-transform">
                         <el-icon>
                             <Back />
@@ -131,23 +131,18 @@ const getCoverUrl = (url: string) => {
     if (!url) return '';
     if (url.startsWith('http')) return url;
     const separator = url.startsWith('/') ? '' : '/';
-    return `${API_BASE_URL}${separator}${url}`;
+    return `${import.meta.env.VITE_API_BASE_URL}${separator}${url}`;
 };
 
 onMounted(async () => {
     console.log('当前编辑的歌曲ID:', song_id);
 
-    // 1. 尝试从 Pinia 获取缓存数据
     const cached = songStore.currentEditingSong;
     console.log('缓存中的完整歌曲数据:', cached);
 
     if (cached) {
-        // 对应后端下划线字段：song_id
         if (Number(cached.song_id) === song_id) {
-            // 对应后端下划线字段：song_title
             formData.song_name = cached.song_title || '';
-
-            // 对应后端下划线字段：song_cover_url
             previewUrl.value = getCoverUrl(cached.song_cover_url || '');
         }
     }
