@@ -1,17 +1,18 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '../stores/user'
 
+//创建一个数组保存路由
 const routes = [
   {
-    path: '/',
-    name: 'Home',
-    component: () => import('../views/Home.vue'),
+    path: '/', //跳转时的路径
+    name: 'Home', //该路径的名字
+    component: () => import('../views/Home.vue'), //懒加载，声明时不执行，被调用时执行
   },
   {
     path: '/login',
     name: 'Login',
     component: () => import('../views/Login.vue'),
-    meta: { requiresGuest: true },
+    meta: { requiresGuest: true }, //在meta里加入标识，表明是否保护该页面
   },
   {
     path: '/register',
@@ -21,13 +22,13 @@ const routes = [
   },
   {
     path: '/userProfile',
-    name: 'UserProfile', // 唯一名称
+    name: 'UserProfile',
     component: () => import('../views/UserProfile.vue'),
     meta: { requiresAuth: true },
   },
   {
     path: '/editUserProfile',
-    name: 'EditUserProfile', // 修正：不要和上面的重名
+    name: 'EditUserProfile',
     component: () => import('../views/EditUserProfile.vue'),
     meta: { requiresAuth: true },
   },
@@ -38,7 +39,6 @@ const routes = [
     meta: { requiresAuth: true },
   },
   {
-    // 修正拼写：Upload (单数)，去掉多余的 s
     path: '/EditUserUploadSong/:id',
     name: 'EditUserUploadSong',
     component: () => import('../views/EditUserUploadSongs.vue'),
@@ -62,27 +62,27 @@ export const router = createRouter({
   routes,
 })
 
+//路由保护检查登陆状态
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-
-  // 1. 恢复登录状态（处理页面刷新）
   if (!userStore.isAuthenticated) {
     const savedUser = localStorage.getItem('user')
     if (savedUser) {
       userStore.isAuthenticated = true
-      // 如果你的 store 需要 user 对象，记得也恢复它
-      // userStore.user = JSON.parse(savedUser)
+      userStore.user = JSON.parse(savedUser)
     }
   }
 
-  // 2. 权限拦截逻辑
+  //如果跳转的页面需要登录且用户未认证，跳转至login
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
     next('/login')
-  } else if (to.meta.requiresGuest && userStore.isAuthenticated) {
+  }
+  // //如果跳转的页面不需要登录且用户认证，跳转至主页
+  else if (to.meta.requiresGuest && userStore.isAuthenticated) {
     next('/')
-  } else {
+  }
+  //其他正常跳转
+  else {
     next()
   }
 })
-
-export { routes }
