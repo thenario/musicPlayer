@@ -1,4 +1,5 @@
 <template>
+  <!--default-active高亮-->
   <el-menu :default-active="route.path" class="navbar-menu" mode="horizontal" router :ellipsis="false">
     <el-menu-item index="/" class="logo-item">
       <span class="text-xl font-bold tracking-wider">音乐播放器</span>

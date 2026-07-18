@@ -1,6 +1,7 @@
 import { IGetStatics, IAxiosRes } from '../type'
 import request from './axios'
 
+//获取统计数据
 const getStatics = async () => {
   const res = await request.get<any, IAxiosRes<any>>('/stats')
 

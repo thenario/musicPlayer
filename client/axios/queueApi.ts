@@ -16,6 +16,7 @@ import type {
 } from '../type'
 import request from './axios'
 
+//获取用户的播放队列
 const getMyQueues = async () => {
   const res = await request.get<any, IAxiosRes<any>>('/queues')
 
@@ -33,6 +34,7 @@ const getMyQueues = async () => {
   }
 }
 
+//依据id获取队列信息
 const getQueueById = async (queueId: number) => {
   const res = await request.get<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
@@ -50,6 +52,7 @@ const getQueueById = async (queueId: number) => {
   }
 }
 
+//获取用户当前的队列信息
 const getCurrentQueue = async () => {
   const res = await request.get<any, IAxiosRes<any>>('/queues/current')
 
@@ -68,6 +71,7 @@ const getCurrentQueue = async () => {
   }
 }
 
+//更换当前的队列
 const alterQueueToCurrent = async (queueId: number) => {
   const res = await request.put<any, IAxiosRes<any>>('/queues/player/current-queue', {
     queue_id: queueId,
@@ -86,6 +90,7 @@ const alterQueueToCurrent = async (queueId: number) => {
   }
 }
 
+//删除队列
 const deletQueue = async (queueId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
@@ -103,6 +108,7 @@ const deletQueue = async (queueId: number) => {
   }
 }
 
+//添加歌曲到队列
 const addSongToQueue = async (song_id: number, queue_id: number, mode: boolean) => {
   const res = await request.post<any, IAxiosRes<any>>(`/queues/${queue_id || 0}/songs`, {
     song_id,
@@ -123,6 +129,7 @@ const addSongToQueue = async (song_id: number, queue_id: number, mode: boolean) 
   }
 }
 
+//从队列移除歌曲
 const removeSongFromQueue = async (queueId: number, itemId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs/${itemId}`)
 
@@ -139,6 +146,7 @@ const removeSongFromQueue = async (queueId: number, itemId: number) => {
   }
 }
 
+//设置播放模式
 const setPlayMode = async (queueId: number, play_mode: string) => {
   const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queueId}/play-mode`, {
     play_mode: play_mode,
@@ -157,6 +165,7 @@ const setPlayMode = async (queueId: number, play_mode: string) => {
   }
 }
 
+//重排队列
 const reorderQueue = async (song_ids: number[], queue_id: number) => {
   const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queue_id}/reorder`, {
     song_ids,
@@ -175,6 +184,7 @@ const reorderQueue = async (song_ids: number[], queue_id: number) => {
   }
 }
 
+//从歌单创建队列，类似于播放全部
 const createQueueFromPlaylist = async (playlist_id: number) => {
   const res = await request.post<any, IAxiosRes<any>>('/queues', {
     source: 'playlist',
@@ -196,6 +206,7 @@ const createQueueFromPlaylist = async (playlist_id: number) => {
   }
 }
 
+//更新播放状态
 const updateCurrentQueueState = async (stateData: IQueueState) => {
   const res = await request.patch<any, IAxiosRes<any>>('/queues/current/state', {
     stateData,
@@ -213,7 +224,7 @@ const updateCurrentQueueState = async (stateData: IQueueState) => {
     message: res.message,
   }
 }
-
+//清空队列
 const clearQueue = async (queueId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs`)
 

@@ -1,3 +1,1007 @@
-1.未有登录过期提示
-2.鼠标悬停时全白会看不清信息
-3.翻页时不会重置窗口位置
+================================================================================
+                    vue_musicplayer 修改建议 & 完整音乐网站规划
+================================================================================
+
+═══════════════════════════════════════════════════════════════════════════════
+第一部分：现有功能 Bug 修复 & 体验优化（来自原有建议 + 新发现）
+═══════════════════════════════════════════════════════════════════════════════
+
+1. 登录过期提示
+   - 问题：JWT token 过期后无用户提示，静默跳转到登录页
+   - 方案：axios 拦截器在 401 时弹出 ElMessage.warning("登录已过期，请重新登录")，再跳转
+
+2. 鼠标悬停时文字全白看不清
+   - 问题：某些组件悬停态颜色对比度不足（如歌曲列表行 hover 时文字变白与浅色背景冲突）
+   - 方案：检查各组件 hover 样式，确保文字色与背景色有足够对比度
+
+3. 翻页时重置窗口位置
+   - 问题：歌曲列表/歌单列表切换页码后，页面不自动滚动到顶部
+   - 方案：在分页组件的 @current-change 事件中调用 window.scrollTo(0, 0)
+
+4. 内存管理优化
+   - 问题：页面销毁时没有清理定时器、事件监听、未完成的网络请求
+   - 方案：
+     - 每个组件 onBeforeUnmount 中清理 setInterval/setTimeout
+     - playerStore 的 fadeTimer 在组件卸载时清理
+     - axios 请求使用 AbortController（已有基础但可加强）
+     - 大对象（如歌词数组、队列列表）在离开页面时置 null
+
+5. 响应式布局及多端适配 + Token 机制优化
+   - 问题：目前主要适配桌面端，移动端体验差；Token 存储在 localStorage 有 XSS 风险
+   - 方案：
+     - 使用 Tailwind 响应式类（sm/md/lg/xl）适配移动端
+     - 底部播放栏在移动端改为固定底部迷你条
+     - QueueDrawer 在移动端改为全屏
+     - Token 考虑 httpOnly cookie + refresh token 双 token 机制（后端配合）
+     - 短期方案：Token 保持 localStorage 但加入过期检测和自动刷新
+
+6. localStorage 操作迁移到 Store 中
+   - 问题：userApi 和组件中直接操作 localStorage，逻辑分散
+   - 方案：所有 localStorage 读写统一收敛到 userStore 中，组件只通过 store 访问
+
+7. 导航栏显示用户头像
+   - 问题：NavBar 目前只显示用户名，没有头像
+   - 方案：NavBar 用户下拉按钮处显示 user_cover_url 头像（用 el-avatar），默认显示首字母
+
+8. 歌曲编辑页面未显示当前封面
+   - 问题：EditUserUploadSongs.vue 编辑时没有预览已有封面图
+   - 方案：进入编辑页时加载并显示当前歌曲的 song_cover_url 缩略图
+
+9. 刷新功能
+   - 问题：无页面数据刷新按钮
+   - 方案：各列表页（歌曲、歌单、上传歌曲）顶部增加刷新图标按钮，重新请求数据
+
+10. [新发现] /api/stats 统计接口后端未实现
+    - 文件：client/axios/choreApi.ts 调用了 getStatics()，但后端无对应 Controller
+    - 方案：后端实现 StatsController，返回 total_songs, total_users, online_users 等统计数据；或暂时移除前端调用
+
+11. [新发现] Redis 已配置但完全未使用
+    - 文件：javaserver/.../config/RedisConfig.java 配置了 Redis 连接
+    - 方案：利用 Redis 缓存热门排行榜、热门歌单等高频查询数据
+
+12. [新发现] 播放状态同步间隔过长
+    - 文件：client/src/stores/player.ts 中 SYNC_INTERVAL = 500000（约 8.3 分钟）
+    - 方案：建议缩短到 30000（30 秒）或 60000（1 分钟），且播放停止时立即同步
+
+13. [新发现] 多个 Controller 空壳
+    - QueueItemsController、PlayStateController、SongsPlaylistsRelationController 等为 MyBatis-Plus 自动生成但未填充
+    - 方案：如无独立使用场景，可删除空壳；或补全实现
+
+14. [新发现] 环境变量命名不一致
+    - EditUserUploadSongs.vue 中使用 VITE_API_BASE_URL，其他地方用 VITE_API_URL
+    - 方案：统一为一个环境变量名
+
+15. [新发现] 客户端密码哈希方式不统一
+    - userApi.ts 使用 Web Crypto API，crypto.ts 使用 CryptoJS，两者都做 SHA-256
+    - 方案：统一用一种方式，推荐保留 Web Crypto API（浏览器原生，体积更小）
+
+
+═══════════════════════════════════════════════════════════════════════════════
+第二部分：完整音乐网站 — 缺失模块与实现方案
+═══════════════════════════════════════════════════════════════════════════════
+
+▶ 当前已有功能：
+  ✅ 用户注册/登录（JWT 认证）
+  ✅ 歌曲上传（音频 + 封面 + 歌词 + ID3 标签写入）
+  ✅ 歌曲浏览 + 关键词搜索 + 分页
+  ✅ LRC 歌词解析与同步显示（含翻译歌词）
+  ✅ 歌单 CRUD + 收藏歌单 + 歌单内歌曲管理
+  ✅ 播放队列多队列管理 + 拖拽排序
+  ✅ 播放控制（播放/暂停/上下曲/进度/音量/淡入淡出）
+  ✅ 四种播放模式（顺序/列表循环/单曲循环/随机）
+  ✅ 播放状态后端持久化
+  ✅ 浏览器 Media Session API 集成
+
+───────────────────────────────────────────────────────────────────────────────
+🔴 P0 — 核心基础模块（优先级最高，改动小、影响大）
+───────────────────────────────────────────────────────────────────────────────
+
+P0-1. 音乐标签/分类系统
+  为什么需要：没有标签就无法组织内容、无法筛选、无法做推荐。这是内容网站的根基。
+
+  数据库新增：
+    -- 标签字典表
+    CREATE TABLE tags (
+        tag_id    INT AUTO_INCREMENT PRIMARY KEY,
+        tag_name  VARCHAR(50) NOT NULL UNIQUE,
+        tag_type  ENUM('genre','language','mood','scene','era') NOT NULL COMMENT '流派/语种/心情/场景/年代',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- 歌曲-标签关联表 (多对多)
+    CREATE TABLE song_tags (
+        song_id INT NOT NULL,
+        tag_id  INT NOT NULL,
+        PRIMARY KEY (song_id, tag_id),
+        FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE,
+        FOREIGN KEY (tag_id)  REFERENCES tags(tag_id)  ON DELETE CASCADE
+    );
+
+  后端改动：
+    - 新建 TagsController: GET /api/tags（获取全部标签列表）、GET /api/tags?type=genre（按类型筛选）
+    - 新建 SongTagsController: POST /api/songs/{id}/tags（设置歌曲标签）、GET /api/songs/{id}/tags（获取歌曲标签）
+    - SongsController 上传接口支持接收 tag_ids 参数
+    - GET /api/songs 接口增加 tag_id 筛选参数
+
+  前端改动：
+    - Upload.vue: 上传表单中增加标签选择器（多选，Element Plus 的 el-select multiple + el-tag）
+    - Songs.vue: 搜索栏旁边增加标签筛选下拉框
+    - PlaylistDetail.vue / songDetail.vue: 显示歌曲的标签徽章
+    - 首页增加按标签分类浏览入口
+
+───────────────────────────────────────────────────────────────────────────────
+P0-2. 歌曲收藏/喜欢
+  为什么需要：最基础的用户交互，歌单可以收藏但单曲不能，这是明显的功能缺失。
+
+  数据库新增：
+    CREATE TABLE user_like_songs (
+        user_id   INT NOT NULL,
+        song_id   INT NOT NULL,
+        liked_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, song_id),
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE
+    );
+
+  后端改动：
+    - 新建 UserLikeSongsController:
+        POST   /api/songs/{id}/like     -- 收藏歌曲
+        DELETE /api/songs/{id}/unlike   -- 取消收藏
+        GET    /api/users/me/liked-songs -- 获取我的收藏列表（分页）
+        GET    /api/songs/{id}/like-status -- 查询当前用户是否已收藏
+
+  前端改动：
+    - playerControl.vue / PlayerBar.vue: 播放栏增加 ❤️ 收藏按钮（空心/实心切换）
+    - Songs.vue: 歌曲列表中每行增加收藏按钮
+    - UserProfile.vue: 个人主页增加"我喜欢的歌曲"入口
+
+───────────────────────────────────────────────────────────────────────────────
+P0-3. 播放历史
+  为什么需要：用户需要找回之前听过的歌，也是推荐系统的数据基础。
+
+  数据库新增：
+    CREATE TABLE play_history (
+        id         INT AUTO_INCREMENT PRIMARY KEY,
+        user_id    INT NOT NULL,
+        song_id    INT NOT NULL,
+        played_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_user_played (user_id, played_at DESC),
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (song_id) REFERENCES songs(song_id) ON DELETE CASCADE
+    );
+    -- 同一用户同一首歌只保留最新一条的方式：可在插入前先 DELETE 旧记录，或用 ON DUPLICATE KEY UPDATE
+
+  后端改动：
+    - 新建 PlayHistoryController:
+        GET    /api/history              -- 获取播放历史（分页，最近N条）
+        DELETE /api/history/{id}         -- 删除单条历史
+        DELETE /api/history              -- 清空历史
+    - 播放器每次播放新歌曲时（后端 play_state 更新接口），自动写入播放历史
+
+  前端改动：
+    - router 增加 /history 路由
+    - 新建 History.vue: 展示播放历史列表（按时间倒序），支持播放和删除
+    - NavBar.vue 增加"播放历史"导航入口
+
+───────────────────────────────────────────────────────────────────────────────
+🟡 P1 — 内容发现与互动模块
+───────────────────────────────────────────────────────────────────────────────
+
+P1-1. 热门排行/排行榜
+  数据库改动：
+    -- Songs 表增加 play_count 字段（如无可先加）
+    ALTER TABLE songs ADD COLUMN play_count INT DEFAULT 0;
+    -- Playlists 表已有 like_count 和 play_count，可直接使用
+
+  后端改动：
+    - 新建 ChartsController:
+        GET /api/charts/hot-songs?limit=20       -- 热歌榜（按 play_count 降序）
+        GET /api/charts/hot-playlists?limit=20   -- 热门歌单（按 like_count+play_count 加权降序）
+        GET /api/charts/new-songs?limit=20       -- 新歌榜（按 date_added 降序）
+        GET /api/charts/trending?limit=20        -- 飙升榜（按近期播放增量降序）
+    - 以上接口全部用 Redis 缓存（如缓存 5 分钟），减少数据库压力
+    - 播放歌曲时异步更新 play_count（用消息队列或直接 update +1）
+
+  前端改动：
+    - Home.vue: 首页改为展示排行榜卡片（热歌榜、新歌榜、热门歌单）+ 推荐内容
+    - 可复用 Songs.vue 和 Playlists.vue 的列表组件
+
+───────────────────────────────────────────────────────────────────────────────
+P1-2. 评论系统
+  数据库新增：
+    CREATE TABLE comments (
+        comment_id   INT AUTO_INCREMENT PRIMARY KEY,
+        user_id      INT NOT NULL,
+        target_type  ENUM('song','playlist') NOT NULL COMMENT '评论目标类型',
+        target_id    INT NOT NULL,
+        parent_id    INT DEFAULT NULL COMMENT '父评论ID(支持回复)',
+        content      TEXT NOT NULL,
+        created_at   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (parent_id) REFERENCES comments(comment_id) ON DELETE CASCADE,
+        INDEX idx_target (target_type, target_id, created_at DESC)
+    );
+
+  后端改动：
+    - 新建 CommentsController:
+        GET    /api/comments?target_type=song&target_id=123&page=1   -- 获取评论列表（分页，含嵌套回复）
+        POST   /api/comments                           -- 发表评论/回复
+        DELETE /api/comments/{id}                      -- 删除评论（仅本人或管理员）
+
+  前端改动：
+    - songDetail.vue: 歌词下方增加评论区（发表评论 + 评论列表 + 回复）
+    - PlaylistDetail.vue: 歌曲列表下方增加评论区
+    - 新建 CommentItem.vue 组件：头像、用户名、时间、内容、回复按钮、嵌套子评论
+
+───────────────────────────────────────────────────────────────────────────────
+P1-3. 简单推荐系统（基于标签匹配）
+  为什么先做这个：不需要复杂算法，标签系统完成后就能做，投入产出比极高。
+
+  后端改动：
+    - 新建 RecommendationsController:
+        GET /api/recommendations/similar-songs/{song_id}?limit=10
+          → 通过 song_tags 匹配相同标签最多的歌曲，排除自身，按 play_count 降序
+        GET /api/recommendations/similar-playlists/{playlist_id}?limit=10
+          → 歌单内歌曲的标签聚合 → 匹配拥有相似标签集合的其他歌单
+        GET /api/recommendations/for-you?limit=20
+          → 基于用户播放历史和收藏的标签偏好，推荐匹配歌曲（未登录则返回热门歌曲）
+
+  前端改动：
+    - songDetail.vue: 歌曲详情底部增加"相似歌曲推荐"横向滚动列表
+    - PlaylistDetail.vue: 歌单详情底部增加"你可能还喜欢"歌单推荐
+    - Home.vue: 登录用户的首页展示"为你推荐"
+
+───────────────────────────────────────────────────────────────────────────────
+🟢 P2 — 内容丰富与社交模块
+───────────────────────────────────────────────────────────────────────────────
+
+P2-1. 艺人/歌手页面
+  轻量方案（不新建艺人表，利用现有 artist 字段）：
+
+  后端改动：
+    - SongsController 增加:
+        GET /api/artists?keyword=xxx         -- 搜索艺人（按 artist 字段去重）
+        GET /api/artists/{name}/songs        -- 获取该艺人所有歌曲（分页）
+        GET /api/artists/{name}/top-songs    -- 该艺人热门歌曲 Top 10
+
+  前端改动：
+    - 新建 Artist.vue 页面，路由 /artist/:name
+    - 歌曲列表中 artist 字段改为可点击链接，跳转到艺人页面
+
+  完整方案（以后扩展）：
+    - 新建 artists 表，Songs 改 artist 字段为 artist_id 外键
+    - 艺人封面图、简介等
+
+───────────────────────────────────────────────────────────────────────────────
+P2-2. 专辑支持
+  数据库新增：
+    CREATE TABLE albums (
+        album_id     INT AUTO_INCREMENT PRIMARY KEY,
+        album_name   VARCHAR(200) NOT NULL,
+        artist_id    INT,  -- 关联 artists 表；如未建 artists 表则用 artist_name VARCHAR(200)
+        cover_url    VARCHAR(500),
+        release_date DATE,
+        description  TEXT
+    );
+
+    -- Songs 表增加 album_id 字段（可选，因为已有 album 字符串字段）
+
+  后端改动：
+    - 新建 AlbumsController: CRUD + 获取专辑歌曲列表
+    - 上传歌曲时可关联专辑
+
+  前端改动：
+    - 新建 Album.vue: 专辑封面、歌曲列表
+    - Songs.vue 中 album 列可点击跳转专辑页
+
+───────────────────────────────────────────────────────────────────────────────
+P2-3. 社交关注
+  数据库新增：
+    CREATE TABLE user_follows (
+        follower_id  INT NOT NULL,
+        followee_id  INT NOT NULL,
+        followed_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (follower_id, followee_id),
+        FOREIGN KEY (follower_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        FOREIGN KEY (followee_id) REFERENCES users(user_id) ON DELETE CASCADE
+    );
+
+  后端改动：
+    - 新建 FollowsController:
+        POST   /api/users/{id}/follow     -- 关注用户
+        DELETE /api/users/{id}/unfollow   -- 取消关注
+        GET    /api/users/{id}/followers  -- 粉丝列表
+        GET    /api/users/{id}/following  -- 关注列表
+        GET    /api/users/{id}/is-following -- 关注状态
+
+  前端改动：
+    - UserProfile.vue: 增加关注/取消关注按钮、粉丝数/关注数展示
+    - 新建用户公开主页（展示公开歌单 + 最近播放 + 关注/粉丝数）
+
+───────────────────────────────────────────────────────────────────────────────
+🔵 P3 — 体验提升 & 运营支撑
+───────────────────────────────────────────────────────────────────────────────
+
+P3-1. 通知系统
+  场景：有人收藏了我的歌单、有人评论了我的歌曲、我关注的人发了新歌单
+
+  数据库新增：
+    CREATE TABLE notifications (
+        id          INT AUTO_INCREMENT PRIMARY KEY,
+        user_id     INT NOT NULL,          -- 接收通知的用户
+        type        ENUM('like','comment','follow','system') NOT NULL,
+        content     VARCHAR(500) NOT NULL,
+        related_id  INT,                   -- 关联的歌曲/歌单/评论 ID
+        is_read     BOOLEAN DEFAULT FALSE,
+        created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
+        INDEX idx_user_unread (user_id, is_read, created_at DESC)
+    );
+
+  后端改动：
+    - 新建 NotificationsController
+    - 在各业务逻辑中（收藏、评论、关注）异步创建通知记录
+
+  前端改动：
+    - NavBar 增加通知铃铛图标 + 未读红点
+    - 新建 Notifications.vue 通知列表页
+
+───────────────────────────────────────────────────────────────────────────────
+P3-2. 搜索增强
+  分阶段实施：
+
+  第一阶段（简单）：
+    - GET /api/search/suggest?keyword=xxx → 返回匹配的歌名、艺人、歌单名（前 5 条）
+    - 前端搜索框增加自动补全下拉
+
+  第二阶段（数据量大了再上）：
+    - 集成 Elasticsearch 做全文搜索
+    - 搜索历史（前端 localStorage）
+    - 高级搜索（按标签、流派、年份范围）
+
+───────────────────────────────────────────────────────────────────────────────
+P3-3. 后台管理面板
+  为什么需要：内容审核、用户管理、数据统计
+
+  后端改动：
+    - 新建 AdminController（接口需管理员权限校验）:
+        GET  /api/admin/songs           -- 所有歌曲（含审核/下架）
+        GET  /api/admin/users           -- 用户列表
+        PUT  /api/admin/songs/{id}      -- 下架/恢复歌曲
+        PUT  /api/admin/users/{id}      -- 封禁/解封用户
+        GET  /api/admin/stats           -- 统计面板数据
+
+  前端改动：
+    - 新建 /admin 路由组（独立布局，非普通用户可见）
+    - 管理后台：仪表盘、歌曲管理、用户管理
+
+───────────────────────────────────────────────────────────────────────────────
+P3-4. Redis 缓存落地
+  已有 RedisConfig，但未实际使用。建议缓存以下场景：
+    - 热门排行榜数据（TTL: 5 分钟）
+    - 热门歌单数据（TTL: 5 分钟）
+    - 用户会话/Session 管理
+    - 接口限流计数器
+
+───────────────────────────────────────────────────────────────────────────────
+P3-5. 文件存储升级
+  现状：音频和封面文件存储在本地 server/ 目录
+  建议：接入对象存储（MinIO 自建 / 阿里云 OSS / 腾讯云 COS）
+    - 好处：扩展性、CDN 加速、与容器化部署更好地配合
+    - 改动：存储层抽象为接口，本地存储和 OSS 均为实现类
+
+───────────────────────────────────────────────────────────────────────────────
+P3-6. 其他可考虑的长期功能
+  - 歌单协作编辑（多人共同维护一个歌单）
+  - 每日推荐 / 私人 FM（基于协同过滤的推荐算法）
+  - 歌词贡献/众包（用户可提交歌词）
+  - 歌曲分享（生成分享链接/海报）
+  - 暗黑/明亮主题切换
+  - 支持更多音频格式（当前支持 MP3/FLAC/WAV/M4A）
+
+
+═══════════════════════════════════════════════════════════════════════════════
+第四部分：AI / Agent 功能集成
+═══════════════════════════════════════════════════════════════════════════════
+
+概述：利用大语言模型（LLM）和 AI Agent 为音乐网站注入智能化能力。
+涉及技术：OpenAI/Claude API、Agent 框架（LangChain/LlamaIndex）、RAG、
+         向量数据库、Function Calling / Tool Use、MCP 协议
+
+───────────────────────────────────────────────────────────────────────────────
+A-1. AI 自然语言搜索
+  使用场景："给我找一些适合深夜听的安静的华语慢歌"
+            "有没有类似《晴天》那种风格的老歌"
+            "最近上传的摇滚风格的歌推荐一下"
+
+  技术栈：
+    - LLM API（Claude/GPT）做意图识别 + 查询转译
+    - LLM 将自然语言提取为结构化过滤条件（标签、语种、年代、BPM 范围等）
+    - Function Calling: LLM 调用搜索 API，拿到结果后整理成自然语言回复
+
+  后端改动：
+    - 新建 AISearchController:
+        POST /api/ai/search  { query: "推荐适合运动的快节奏歌曲" }
+    - AISearchService:
+        1. 调用 LLM 将自然语言 → 结构化筛选参数 JSON
+        2. 用筛选参数查询数据库（标签匹配 + 关键词 + BPM范围等）
+        3. 返回歌曲列表 + LLM 生成的推荐理由
+    - 可选：将搜索结果向量化存入向量数据库，支持语义相似搜索
+
+  前端改动：
+    - NavBar 搜索框支持自然语言输入（加一个"AI 搜索"切换开关）
+    - 搜索结果页显示 AI 推荐理由（如"这首歌的节奏感强，适合运动时激发动力"）
+    - 支持多轮对话式搜索（上下文记忆上一轮结果）
+
+───────────────────────────────────────────────────────────────────────────────
+A-2. AI 智能歌单生成
+  使用场景："帮我生成一个适合雨天听的歌单，20首左右"
+            "生成一个 90 年代经典粤语老歌歌单"
+            "把最近一周的热门新歌整理成一个歌单"
+
+  技术栈：
+    - LLM 根据描述生成歌单名 + 描述 + 搜索条件
+    - Agent 模式：LLM 自主决定调用哪些搜索/筛选 API，多轮迭代直到凑够数量
+
+  后端改动：
+    - 新建 AIPlaylistController:
+        POST /api/ai/playlist/generate
+          Body: { prompt: "适合下雨天听的忧伤歌曲", count: 20 }
+          Response: { playlist_id, playlist_name, description, songs[], reason }
+    - AIPlaylistService (Agent 流程):
+        1. LLM 解析用户意图 → 拆解为多个搜索方向
+           （如"雨天"→ 标签匹配"伤感/慢节奏/民谣"，同时搜索歌词含"雨"的歌曲）
+        2. Agent 调用搜索 API 收集候选歌曲（Function Calling / Tool Use）
+        3. Agent 对结果去重、排序、过滤
+        4. LLM 为生成的歌单起名 + 写推荐语
+        5. 自动创建歌单并填充歌曲
+    - 高级版：加入用户偏好（播放历史、已收藏歌曲），Agent 自动避开不喜欢的风格
+
+  前端改动：
+    - Playlists.vue 增加"AI 生成歌单"按钮
+    - 弹出对话框：输入自然语言描述 + 期望歌曲数量
+    - 生成过程展示 Agent 的思考步骤（搜索方向、候选数量、筛选逻辑）
+    - 生成完成后可预览、手动增删、确认保存
+    - 增加"不满意，重新生成"和"微调"按钮（如"再慢一点"、"更多华语歌"）
+
+───────────────────────────────────────────────────────────────────────────────
+A-3. AI 音乐标签自动识别
+  使用场景：用户上传歌曲时，AI 自动分析音频 + 歌名/歌词，推荐标签
+            （流派、心情、场景、语种），用户只需确认/微调
+
+  技术栈：
+    - 音频特征分析（可选，用 librosa/essentia）
+    - LLM 分析歌名 + 歌词文本 → 推断流派/心情/场景
+    - Agent 模式：LLM 多维度分析后综合判断
+
+  后端改动：
+    - 上传歌曲流程增加异步标签识别步骤：
+        1. 歌曲上传完成后发送消息到消息队列（RabbitMQ）
+        2. 消费者调用 LLM API，输入歌名 + 艺人 + 歌词片段
+        3. LLM 返回推测的 tags: [{tag: "流行", confidence: 0.95}, {tag: "抒情", confidence: 0.8}]
+        4. 自动写入 song_tags 表（只写入 confidence > 0.7 的标签）
+        5. 用户可在编辑页查看/修改 AI 打的标签
+
+  前端改动：
+    - Upload.vue 上传成功后提示"AI 正在分析你的歌曲..."
+    - 歌曲编辑页展示 AI 推荐标签（带置信度），用户可点击确认/删除
+    - 标签旁标注 🤖 AI 推荐 vs 👤 手动设置
+
+───────────────────────────────────────────────────────────────────────────────
+A-4. 与音乐库对话（RAG 知识库问答）
+  使用场景："我的音乐库里一共有多少首歌？最长的一首是什么？"
+            "最近一个月我听了哪些歌？哪首听得最多？"
+            "帮我总结一下我歌单'睡前精选'里的音乐风格"
+            "有没有哪首歌我超过一个月没听了，但以前经常听？"
+            "今年我最喜欢哪首歌？"
+
+  技术栈：
+    - RAG（检索增强生成）：用户数据 → 向量嵌入 → 向量数据库（Milvus/Qdrant/Chroma）
+    - LLM + Function Calling: Agent 可以查询数据库统计、播放历史等结构化数据
+    - Text-to-SQL: 自然语言转 SQL 查询
+
+  后端改动：
+    - 新建 MusicChatController:
+        POST /api/ai/chat  { message: "我的库里有多少周杰伦的歌？" }
+        Response: { reply: "你的音乐库里有 37 首周杰伦的歌，其中...", data: {...} }
+    - MusicChatAgent 核心流程:
+        1. 将用户音乐数据（歌名、艺人、标签、播放历史）向量化存入向量数据库
+        2. 收到用户问题 → LLM 判断需要调用哪些工具：
+            - search_songs(keyword) → 搜索歌曲
+            - get_statistics(type, period) → 获取统计
+            - get_play_history(period) → 获取播放历史
+            - get_playlist_info(id) → 获取歌单信息
+            - get_user_profile() → 获取用户画像
+            - run_sql(query) → 执行自定义统计查询（Text-to-SQL）
+        3. Agent 多轮调用工具收集数据
+        4. LLM 将结构化数据转化为自然语言回答
+    - 可选的向量化：歌曲标签、歌词、歌单描述等非结构化文本做语义搜索
+
+  前端改动：
+    - 底部播放栏或 NavBar 增加"AI 助手"聊天图标
+    - 点击打开侧边 AI 对话面板（类似 ChatGPT 的聊天界面）
+    - 支持快捷提问按钮（"我最爱听什么？"、"推荐新歌"、"分析我的口味"）
+    - 回答中嵌入可点击的歌曲卡片（播放/加入队列）
+    - 侧边面板展示 Agent 的思考步骤（用了哪些工具、查了什么数据）
+
+───────────────────────────────────────────────────────────────────────────────
+A-5. AI DJ（智能串烧 + 语音播报）
+  使用场景：进入 AI DJ 模式后，AI 自动选曲、无缝衔接，每首歌之间插入
+            AI 生成的语音介绍（类似 Spotify AI DJ / 网易云音乐私人 DJ）
+
+  技术栈：
+    - LLM 生成串词/介绍（结合歌曲背景、艺人生平、推荐理由）
+    - TTS（Text-to-Speech）生成语音播报
+    - Agent 根据用户当前心情/时段/历史动态决策下一首播放什么
+    - Web Audio API 实现歌曲间平滑过渡（crossfade）
+
+  后端改动：
+    - 新建 AIDJController:
+        POST /api/ai/dj/start    -- 启动 AI DJ 模式（返回初始曲目 + TTS 音频 URL）
+        GET  /api/ai/dj/next     -- 获取下一首歌 + AI 串词音频
+        POST /api/ai/dj/skip     -- 跳过当前（反馈给 Agent 调整策略）
+        POST /api/ai/dj/feedback { rating: "like"|"dislike" }
+          -- 用户反馈（Agent 学习偏好）
+    - AIDJService (Agent 流程):
+        1. Agent 获取用户画像（喜欢的标签、最近播放、当前时间、当前心情）
+        2. Agent 决策下一首歌（探索 vs 利用平衡：熟悉的歌 vs 发现新歌）
+        3. LLM 生成 10-20 秒的串场语音文本（结合歌曲背景 + 推荐理由）
+        4. TTS 服务合成语音（OpenAI TTS / 火山引擎 / 微软 Azure TTS）
+        5. 语音音频和歌曲音频拼接/排队
+        6. 根据用户 skip/dislike 反馈持续调整策略
+    - 实现建议：
+        - DJ 串词可以做成不同的"DJ 人格"（温柔知性、幽默搞怪、专业乐评人）
+        - TTS 语音缓存（同一首歌的串词复用，不用重复合成）
+
+  前端改动：
+    - 播放栏增加"AI DJ"模式按钮（类似收音机图标）
+    - 进入 DJ 模式后：
+        - 播放队列由 AI 动态管理（不再显示完整列表）
+        - 显示"当前 AI DJ 正在为你挑选..."动画
+        - 歌曲间隙显示 DJ 串词文字 + 播放 TTS 语音
+        - 显示 DJ 的推荐理由卡片
+        - "下一首是什么"按钮（可预览但不可完整列表）
+        - 赞/踩按钮实时反馈
+    - 完全替代手动选歌的懒人模式
+
+───────────────────────────────────────────────────────────────────────────────
+A-6. AI 评论/内容审核
+  使用场景：自动检测评论中的不当内容、垃圾广告、人身攻击
+
+  技术栈：
+    - LLM 内容审核 API（或本地模型）
+    - 关键词 + AI 双保险
+
+  后端改动：
+    - 评论提交后异步送审（消息队列）
+    - AI 返回审核结果：PASS / FLAG / BLOCK
+    - FLAG 状态的内容进入人工审核队列（后台管理面板）
+
+───────────────────────────────────────────────────────────────────────────────
+A-7. AI 歌词分析与可视化
+  使用场景：对歌词进行情感分析、关键词提取、生成词云图
+
+  技术栈：
+    - NLP 情感分析
+    - LLM 分析歌词主题和情感色彩
+    - ECharts/Canvas 可视化词云
+
+  后端改动：
+    - 新建 LyricsAnalysisController:
+        GET /api/songs/{id}/lyrics/analysis  → 情感曲线、关键词、主题标签
+    - 可用 LLM 或专用 NLP 模型分析
+
+  前端改动：
+    - songDetail.vue 增加"歌词分析"Tab
+    - 展示：情感随时间变化的曲线图、高频词云、LLM 写的歌词点评
+
+───────────────────────────────────────────────────────────────────────────────
+A-8. AI 音乐年度报告
+  使用场景：类似 Spotify Wrapped / 网易云年度听歌报告，但由 AI 生成个性化评语
+
+  技术栈：
+    - 数据聚合（播放历史、收藏、标签分布）
+    - LLM 基于数据生成个性化文案和总结
+
+  后端改动：
+    - 新建 MusicReportController:
+        GET /api/report/{year} → 年度听歌报告数据
+    - LLM 生成个性化总结（"2026 年你一共听了 X 首歌，你最爱的是...你的音乐灵魂是..."）
+
+  前端改动：
+    - 新建 YearReport.vue（独立页面，类似故事式翻页 H5）
+    - 每页展示一个维度的数据 + AI 评语
+    - 支持分享图片/链接到社交平台
+
+───────────────────────────────────────────────────────────────────────────────
+A-9. Agent 架构设计建议
+  推荐技术选型：
+    - LLM: Claude API（Claude Fable 5）或 OpenAI GPT
+    - Agent 框架: 后端可以用 LangChain4j（Java 生态）/ Spring AI
+    - Function Calling: 定义工具集（搜索歌曲、查数据库、创建歌单等）
+    - 向量数据库: Milvus（生产级）/ Chroma（轻量）/ Qdrant
+    - 嵌入模型: text-embedding-3-small / 本地 BGE 模型
+    - 消息队列: RabbitMQ（异步 AI 任务）
+    - MCP (Model Context Protocol): 如果后续要做更复杂的 Agent 编排，
+      可考虑将音乐平台的能力封装为 MCP Server，让 AI 客户端直接调用
+
+  通用 Agent 工具集设计（所有 AI 功能共用）:
+    search_songs(keyword, tags[], limit)       -- 搜索歌曲
+    get_song_info(song_id)                     -- 获取歌曲详情
+    get_user_stats()                           -- 获取用户统计
+    get_play_history(days)                     -- 获取播放历史
+    get_user_playlists()                       -- 获取用户歌单
+    create_playlist(name, description, song_ids) -- 创建歌单
+    get_playlist_songs(playlist_id)            -- 获取歌单歌曲
+    get_hot_songs(limit)                       -- 获取热门歌曲
+    get_tags(type)                             -- 获取标签列表
+    analyze_lyrics(song_id)                    -- 分析歌词
+    get_similar_songs(song_id)                -- 获取相似歌曲
+
+
+═══════════════════════════════════════════════════════════════════════════════
+第五部分：技术覆盖面扩展 — 打造"全栈学习型项目"
+═══════════════════════════════════════════════════════════════════════════════
+
+概述：以下功能的设计目标不单是业务需求，更重要的是覆盖尽可能多的主流技术栈，
+      让这个项目成为你的技术试验田和面试作品。
+
+───────────────────────────────────────────────────────────────────────────────
+T-1. 消息队列 (RabbitMQ / RocketMQ / Kafka)
+  学习目标：异步解耦、削峰填谷、事件驱动架构
+
+  应用场景：
+    - 歌曲上传后的异步处理（AI 标签识别 T-1-1、音频转码 T-1-2、封面压缩）
+    - 播放事件统计（每播放一次发消息，消费者批量入库，避免高并发写 DB）
+    - 评论审核异步送审（T-1-3）
+    - 通知消息异步分发（关注、收藏、评论触发通知）
+
+  实现：
+    - Docker Compose 增加 RabbitMQ 容器
+    - Spring Boot 集成 spring-boot-starter-amqp
+    - 定义 Exchange/Queue 拓扑：
+        exchange: music.events
+        queues: audio.process / tag.analyze / stats.aggregate / notification.send
+    - 死信队列处理失败重试
+
+───────────────────────────────────────────────────────────────────────────────
+T-2. Elasticsearch 全文搜索
+  学习目标：倒排索引、分词器、聚合查询、高亮搜索
+
+  应用场景：
+    - 歌曲/歌单/艺人的全文搜索替代 MySQL LIKE
+    - 搜索建议/自动补全（Completion Suggester）
+    - 聚合统计（按标签/流派/年份分布）
+    - 拼音搜索（"zhoujielun" → "周杰伦"）
+
+  实现：
+    - Docker Compose 增加 Elasticsearch + Kibana 容器
+    - Spring Boot 集成 spring-boot-starter-data-elasticsearch
+    - 歌曲/歌单数据同步到 ES（全量同步 + Canal 增量同步）
+    - 中文分词器：IK Analyzer
+    - 搜索接口改造：GET /api/search → ES 查询
+
+───────────────────────────────────────────────────────────────────────────────
+T-3. WebSocket 实时通信
+  学习目标：全双工通信、STOMP 协议、心跳机制
+
+  应用场景：
+    - 好友正在听什么歌（实时状态）
+    - 一起听功能（多人同步听同一首歌，T-3-1）
+    - 实时评论弹幕（歌曲播放页面的弹幕评论）
+    - 通知实时推送
+    - 在线用户数实时更新
+
+  实现：
+    - Spring Boot 集成 spring-boot-starter-websocket
+    - 前端使用 SockJS + STOMP
+    - 或者用更轻量的原生 WebSocket + JSON
+
+  子功能 T-3-1：一起听/共享听歌房间
+    - 创建房间 → 生成邀请码/链接
+    - 房间成员同步播放进度
+    - 房间内聊天（文字 + emoji）
+    - 成员可点歌加入队列（投票决定）
+    - 技术：WebSocket + Redis Pub/Sub（多节点同步）
+
+───────────────────────────────────────────────────────────────────────────────
+T-4. OAuth 2.0 第三方登录
+  学习目标：OAuth 2.0 授权码流程、JWT 签发、开放平台接入
+
+  应用场景：
+    - GitHub 登录
+    - 微信扫码登录（微信开放平台）
+    - QQ 登录（QQ 互联）
+
+  实现：
+    - Spring Security OAuth2 Client
+    - 各平台申请 AppID/AppSecret
+    - 用户表增加 oauth_provider + oauth_openid 字段
+    - 首次登录自动注册，绑定已有账号
+
+───────────────────────────────────────────────────────────────────────────────
+T-5. PWA 渐进式 Web 应用
+  学习目标：Service Worker、离线缓存、Manifest、推送通知
+
+  应用场景：
+    - 可以"安装"到桌面（类似原生 App）
+    - 离线时缓存已加载的歌曲列表和页面
+    - 推送通知（新歌推荐、关注的人发歌单）
+
+  实现：
+    - vite-plugin-pwa 插件
+    - 配置 Service Worker 缓存策略（Stale-While-Revalidate）
+    - manifest.json 配置应用名、图标、主题色
+    - Web Push API 做浏览器推送通知
+
+───────────────────────────────────────────────────────────────────────────────
+T-6. Web Audio API 音频可视化 + 均衡器
+  学习目标：音频上下文、AnalyserNode、频谱分析、滤波器
+
+  应用场景：
+    - 播放器背景实时频谱动画（随音乐跳动）
+    - 音频波形图渲染
+    - 简易均衡器（EQ：低音/中音/高音调节）
+    - 3D 频谱可视化（Three.js + Web Audio API）
+
+  实现：
+    - AudioContext.createMediaElementSource() 连接 <audio> 元素
+    - AnalyserNode.getByteFrequencyData() 获取频谱数据
+    - Canvas 绘制频谱柱状图/波形图
+    - BiquadFilterNode 实现均衡器
+    - 可选：Three.js 做 3D 粒子随音乐舞动效果
+
+───────────────────────────────────────────────────────────────────────────────
+T-7. Web Workers 多线程处理
+  学习目标：浏览器多线程、消息传递、OffscreenCanvas
+
+  应用场景：
+    - 音频文件 MD5 计算放 Worker（大文件不阻塞 UI）
+    - 歌词解析/格式化放 Worker
+    - 大量数据排序/过滤放 Worker
+
+  实现：
+    - 新建 audio.worker.ts / parser.worker.ts
+    - 主线程通过 postMessage 通信
+    - Comlink 库简化 Worker 调用
+
+───────────────────────────────────────────────────────────────────────────────
+T-8. Docker 深化 + CI/CD + 监控
+  学习目标：容器化、编排、自动化部署、可观测性
+
+  T-8-1. Docker 多阶段构建
+    - 前端构建阶段 + Nginx 运行阶段合并
+    - 后端 Maven 构建阶段 + JRE 运行阶段合并
+    - 减小镜像体积
+
+  T-8-2. CI/CD（GitHub Actions）
+    - push main 分支触发自动构建 Docker 镜像
+    - 推送到阿里云容器镜像服务 / Docker Hub
+    - SSH 到服务器自动部署（docker-compose pull && up -d）
+    - PR 触发自动运行测试
+
+  T-8-3. 监控（Prometheus + Grafana）
+    - Spring Boot Actuator + Micrometer 暴露指标
+    - Prometheus 采集 JVM 指标、接口耗时、QPS
+    - Grafana 仪表盘（接口 QPS、错误率、内存/GC、慢查询）
+    - 自定义业务指标（播放量、上传量、注册量）
+
+  T-8-4. 日志收集（ELK / Loki）
+    - Filebeat 采集 Spring Boot 日志 → Elasticsearch → Kibana
+    - 或轻量方案：Promtail → Loki → Grafana（同一套 Grafana 展示）
+    - 集中查看错误日志、慢请求日志
+
+───────────────────────────────────────────────────────────────────────────────
+T-9. 单元测试 + 集成测试 + E2E 测试
+  学习目标：测试金字塔、Mock、测试覆盖率
+
+  T-9-1. 后端测试
+    - JUnit 5 + Mockito 单元测试（Service 层）
+    - Testcontainers 集成测试（真实 MySQL/Redis 容器）
+    - Spring MockMvc 测试 Controller 层
+    - JaCoCo 生成覆盖率报告
+
+  T-9-2. 前端测试
+    - Vitest 单元测试（Store、工具函数）
+    - Vue Test Utils 组件测试
+    - Playwright E2E 测试（登录 → 搜索 → 播放 → 收藏完整流程）
+
+───────────────────────────────────────────────────────────────────────────────
+T-10. API 文档（Knife4j / Swagger）
+  学习目标：OpenAPI 3.0 规范、自动文档生成、在线调试
+
+  实现：
+    - 引入 Knife4j（Spring Boot 3 兼容版）
+    - 每个 Controller + 接口注解 @Operation, @Parameter
+    - 实体类注解 @Schema
+    - 访问 /doc.html 查看在线 API 文档 + 在线调试
+
+───────────────────────────────────────────────────────────────────────────────
+T-11. i18n 国际化
+  学习目标：多语言支持、资源文件管理
+
+  实现：
+    - 前端：vue-i18n（中/英/日三语切换）
+    - 后端：Spring i18n 返回对应语言的错误消息
+    - 数据库：歌曲标签名、系统提示语支持多语言
+    - 语言偏好保存到用户设置
+
+───────────────────────────────────────────────────────────────────────────────
+T-12. 音频处理（FFmpeg）
+  学习目标：音视频编解码、格式转换、元数据操作
+
+  应用场景：
+    - 上传歌曲自动转码为统一格式（AAC 256kbps / MP3 320kbps）
+    - 提取音频片段作为预览（30 秒试听）
+    - 音频响度标准化（LUFS normalization，避免不同歌曲音量差异大）
+    - 音频剪辑/截取（用户自定义铃声片段）
+    - 生成波形缩略图
+
+  实现：
+    - Java 调用 FFmpeg（ProcessBuilder 或 JAVE2 库）
+    - 消息队列异步处理转码任务
+    - Docker 基础镜像中安装 FFmpeg
+
+───────────────────────────────────────────────────────────────────────────────
+T-13. 接口限流与安全
+  学习目标：限流算法、安全防护
+
+  T-13-1. 接口限流
+    - 基于 Redis + Lua 脚本的滑动窗口限流
+    - 或 Spring Cloud Gateway / Sentinel 集成
+    - 按用户/IP/接口维度限流
+    - 上传接口严格限流（防止被刷）
+
+  T-13-2. 安全防护
+    - XSS 过滤器（评论内容过滤 script 标签）
+    - CSRF 防护（如用了 Cookie 则需要）
+    - SQL 注入防护（MyBatis 参数化查询已有，但需注意动态 SQL）
+    - 文件上传安全（类型校验、大小限制、病毒扫描）
+    - 密码强度校验
+    - 登录失败次数限制（Redis 计数器）
+
+  T-13-3. 敏感词过滤
+    - DFA 算法实现敏感词库
+    - 或集成第三方内容安全 API（阿里云/腾讯云）
+    - 评论、歌单描述、用户名都需要过滤
+
+───────────────────────────────────────────────────────────────────────────────
+T-14. 推荐算法从零实现
+  学习目标：理解推荐系统原理，不依赖现成库
+
+  阶段一：基于内容的推荐（Content-Based）
+    - 歌曲标签向量 → 余弦相似度计算 → TopN 相似歌曲
+    - 用户标签偏好向量（收藏/播放历史加权） → 相似度匹配
+
+  阶段二：协同过滤（Collaborative Filtering）
+    - 基于用户的 CF：找到相似用户 → 推荐他们的收藏
+    - 基于物品的 CF：歌曲共现矩阵 → A 和 B 经常被一起收藏
+    - 用 Redis 存储共现矩阵，定时离线计算
+
+  阶段三：混合推荐 + 深度学习（可选）
+    - 加权融合多种推荐策略
+    - 或用 DeepFM / Wide&Deep 等模型（Java 可调 Python 模型服务）
+
+───────────────────────────────────────────────────────────────────────────────
+T-15. GraphQL API
+  学习目标：声明式数据查询、减少 over-fetching
+
+  应用场景：替代部分 REST 接口，让前端灵活组合查询字段
+    例如：查询歌单时可以选择是否同时返回歌曲列表、创建者信息、标签
+
+  实现：
+    - Spring Boot 集成 spring-boot-starter-graphql
+    - 定义 Schema（类型、Query、Mutation）
+    - 前端使用 @apollo/client 或 urql
+    - 部分复杂查询用 GraphQL（如歌单详情页），简单查询保持 REST
+    - REST 和 GraphQL 共存，不全部替换
+
+───────────────────────────────────────────────────────────────────────────────
+T-16. Spring Cloud 微服务化（高级阶段）
+  学习目标：服务注册发现、配置中心、网关、远程调用
+
+  注意：这是大型项目才需要的架构升级，建议在单体架构把功能做完整后再拆
+
+  架构设计：
+    - Nacos: 服务注册中心 + 配置中心
+    - Gateway: API 网关（统一入口、路由转发、鉴权、限流）
+    - OpenFeign: 微服务间 RPC 调用
+    - Sentinel: 熔断降级
+    - Seata: 分布式事务
+    - SkyWalking: 分布式链路追踪
+
+  服务拆分建议（按业务域）：
+    - user-service（用户、关注）
+    - song-service（歌曲、标签、歌词）
+    - playlist-service（歌单）
+    - queue-service（播放队列、播放状态）
+    - comment-service（评论）
+    - notification-service（通知）
+    - recommendation-service（推荐）
+    - ai-service（AI Agent 所有功能）
+    - gateway-service（API 网关）
+
+───────────────────────────────────────────────────────────────────────────────
+T-17. 其他可学技术（单项小而精）
+
+  编号    技术                       应用场景
+  ─────────────────────────────────────────────────────────────────
+  T-17-1  Redisson 分布式锁         防止同一首歌被重复上传处理
+  T-17-2  XXL-Job 定时任务           每周热门榜定时计算、凌晨数据清理
+  T-17-3  MinIO 自建 S3 存储        替代本地文件存储，S3 兼容 API
+  T-17-4  Nginx 进阶                 负载均衡、限流、静态资源缓存、gzip
+  T-17-5  HTTPS/Let's Encrypt       自动续签 SSL 证书
+  T-17-6  QR 码生成                  歌单/歌曲分享二维码
+  T-17-7  Canvas 海报生成            年度报告/歌单分享的可分享海报图
+  T-17-8  Three.js 3D 可视化         3D 频谱特效 / 虚拟音乐空间
+  T-17-9  SSG/SSR (Nuxt)            如后续做官网/SEO 页面，可引入 Nuxt
+  T-17-10 无障碍 a11y                ARIA 标签、键盘导航、屏幕阅读器支持
+  T-17-11 A/B 测试 + Feature Flags  新功能灰度上线、UI 方案对比
+  T-17-12 压力测试 (wrk/JMeter)     接口 QPS 测试、性能瓶颈定位
+  T-17-13 JVM 调优                   GC 日志分析、堆内存调优、Arthas 诊断
+  T-17-14 数据脱敏                   日志中手机号/邮箱自动脱敏
+  T-17-15 MVC 模式升级为 DDD         领域驱动设计重构（大项目再考虑）
+
+
+═══════════════════════════════════════════════════════════════════════════════
+第六部分：更新后的实施路线图
+═══════════════════════════════════════════════════════════════════════════════
+
+  阶段一（1-2 周）：基础完善
+    ├── Bug 修复（第 1-15 条）
+    ├── 歌曲收藏（P0-2）
+    ├── 播放历史（P0-3）
+    └── 刷新功能
+
+  阶段二（2-4 周）：内容组织 + 技术基建
+    ├── 音乐标签系统（P0-1）
+    ├── API 文档 Knife4j（T-10）
+    ├── 首页改造：热门排行（P1-1） + Redis 缓存落地（P3-4）
+    ├── 消息队列 RabbitMQ 引入（T-1）
+    └── 标签匹配推荐（P1-3）
+
+  阶段三（4-6 周）：互动 + 测试 + 部署
+    ├── 评论系统（P1-2）
+    ├── 后端单元测试 + 集成测试（T-9-1）
+    ├── 前端组件测试 + E2E（T-9-2）
+    ├── CI/CD GitHub Actions（T-8-2）
+    └── 搜索增强：Elasticsearch 集成（T-2）
+
+  阶段四（6-8 周）：AI 初级功能
+    ├── AI 自然语言搜索（A-1）
+    ├── AI 智能歌单生成（A-2）
+    ├── AI 标签自动识别（A-3）
+    └── Agent 工具集基础架构搭建（A-9）
+
+  阶段五（8-10 周）：实时 + 社交
+    ├── WebSocket 实时通信（T-3）
+    ├── 一起听功能（T-3-1）
+    ├── 社交关注（P2-3）
+    ├── 通知系统（P3-1）
+    └── OAuth 第三方登录（T-4）
+
+  阶段六（10-12 周）：AI 高级 + 音频可视化
+    ├── 音乐库 RAG 对话（A-4）
+    ├── AI DJ 智能播报（A-5）
+    ├── Web Audio API 频谱可视化 + 均衡器（T-6）
+    ├── AI 年度报告（A-8）
+    └── 算法推荐系统（T-14）
+
+  阶段七（12-14 周）：PWA + 运维 + 体验
+    ├── PWA 桌面安装 + 离线缓存（T-5）
+    ├── 监控 Prometheus + Grafana（T-8-3）
+    ├── 日志收集 ELK/Loki（T-8-4）
+    ├── 接口限流 + 安全加固（T-13）
+    ├── i18n 国际化（T-11）
+    └── 音频处理 FFmpeg 转码（T-12）
+
+  阶段八（14 周+）：微服务进阶（选做，学习性质）
+    ├── Spring Cloud 微服务拆分（T-16）
+    ├── GraphQL API 层（T-15）
+    ├── 后台管理面板（P3-3）
+    ├── 压力测试 + JVM 调优（T-17-12/13）
+    └── 分布式事务/分布式锁/读写分离等高级主题
+
+================================================================================
+                          END
+================================================================================

@@ -1,6 +1,7 @@
 import request from './axios'
 import type { ILogin, ILogout, IRegister, IAxiosRes } from '../type'
 
+//加密函数
 export async function encryptPassword(password: string) {
   const msgUint8 = new TextEncoder().encode(password)
   const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8)
@@ -8,6 +9,7 @@ export async function encryptPassword(password: string) {
   return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+//登录函数
 async function login(user_name: string, password: string) {
   const encryptedPassword = await encryptPassword(password)
 
@@ -31,6 +33,7 @@ async function login(user_name: string, password: string) {
   }
 }
 
+//注册函数
 async function register(registerFormdata: {
   user_name: string
   password: string
@@ -52,6 +55,7 @@ async function register(registerFormdata: {
   }
 }
 
+//登出函数
 async function logout() {
   const res = await request.post<any, IAxiosRes<any>>('/users/logout')
 
@@ -63,6 +67,7 @@ async function logout() {
   return { success: true, message: res.message }
 }
 
+//获取用户头像的url
 async function getUSerCover() {
   const res = await request.get<any, IAxiosRes<any>>(`/users/cover`)
 
@@ -74,6 +79,7 @@ async function getUSerCover() {
   }
 }
 
+//编辑用户信息
 async function editUserProfile(formdata: FormData) {
   const res = await request.patch<any, IAxiosRes<any>>('/users/me', formdata)
 

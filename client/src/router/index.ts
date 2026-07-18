@@ -55,6 +55,21 @@ const routes = [
     component: () => import('../views/Upload.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/playlists',
+    name: 'Playlists',
+    component: () => import('../views/Playlists.vue'),
+  },
+  {
+    path: '/playlists/:id',
+    name: 'PlaylistDetail',
+    component: () => import('../views/PlaylistDetail.vue'),
+  },
+  {
+    path: '/playlists/:id/edit',
+    name: 'EditPlaylist',
+    component: () => import('../views/EditPlaylistDetail.vue'),
+  },
 ]
 
 export const router = createRouter({

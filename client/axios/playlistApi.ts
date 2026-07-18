@@ -11,6 +11,7 @@ import type {
 } from '../type'
 import request from './axios'
 
+//创建歌单
 const createPlaylist = async (formData: any) => {
   const res = await request.post<any, IAxiosRes<any>>('/playlists', formData)
 
@@ -28,6 +29,7 @@ const createPlaylist = async (formData: any) => {
   }
 }
 
+//编辑歌单
 const editPlaylistDetails = async (formData: any) => {
   const res = await request.patch<any, IAxiosRes<any>>('/playlists', formData)
 
@@ -44,6 +46,7 @@ const editPlaylistDetails = async (formData: any) => {
   }
 }
 
+//删除歌单
 const deletePlaylist = async (playlistId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
@@ -60,6 +63,7 @@ const deletePlaylist = async (playlistId: number) => {
   }
 }
 
+//点赞歌单
 const likePlaylist = async (playlistId: number) => {
   const res = await request.post<any, IAxiosRes<any>>(`/playlists/${playlistId}/likes`)
 
@@ -76,6 +80,7 @@ const likePlaylist = async (playlistId: number) => {
   }
 }
 
+//取消歌单的点赞
 const unlikePlaylist = async (playlistId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}/unlikes`)
 
@@ -92,6 +97,7 @@ const unlikePlaylist = async (playlistId: number) => {
   }
 }
 
+//获取用户本人的歌单列表
 const getMyPlaylists = async () => {
   const res = await request.get<any, IAxiosRes<any>>(`/playlists`, {})
 
@@ -109,6 +115,7 @@ const getMyPlaylists = async () => {
   }
 }
 
+//根据id获取歌单信息
 const getPlaylistById = async (playlistId: number) => {
   const res = await request.get<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
@@ -128,6 +135,7 @@ const getPlaylistById = async (playlistId: number) => {
   }
 }
 
+//加入歌曲到歌单
 const addSongToPlaylist = async (playlistId: number, songId: number) => {
   const res = await request.post<any, IAxiosRes<any>>(`/playlists/${playlistId}/songs/${songId}`)
 
@@ -145,6 +153,7 @@ const addSongToPlaylist = async (playlistId: number, songId: number) => {
   }
 }
 
+//从歌单移除歌曲
 const removeSongFromPlaylist = async (playlistId: number, songId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`playlists/${playlistId}/songs/${songId}`)
 

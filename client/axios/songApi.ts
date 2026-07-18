@@ -1,6 +1,7 @@
 import type { IGetSongs, IUploadSong, IAxiosRes } from '../type'
 import request from './axios'
 
+//获取歌曲，涵盖查询歌曲的功能
 const getSongs = async (search_page: number, searchKeyword: string) => {
   const res = await request.get<any, IAxiosRes<any>>('/songs', {
     params: { page: search_page, keyword: searchKeyword },
@@ -21,7 +22,8 @@ const getSongs = async (search_page: number, searchKeyword: string) => {
   }
 }
 
-export const uploadSong = async (
+//上传歌曲
+const uploadSong = async (
   formData: FormData,
   onProgress?: (progressEvent: any) => void,
 ): Promise<IUploadSong> => {
@@ -36,7 +38,8 @@ export const uploadSong = async (
   }
 }
 
-export const getLyrics = async (songId: number) => {
+//获取歌词
+const getLyrics = async (songId: number) => {
   const res = await request.get<any, any>(`/songs/${songId}/lyrics`)
   if (!res.success) {
     return {
@@ -52,7 +55,8 @@ export const getLyrics = async (songId: number) => {
   }
 }
 
-export const getUserUploadSongs = async (page: number, size: number) => {
+//获取用户的上传歌曲
+const getUserUploadSongs = async (page: number, size: number) => {
   const res = await request.get<any, any>(`/songs/my-uploads`, {
     params: {
       page: page,
@@ -68,7 +72,8 @@ export const getUserUploadSongs = async (page: number, size: number) => {
   }
 }
 
-export const EditUserUploadSongs = async (formdata: FormData, song_id: number) => {
+//编辑上传的歌曲的信息
+const EditUserUploadSongs = async (formdata: FormData, song_id: number) => {
   const res = await request.patch<any, any>(`/songs/my-uploads/${song_id}`, formdata)
 
   return { success: res.success, message: res.message }
