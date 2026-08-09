@@ -1,12 +1,10 @@
 <template>
   <!--default-active高亮-->
   <el-menu :default-active="route.path" class="navbar-menu" mode="horizontal" router :ellipsis="false">
-    <el-menu-item index="/" class="logo-item">
-      <span class="text-xl font-bold tracking-wider">音乐播放器</span>
+    <el-menu-item v-for="item in NAV_ITEMS" :key="item.path" :index="item.path"
+      :class="{ 'logo-item': item.isLogo }">
+      <span :class="item.isLogo ? 'text-xl font-bold tracking-wider' : ''">{{ item.label }}</span>
     </el-menu-item>
-
-    <el-menu-item index="/songs">歌曲库</el-menu-item>
-    <el-menu-item index="/playlists">歌单</el-menu-item>
 
     <div class="grow" />
 
@@ -39,24 +37,20 @@
 </template>
 
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
-import { useUserStore } from '../stores/user'
-import { useRouter, useRoute } from 'vue-router'
+defineOptions({ name: 'NavBar' })
+import { useRoute, useRouter } from 'vue-router'
+import { useUserStore } from '@/stores/user'
+import { NAV_ITEMS } from './const'
+import { useNavBar } from './composables/useNavBar'
 
 const userStore = useUserStore()
-const router = useRouter()
 const route = useRoute()
-
-const logout = async () => {
-  if (!userStore.user) return
-  await userStore.logout()
-  ElMessage.success("登出成功")
-  router.push('/login')
-}
+const router = useRouter()
+const { logout } = useNavBar()
 </script>
 
 <style scoped>
-@reference "../assets/index.css";
+@reference "../../assets/index.css";
 
 .navbar-menu {
   background-color: #1f2937;

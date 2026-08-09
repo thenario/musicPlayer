@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
 import { playlistApi } from '@/api/playlistApi'
 import { getImageUrl } from '@/utils/format'
 import { PLAYLIST_COVER_TYPES } from '../const'

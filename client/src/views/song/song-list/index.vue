@@ -34,7 +34,6 @@
 <script setup lang="ts">
 defineOptions({ name: 'SongListPage' })
 import { onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { debounce } from 'lodash-es'
 import { Search } from '@element-plus/icons-vue'

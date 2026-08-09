@@ -98,7 +98,6 @@ defineOptions({ name: 'EditUploadPage' })
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSongStore } from '@/stores/song';
-import { ElMessage } from 'element-plus';
 import { Back, Camera, Mic } from '@element-plus/icons-vue';
 import { getImageUrl } from '@/utils/format';
 import { useEditUpload } from './composables/useEditUpload';

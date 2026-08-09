@@ -1,5 +1,4 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
-import { ElMessage } from 'element-plus'
 import { router } from '@/router'
 import { tokenStorage, userStorage } from '@/utils/storage'
 
