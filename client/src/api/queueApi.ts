@@ -1,8 +1,8 @@
-import type { IQueueState, IAxiosRes } from '@/types'
+import type { IQueueState, IAxiosRes, IGetCurrentQueue, IGetMyQueues, IQueue } from '@/types'
 import request from './axios'
 
 //获取用户的播放队列
-const getMyQueues = async () => {
+const getMyQueues = async (): Promise<IGetMyQueues> => {
   const res = await request.get<any, IAxiosRes<any>>('/queues', { silent: true })
 
   return {
@@ -13,7 +13,9 @@ const getMyQueues = async () => {
 }
 
 //依据id获取队列信息
-const getQueueById = async (queueId: number) => {
+const getQueueById = async (
+  queueId: number,
+): Promise<{ success: boolean; message: string; queue: IQueue }> => {
   const res = await request.get<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
   return {
@@ -24,7 +26,7 @@ const getQueueById = async (queueId: number) => {
 }
 
 //获取用户当前的队列信息
-const getCurrentQueue = async () => {
+const getCurrentQueue = async (): Promise<IGetCurrentQueue> => {
   const res = await request.get<any, IAxiosRes<any>>('/queues/current', { silent: true })
 
   return {

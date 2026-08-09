@@ -1,12 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { IQueue, IQueueItem, ISong } from '@/types'
+import type { IQueue, IQueueItem, IQueueState, ISong } from '@/types'
 import { queueApi } from '@/api/queueApi'
+import { getImageUrl } from '@/utils/format'
 import { createAudioEngine } from '@/composables/player/useAudioEngine'
 import { createLyricsLoader } from '@/composables/player/useLyricsLoader'
 import { createQueueMutations } from '@/composables/player/useQueueMutations'
-
-const API_BASE_URL = import.meta.env.VITE_API_URL
 
 export const usePlayerStore = defineStore('player', () => {
   // ================= 状态 =================
@@ -95,10 +94,7 @@ export const usePlayerStore = defineStore('player', () => {
     if ('mediaSession' in navigator && currentSong.value) {
       const song = currentSong.value
 
-      let coverUrl = song.song_cover_url || ''
-      if (coverUrl && !coverUrl.startsWith('http')) {
-        coverUrl = `${API_BASE_URL}${coverUrl.startsWith('/') ? '' : '/'}${coverUrl}`
-      }
+      const coverUrl = getImageUrl(song.song_cover_url)
 
       navigator.mediaSession.metadata = new MediaMetadata({
         title: song.song_title,
@@ -231,15 +227,15 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const updateQueueData = (queue: any) => {
+  const updateQueueData = (queue: IQueue) => {
     if (queue.queue_items) {
-      queue.queue_items.sort((a: any, b: any) => a.queue_item_position - b.queue_item_position)
+      queue.queue_items.sort((a, b) => a.queue_item_position - b.queue_item_position)
       currentQueue.value = [...queue.queue_items]
     }
     currentQueueId.value = queue.queue_id
   }
 
-  const syncPlaybackState = (state: any) => {
+  const syncPlaybackState = (state: IQueueState) => {
     playMode.value = state.playmode || 'sequential'
 
     if (!state.current_song_id) return
@@ -278,14 +274,14 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       const res = await queueApi.getMyQueues()
       const rawQueues = res.queues ?? []
-      rawQueues.sort((a: any, b: any) => {
+      rawQueues.sort((a, b) => {
         const timeA = new Date(a.updated_date).getTime()
         const timeB = new Date(b.updated_date).getTime()
         return timeB - timeA
       })
-      rawQueues.forEach((queue: any) => {
+      rawQueues.forEach((queue) => {
         if (queue.queue_items && Array.isArray(queue.queue_items)) {
-          queue.queue_items.sort((a: any, b: any) => {
+          queue.queue_items.sort((a, b) => {
             return a.queue_item_position - b.queue_item_position
           })
         }
