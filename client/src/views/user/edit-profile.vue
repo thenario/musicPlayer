@@ -48,78 +48,15 @@
 </template>
 
 <script setup lang="ts">
-import { useUserStore } from '@/stores/user';
-import { userApi } from '@/api/userApi';
-import type { FormInstance, FormRules } from 'element-plus';
-import { ElMessage } from 'element-plus';
-import { storeToRefs } from 'pinia';
-import { reactive, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Camera } from '@element-plus/icons-vue';
+import { useUserProfile } from './composables/useUserProfile';
 
 const router = useRouter();
-const userStore = useUserStore();
-const { user, userCoverUrl } = storeToRefs(userStore);
-
-const formRef = ref<FormInstance>();
-const preCover = ref<File>();
-const prevCoverUrl = ref<string>(userCoverUrl.value || '');
-const preUserName = ref<string>(user.value?.user_name || "");
-const submitting = ref(false);
-
-const editForm = reactive({
-    user_name: preUserName.value,
-});
-
-const rules = reactive<FormRules>({
-    user_name: [
-        { required: true, message: '用户名不能为空', trigger: 'blur' },
-        { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
-    ]
-});
-
-const handleFileChange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-        if (file.size > 2 * 1024 * 1024) {
-            ElMessage.warning('图片大小不能超过 2MB');
-            return;
-        }
-        preCover.value = file;
-        prevCoverUrl.value = URL.createObjectURL(file);
-    }
-};
+const { formRef, prevCoverUrl, editForm, rules, submitting, handleFileChange, submit } = useUserProfile();
 
 const submitForm = async () => {
-    if (!formRef.value) return;
-
-    await formRef.value.validate(async (valid) => {
-        if (!valid) return;
-
-        submitting.value = true;
-        const formdata = new FormData();
-        formdata.append('user_name', editForm.user_name);
-
-        if (preCover.value) {
-            formdata.append('user_cover', preCover.value);
-        }
-
-        try {
-            const res = await userApi.editUserProfile(formdata);
-            ElMessage.success("资料修改成功！");
-            if (user.value) {
-                user.value.user_name = res.user_name;
-                userCoverUrl.value = res.user_cover_url;
-            }
-            router.push('/user-profile');
-        } catch (err) {
-            // 错误已由拦截器统一提示，这里只记录日志
-            console.error(err);
-        } finally {
-            submitting.value = false;
-        }
-    });
+    if (await submit()) router.push('/user-profile');
 };
 
 const goBack = () => {

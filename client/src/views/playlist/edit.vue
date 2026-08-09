@@ -87,83 +87,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { ElMessage } from 'element-plus'
-import { playlistApi } from "@/api/playlistApi"
 import { storeToRefs } from 'pinia'
 import { Edit, Camera, Plus } from '@element-plus/icons-vue'
+import { useEditPlaylist } from './composables/useEditPlaylist'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
-const form = ref({ name: '', description: '' })
 const playlistId = route.params.id as string
-const previewImage = ref('')
-const selectedFile = ref<File | null>(null)
-const submitting = ref(false)
+const { form, previewImage, submitting, load, handleFileChange, submit } = useEditPlaylist(playlistId)
 
-const getImageUrl = (url: string) => {
-    if (!url) return ''
-    if (url.startsWith('http')) return url
-
-    const baseUrl = import.meta.env.VITE_API_URL || ''
-    const normalizedUrl = url.startsWith('/') ? url : `/${url}`
-
-    return `${baseUrl}${normalizedUrl}`
-}
-
-onMounted(async () => {
-    try {
-        const res = await playlistApi.getPlaylistById(Number(playlistId))
-        if (res.playlist) {
-            form.value.name = res.playlist.playlist_name
-            form.value.description = res.playlist.description || ''
-            previewImage.value = getImageUrl(res.playlist.playlist_cover_url)
-        }
-    } catch (err: any) {
-        // 错误已由拦截器统一提示，这里只记录日志
-        console.error(err)
-    }
-})
-
-const handleFileChange = (uploadFile: any) => {
-    const file = uploadFile.raw
-    if (!file) return
-    if (!['image/jpeg', 'image/png'].includes(file.type)) {
-        ElMessage.error('只能上传 JPG/PNG 格式!')
-        return
-    }
-    selectedFile.value = file
-    previewImage.value = URL.createObjectURL(file)
-}
+onMounted(load)
 
 const submitForm = async () => {
-    submitting.value = true
-    try {
-        const formData = new FormData()
-        formData.append('playlist_id', playlistId)
-        formData.append('name', form.value.name)
-        formData.append('description', form.value.description)
-
-        if (selectedFile.value) {
-            formData.append('cover_image', selectedFile.value)
-        }
-
-        await playlistApi.editPlaylistDetails(formData)
-
-        ElMessage.success('更新成功')
-
-        router.push(`/playlists/${playlistId}`)
-
-    } catch (err: any) {
-        // 错误已由拦截器统一提示，这里只记录日志
-        console.error('更新失败:', err)
-    } finally {
-        submitting.value = false
-    }
+    if (await submit()) router.push(`/playlists/${playlistId}`)
 }
 </script>
