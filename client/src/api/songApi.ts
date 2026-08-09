@@ -33,7 +33,7 @@ const uploadSong = async (
 
 //获取歌词
 const getLyrics = async (songId: number) => {
-  const res = await request.get<any, any>(`/songs/${songId}/lyrics`)
+  const res = await request.get<any, any>(`/songs/${songId}/lyrics`, { silent: true })
 
   return {
     success: true,

@@ -59,6 +59,9 @@ export function useUserProfile() {
         userCoverUrl.value = res.user_cover_url
       }
       return true
+    } catch (err) {
+      console.error(err)
+      return false
     } finally {
       submitting.value = false
     }

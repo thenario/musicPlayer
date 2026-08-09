@@ -62,7 +62,7 @@ async function logout() {
 
 //获取用户头像的url
 async function getUserCover() {
-  const res = await request.get<any, IAxiosRes<any>>(`/users/cover`)
+  const res = await request.get<any, IAxiosRes<any>>(`/users/cover`, { silent: true })
 
   return {
     success: res.success,

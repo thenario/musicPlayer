@@ -3,7 +3,7 @@ import request from './axios'
 
 //获取用户的播放队列
 const getMyQueues = async () => {
-  const res = await request.get<any, IAxiosRes<any>>('/queues')
+  const res = await request.get<any, IAxiosRes<any>>('/queues', { silent: true })
 
   return {
     success: true,
@@ -25,7 +25,7 @@ const getQueueById = async (queueId: number) => {
 
 //获取用户当前的队列信息
 const getCurrentQueue = async () => {
-  const res = await request.get<any, IAxiosRes<any>>('/queues/current')
+  const res = await request.get<any, IAxiosRes<any>>('/queues/current', { silent: true })
 
   return {
     success: true,

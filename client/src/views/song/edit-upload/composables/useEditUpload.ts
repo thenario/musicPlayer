@@ -64,6 +64,9 @@ export function useEditUpload(songId: number) {
       await songApi.editUserUploadSongs(finalData, songId)
       ElMessage.success('修改成功')
       return true
+    } catch (err) {
+      console.error(err)
+      return false
     } finally {
       submitting.value = false
     }

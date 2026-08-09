@@ -40,8 +40,13 @@ const searchSongs = async () => {
     searchResults.value = []
     return
   }
-  const res = await songApi.getSongs(1, songSearchQuery.value)
-  searchResults.value = res.songs || []
+  try {
+    const res = await songApi.getSongs(1, songSearchQuery.value)
+    searchResults.value = res.songs || []
+  } catch (err) {
+    // 错误已由拦截器统一提示，这里只记录日志
+    console.error(err)
+  }
 }
 
 const debouncedSearch = debounce(searchSongs, 500)

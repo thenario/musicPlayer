@@ -31,8 +31,8 @@ const showModal = ref(false)
 const { playlists, creating, load, create } = usePlaylistList()
 
 const handleCreate = async (payload: { name: string; description: string; coverFile: File | null }) => {
-  await create({ ...payload, creatorId: userStore.user?.user_id })
-  showModal.value = false
+  const ok = await create({ ...payload, creatorId: userStore.user?.user_id })
+  if (ok) showModal.value = false
 }
 
 onMounted(load)

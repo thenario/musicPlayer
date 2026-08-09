@@ -12,9 +12,13 @@ export function useMyUploads(defaultPageSize = UPLOAD_PAGE_SIZE) {
 
   const load = async () => {
     await task.run(async () => {
-      const res = await songApi.getUserUploadSongs(pagination.state.current, pagination.state.pageSize)
-      songs.value = res.songs
-      pagination.setTotal(res.total)
+      try {
+        const res = await songApi.getUserUploadSongs(pagination.state.current, pagination.state.pageSize)
+        songs.value = res.songs
+        pagination.setTotal(res.total)
+      } catch (err) {
+        console.error(err)
+      }
     })
   }
 

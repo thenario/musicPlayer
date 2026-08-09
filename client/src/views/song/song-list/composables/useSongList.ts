@@ -13,9 +13,13 @@ export function useSongList(defaultPageSize = SONG_PAGE_SIZE) {
 
   const load = async () => {
     await task.run(async () => {
-      const res = await songApi.getSongs(pagination.state.current, searchKeyword.value)
-      songs.value = res.songs || []
-      pagination.setTotal(res.pagination?.total_items || songs.value.length)
+      try {
+        const res = await songApi.getSongs(pagination.state.current, searchKeyword.value)
+        songs.value = res.songs || []
+        pagination.setTotal(res.pagination?.total_items || songs.value.length)
+      } catch (err) {
+        console.error(err)
+      }
     })
   }
 
