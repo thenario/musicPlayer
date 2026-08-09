@@ -1,4 +1,4 @@
-import type { IAxiosRes } from '@/types'
+import type { IAxiosRes, IGetMyPlaylists, IGetPlaylistById } from '@/types'
 import request from './axios'
 
 //创建歌单
@@ -53,7 +53,7 @@ const unlikePlaylist = async (playlistId: number) => {
 }
 
 //获取用户本人的歌单列表
-const getMyPlaylists = async () => {
+const getMyPlaylists = async (): Promise<IGetMyPlaylists> => {
   const res = await request.get<any, IAxiosRes<any>>(`/playlists`, {})
 
   return {
@@ -64,7 +64,7 @@ const getMyPlaylists = async () => {
 }
 
 //根据id获取歌单信息
-const getPlaylistById = async (playlistId: number) => {
+const getPlaylistById = async (playlistId: number): Promise<IGetPlaylistById> => {
   const res = await request.get<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
   return {

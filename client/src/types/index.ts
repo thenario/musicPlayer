@@ -125,6 +125,9 @@ export interface IGetStatics {
   popular_songs: ISong[]
 }
 
+/** 歌单中的歌曲：附带在歌单内的排序位置 */
+export type PlaylistSong = ISong & { song_playlist_position: number }
+
 export interface IGetMyPlaylists {
   message: string
   success: boolean
@@ -134,7 +137,8 @@ export interface IGetPlaylistById {
   message: string
   success: boolean
   playlist: IPlaylist
-  songs: ISong[]
+  songs: PlaylistSong[]
+  is_liked: boolean
 }
 export interface ICreatePlaylist {
   message: string

@@ -1,6 +1,7 @@
 import { ref } from 'vue'
 import { playlistApi } from '@/api/playlistApi'
 import { useAsyncTask } from '@/common'
+import type { IPlaylist } from '@/types'
 
 export interface CreatePlaylistPayload {
   name: string
@@ -11,7 +12,7 @@ export interface CreatePlaylistPayload {
 
 /** 歌单列表：加载 + 新建。错误提示由拦截器统一弹出，这里只吞掉避免未处理拒绝。 */
 export function usePlaylistList() {
-  const playlists = ref<any[]>([])
+  const playlists = ref<IPlaylist[]>([])
   const loadTask = useAsyncTask()
   const createTask = useAsyncTask()
 

@@ -1,14 +1,7 @@
 import request from './axios'
 import type { IAxiosRes } from '@/types'
 import { tokenStorage, userStorage } from '@/utils/storage'
-
-//加密函数
-export async function encryptPassword(password: string) {
-  const msgUint8 = new TextEncoder().encode(password)
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8)
-  const hashArray = Array.from(new Uint8Array(hashBuffer))
-  return hashArray.map((b) => b.toString(16).padStart(2, '0')).join('')
-}
+import { encryptPassword } from '@/utils/crypto'
 
 //登录函数
 async function login(user_name: string, password: string) {
