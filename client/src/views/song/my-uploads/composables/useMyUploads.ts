@@ -2,9 +2,10 @@ import { ref } from 'vue'
 import type { ISong } from '@/types'
 import { songApi } from '@/api/songApi'
 import { usePagination, useAsyncTask } from '@/common'
+import { UPLOAD_PAGE_SIZE } from '../const'
 
 /** 我的上传列表：分页 + 加载状态。 */
-export function useMyUploads(defaultPageSize = 10) {
+export function useMyUploads(defaultPageSize = UPLOAD_PAGE_SIZE) {
   const songs = ref<ISong[]>([])
   const pagination = usePagination(defaultPageSize)
   const task = useAsyncTask()

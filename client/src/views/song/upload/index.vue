@@ -106,7 +106,7 @@ const submitUpload = () => submit(user.value?.user_id)
 </script>
 
 <style scoped>
-@reference "../../assets/index.css";
+@reference "../../../assets/index.css";
 
 .input-style {
   @apply w-full bg-gray-900 border border-gray-700 rounded-lg p-3 focus:border-blue-500 outline-none transition-all placeholder:text-gray-600;

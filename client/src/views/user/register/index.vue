@@ -49,7 +49,7 @@
 import { onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
-import AuthPageLayout from './components/AuthPageLayout.vue'
+import AuthPageLayout from '@/views/user/components/AuthPageLayout.vue'
 import { useRegister } from './composables/useRegister'
 
 const router = useRouter()

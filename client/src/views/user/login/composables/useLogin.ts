@@ -1,6 +1,6 @@
 import { reactive, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { USERNAME_MIN_LENGTH, LOGIN_PASSWORD_MIN_LENGTH } from '../const'
+import { USERNAME_MIN_LENGTH, LOGIN_PASSWORD_MIN_LENGTH } from '../../const'
 
 /** 登录表单：状态、校验与提交。 */
 export function useLogin() {

@@ -1,6 +1,6 @@
 import { reactive, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
-import { USERNAME_MIN_LENGTH, REGISTER_PASSWORD_MIN_LENGTH, EMAIL_PATTERN } from '../const'
+import { USERNAME_MIN_LENGTH, REGISTER_PASSWORD_MIN_LENGTH, EMAIL_PATTERN } from '../../const'
 
 /** 注册表单：状态、校验与提交。 */
 export function useRegister() {

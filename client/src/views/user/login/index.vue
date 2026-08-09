@@ -57,7 +57,7 @@
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
-import AuthPageLayout from './components/AuthPageLayout.vue'
+import AuthPageLayout from '@/views/user/components/AuthPageLayout.vue'
 import { useLogin } from './composables/useLogin'
 
 const playStore = usePlayerStore()

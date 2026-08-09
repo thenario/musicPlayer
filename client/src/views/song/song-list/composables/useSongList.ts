@@ -2,9 +2,10 @@ import { ref } from 'vue'
 import type { ISong } from '@/types'
 import { songApi } from '@/api/songApi'
 import { usePagination, useAsyncTask } from '@/common'
+import { SONG_PAGE_SIZE } from '../const'
 
 /** 歌曲库列表：搜索 + 分页 + 加载状态。 */
-export function useSongList(defaultPageSize = 15) {
+export function useSongList(defaultPageSize = SONG_PAGE_SIZE) {
   const songs = ref<ISong[]>([])
   const searchKeyword = ref('')
   const pagination = usePagination(defaultPageSize)
