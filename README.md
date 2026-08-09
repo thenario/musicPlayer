@@ -160,7 +160,7 @@ docker compose up -d --build
 ### 2026-07-18
 - `9d3e811` 更新修改建议
 
-### 2026-08-09 · 大规模工业化重构（19 个提交）
+### 2026-08-09 · 大规模工业化重构（23 个提交）
 
 **后端安全加固**
 - `1771f76` 升级 JWT 认证依赖
@@ -186,3 +186,9 @@ docker compose up -d --build
 - `5597174` 修复未入库文件（application.yml、docker-compose、nginx Dockerfile 曾被 gitignore 误伤）+ 重写 .gitignore
 - `1646e8a` 前端配置精简（移除死测试脚手架与死依赖）、npm → pnpm、修复 dev/prod 后端访问与 Vite 代理
 - `325b370` 只保留 Java 后端（删除 Flask / Node 旧后端），目录重构（`client`→`web`、`javaserver`→`backend` 扁平化、`nginx-1.26.3`→`nginx`），静态资源移至根 `static/`，后端增加 `/static/**` 兜底映射
+- `5daca3d` 重写 README（完整重构历程 + 运行说明），nginx `/static` 改回 alias 直接读 static/ 卷（性能更好），Spring 静态路由仅作兜底
+- `8d27873` 删除无主的根 package-lock.json（对应 package.json 早已删除）
+- `b56d1e7` README 补充注意事项（后端需先 `./mvnw package`、改 nginx 配置需重建镜像、8080 端口冲突、静态资源不入库等）
+
+**样式规范**
+- `eb42ca8` 前端样式重构：模板 Tailwind 原子类 → 语义化 BEM 类名，样式收进 `<style scoped>`（顶部 `@reference` + `@apply` 迁移原原子类），`hover`/`focus`/`group-hover` 等变体改写为纯 CSS 选择器，动态 `:class` 原子条件改为 `is-active` 等语义类。涉及 31 个 `.vue` 文件
