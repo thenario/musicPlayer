@@ -6,7 +6,7 @@
       <PlaylistHeader
         :playlist="playlist"
         :is-owner="isOwner"
-        :is-liked="is_liked"
+        :is-liked="isLiked"
         :user-name="user?.user_name || '未知用户'"
         @play-all="playAll"
         @toggle-like="toggleLike"
@@ -37,6 +37,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'PlaylistDetailPage' })
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
@@ -58,7 +59,7 @@ const { currentSong, isPlaying } = storeToRefs(playerStore)
 
 const playlist = ref<IPlaylist | null>(null)
 const songs = ref<ISong[]>([])
-const is_liked = ref<boolean>(false)
+const isLiked = ref<boolean>(false)
 const loading = ref(true)
 const showAddSongModal = ref(false)
 
@@ -79,7 +80,7 @@ const loadPlaylist = async () => {
     const res = await playlistApi.getPlaylistById(Number(idParam))
     playlist.value = res.playlist
     songs.value = res.songs ? res.songs.sort((a: any, b: any) => a.song_playlist_position - b.song_playlist_position) : []
-    is_liked.value = (res as any).is_liked
+    isLiked.value = (res as any).is_liked
   } catch (error) {
     // 错误已由拦截器统一提示，这里只记录日志
     console.error(error)
@@ -120,14 +121,14 @@ const toggleLike = async () => {
   if (!playlist.value) return
 
   try {
-    const res = is_liked.value
+    const res = isLiked.value
       ? await playlistApi.unlikePlaylist(playlist.value.playlist_id)
       : await playlistApi.likePlaylist(playlist.value.playlist_id)
 
     if (res.success) {
-      is_liked.value = !is_liked.value
-      playlist.value.like_count += is_liked.value ? 1 : -1
-      ElMessage.success(is_liked.value ? "已点赞" : "取消点赞成功")
+      isLiked.value = !isLiked.value
+      playlist.value.like_count += isLiked.value ? 1 : -1
+      ElMessage.success(isLiked.value ? "已点赞" : "取消点赞成功")
     }
   } catch (err) {
     // 错误已由拦截器统一提示，这里只记录日志

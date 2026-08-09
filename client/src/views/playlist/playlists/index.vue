@@ -19,6 +19,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'PlaylistsPage' })
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import PlaylistCard from './components/PlaylistCard.vue'

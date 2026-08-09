@@ -657,7 +657,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   const deleteQueue = async (queueId: number) => {
     try {
-      const res = await queueApi.deletQueue(queueId)
+      const res = await queueApi.deleteQueue(queueId)
       const { new_queue_id, was_active } = res.data
       if (was_active) {
         currentSong.value = null

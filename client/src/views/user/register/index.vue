@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'RegisterPage' })
 import { onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'

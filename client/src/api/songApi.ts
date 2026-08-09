@@ -60,7 +60,7 @@ const getUserUploadSongs = async (page: number, size: number) => {
 }
 
 //编辑上传的歌曲的信息
-const EditUserUploadSongs = async (formdata: FormData, song_id: number) => {
+const editUserUploadSongs = async (formdata: FormData, song_id: number) => {
   const res = await request.patch<any, any>(`/songs/my-uploads/${song_id}`, formdata)
 
   return { success: res.success, message: res.message }
@@ -71,5 +71,5 @@ export const songApi = {
   uploadSong,
   getLyrics,
   getUserUploadSongs,
-  EditUserUploadSongs,
+  editUserUploadSongs,
 }

@@ -45,7 +45,7 @@
                                             <Camera />
                                         </el-icon>
                                         <span class="text-xs font-bold tracking-wider">更换封面</span>
-                                        <div v-if="song_cover_file"
+                                        <div v-if="songCoverFile"
                                             class="mt-2 px-2 py-0.5 bg-green-500 rounded text-[10px]">已选择新图片</div>
                                     </div>
                                     <input type="file" accept="image/*"
@@ -94,6 +94,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'EditUploadPage' })
 import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSongStore } from '@/stores/song';
@@ -112,7 +113,7 @@ const {
     formRef,
     submitting,
     lyricsLoading,
-    song_cover_file,
+    songCoverFile,
     previewUrl,
     formData,
     rules,

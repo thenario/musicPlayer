@@ -61,7 +61,7 @@ async function logout() {
 }
 
 //获取用户头像的url
-async function getUSerCover() {
+async function getUserCover() {
   const res = await request.get<any, IAxiosRes<any>>(`/users/cover`)
 
   return {
@@ -81,4 +81,4 @@ async function editUserProfile(formdata: FormData) {
   }
 }
 
-export const userApi = { login, logout, register, editUserProfile, getUSerCover }
+export const userApi = { login, logout, register, editUserProfile, getUserCover }

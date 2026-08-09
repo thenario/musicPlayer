@@ -54,6 +54,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'LoginPage' })
 import { ElMessage } from 'element-plus'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'

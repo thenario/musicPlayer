@@ -11,7 +11,7 @@ export function useUserProfile() {
   const { user, userCoverUrl } = storeToRefs(userStore)
 
   const formRef = ref<FormInstance>()
-  const preCover = ref<File>()
+  const coverFile = ref<File>()
   const prevCoverUrl = ref<string>(userCoverUrl.value || '')
   const preUserName = ref<string>(user.value?.user_name || '')
   const submitting = ref(false)
@@ -34,7 +34,7 @@ export function useUserProfile() {
       ElMessage.warning('图片大小不能超过 2MB')
       return
     }
-    preCover.value = file
+    coverFile.value = file
     prevCoverUrl.value = URL.createObjectURL(file)
   }
 
@@ -51,7 +51,7 @@ export function useUserProfile() {
     try {
       const formdata = new FormData()
       formdata.append('user_name', editForm.user_name)
-      if (preCover.value) formdata.append('user_cover', preCover.value)
+      if (coverFile.value) formdata.append('user_cover', coverFile.value)
 
       const res = await userApi.editUserProfile(formdata)
       ElMessage.success('资料修改成功！')

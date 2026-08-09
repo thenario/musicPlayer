@@ -48,6 +48,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'EditProfilePage' })
 import { useRouter } from 'vue-router';
 import { Camera } from '@element-plus/icons-vue';
 import { useUserProfile } from './composables/useUserProfile';

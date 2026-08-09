@@ -87,6 +87,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'EditPlaylistPage' })
 import { onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'

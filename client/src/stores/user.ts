@@ -46,7 +46,7 @@ export const useUserStore = defineStore('user', () => {
 
   const fetchUserCoverUrl = async () => {
     try {
-      const res = await userApi.getUSerCover()
+      const res = await userApi.getUserCover()
       userCoverUrl.value = res.user_cover_url
     } catch (err) {
       console.log(err)

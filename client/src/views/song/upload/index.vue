@@ -79,12 +79,13 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'UploadPage' })
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { useSongUpload } from './composables/useSongUpload'
 
-const userstore = useUserStore()
-const { user } = storeToRefs(userstore)
+const userStore = useUserStore()
+const { user } = storeToRefs(userStore)
 
 const {
   audioInput,

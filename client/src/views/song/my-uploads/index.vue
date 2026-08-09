@@ -53,6 +53,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'MyUploadsPage' })
 import { useRouter } from 'vue-router';
 import { onMounted } from 'vue';
 import { useSongStore } from '@/stores/song';

@@ -32,6 +32,7 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'SongListPage' })
 import { onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'

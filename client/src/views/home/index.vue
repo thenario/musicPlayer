@@ -37,6 +37,6 @@
   </div>
 </template>
 
-<script setup>
-// 首页组件
+<script setup lang="ts">
+defineOptions({ name: 'HomePage' })
 </script>

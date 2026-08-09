@@ -8,7 +8,7 @@ export function useEditUpload(songId: number) {
   const formRef = ref<FormInstance>()
   const submitting = ref(false)
   const lyricsLoading = ref(false)
-  const song_cover_file = ref<File>()
+  const songCoverFile = ref<File>()
   const previewUrl = ref<string>('')
 
   const formData = reactive({
@@ -42,7 +42,7 @@ export function useEditUpload(songId: number) {
       ElMessage.warning('图片不能超过 2MB')
       return
     }
-    song_cover_file.value = file
+    songCoverFile.value = file
     previewUrl.value = URL.createObjectURL(file)
   }
 
@@ -58,11 +58,11 @@ export function useEditUpload(songId: number) {
     submitting.value = true
     try {
       const finalData = new FormData()
-      if (song_cover_file.value) finalData.append('song_cover', song_cover_file.value)
+      if (songCoverFile.value) finalData.append('song_cover', songCoverFile.value)
       finalData.append('song_name', formData.song_name)
       finalData.append('lyrics', formData.lyrics)
       finalData.append('t_lyrics', formData.t_lyrics)
-      await songApi.EditUserUploadSongs(finalData, songId)
+      await songApi.editUserUploadSongs(finalData, songId)
       ElMessage.success('修改成功')
       return true
     } finally {
@@ -74,7 +74,7 @@ export function useEditUpload(songId: number) {
     formRef,
     submitting,
     lyricsLoading,
-    song_cover_file,
+    songCoverFile,
     previewUrl,
     formData,
     rules,

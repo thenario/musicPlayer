@@ -48,7 +48,7 @@ const alterQueueToCurrent = async (queueId: number) => {
 }
 
 //删除队列
-const deletQueue = async (queueId: number) => {
+const deleteQueue = async (queueId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
   return {
@@ -146,7 +146,7 @@ export const queueApi = {
   getCurrentQueue,
   getMyQueues,
   getQueueById,
-  deletQueue,
+  deleteQueue,
   createQueueFromPlaylist,
   addSongToQueue,
   updateCurrentQueueState,
