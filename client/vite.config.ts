@@ -28,8 +28,14 @@ export default defineConfig({
   ],
   server: {
     proxy: {
+      // 接口：/api/users/login -> http://127.0.0.1:8080/api/users/login
       '/api': {
-        target: 'http://127.0.0.1:3000',
+        target: 'http://127.0.0.1:8080',
+        changeOrigin: true,
+      },
+      // 静态资源：/static/songs/x.mp3 -> 同后端（nginx 提供 /static）
+      '/static': {
+        target: 'http://127.0.0.1:8080',
         changeOrigin: true,
       },
     },

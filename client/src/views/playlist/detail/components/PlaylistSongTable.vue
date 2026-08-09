@@ -28,21 +28,21 @@
         <div class="flex justify-end items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
           <el-tooltip content="立即播放">
             <el-icon class="cursor-pointer text-blue-400 hover:text-blue-300" :size="20"
-              @click="emit('play-song', row)">
+              @click="emit('play-song', row as ISong)">
               <VideoPlay />
             </el-icon>
           </el-tooltip>
 
           <el-tooltip content="下一首播放">
             <el-icon class="cursor-pointer text-gray-400 hover:text-white" :size="20"
-              @click="emit('play-next', row)">
+              @click="emit('play-next', row as ISong)">
               <List />
             </el-icon>
           </el-tooltip>
 
           <el-tooltip content="添加到队列">
             <el-icon class="cursor-pointer text-gray-400 hover:text-white" :size="20"
-              @click="emit('add-to-queue', row)">
+              @click="emit('add-to-queue', row as ISong)">
               <CirclePlus />
             </el-icon>
           </el-tooltip>

@@ -20,7 +20,8 @@
             </div>
           </template>
           <el-menu-item index="/user-profile">个人中心</el-menu-item>
-          <el-menu-item @click="logout" class="logout-item">
+          <!-- index 留空：不触发 router 模式跳转，仅执行 @click 登出 -->
+          <el-menu-item @click="logout" :index="''" class="logout-item">
             <span class="text-red-400">退出登录</span>
           </el-menu-item>
         </el-sub-menu>

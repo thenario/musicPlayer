@@ -22,6 +22,7 @@ export function formatDate(value?: string | number | Date | null): string {
 export function getImageUrl(url?: string): string {
   if (!url) return ''
   if (url.startsWith('http')) return url
+  const base = import.meta.env.VITE_API_URL ?? ''
   const separator = url.startsWith('/') ? '' : '/'
-  return `${import.meta.env.VITE_API_URL}${separator}${url}`
+  return `${base}${separator}${url}`
 }
