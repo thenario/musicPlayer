@@ -15,11 +15,11 @@ Thumbs.db
 **/node_modules/
 
 # ===== 构建产物 =====
-client/dist/
-client/dist-ssr/
-client/coverage/
-client/.eslintcache
-client/.vite/
+web/dist/
+web/dist-ssr/
+web/coverage/
+web/.eslintcache
+web/.vite/
 *.tsbuildinfo
 
 # ===== Java / Spring Boot / Maven =====
@@ -30,26 +30,14 @@ HELP.md
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-# ===== 旧 Python 后端 =====
-server/venv/
-server/env/
-server/.venv/
-server/.flaskenv
-server/.env
-server/*.py[cod]
-server/*.db
-server/*.sqlite3
-server_py/
-**/__pycache__/
-
 # ===== 用户上传的媒体文件（不入库） =====
-server/static/
+static/
 
 # ===== 本地 nginx：只跟踪 Docker 构建所需 =====
-nginx-1.26.3/*
-!nginx-1.26.3/Dockerfile
-!nginx-1.26.3/conf/
-!nginx-1.26.3/conf/nginx.conf
+nginx/*
+!nginx/Dockerfile
+!nginx/conf/
+!nginx/conf/nginx.conf
 
 # ===== 数据库（Docker 数据卷） =====
 mysql/data/

@@ -52,15 +52,15 @@
    - 方案：各列表页（歌曲、歌单、上传歌曲）顶部增加刷新图标按钮，重新请求数据
 
 10. [新发现] /api/stats 统计接口后端未实现
-    - 文件：client/axios/choreApi.ts 调用了 getStatics()，但后端无对应 Controller
+    - 文件：web/src/api/choreApi.ts 调用了 getStatics()，但后端无对应 Controller
     - 方案：后端实现 StatsController，返回 total_songs, total_users, online_users 等统计数据；或暂时移除前端调用
 
 11. [新发现] Redis 已配置但完全未使用
-    - 文件：javaserver/.../config/RedisConfig.java 配置了 Redis 连接
+    - 文件：backend/.../config/RedisConfig.java 配置了 Redis 连接
     - 方案：利用 Redis 缓存热门排行榜、热门歌单等高频查询数据
 
 12. [新发现] 播放状态同步间隔过长
-    - 文件：client/src/stores/player.ts 中 SYNC_INTERVAL = 500000（约 8.3 分钟）
+    - 文件：web/src/stores/player.ts 中 SYNC_INTERVAL = 500000（约 8.3 分钟）
     - 方案：建议缩短到 30000（30 秒）或 60000（1 分钟），且播放停止时立即同步
 
 13. [新发现] 多个 Controller 空壳
