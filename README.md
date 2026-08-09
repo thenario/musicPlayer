@@ -47,7 +47,8 @@ vue_musicplayer/
 
 ```bash
 # 1. 起基础设施（MySQL + 后端 + nginx 走 docker，nginx 暴露在宿主机 8080）
-docker compose up -d
+#    首次启动或改过 Dockerfile/nginx.conf 后加 --build；后端需先有 target/*.jar（见注意事项）
+docker compose up -d --build
 
 # 2. 前端 dev server（vite，端口 5173）
 cd web
@@ -89,6 +90,35 @@ docker compose up -d --build
 读取：/static/** ──> nginx alias 直接读取 static/ 卷（主链路，性能好）
       裸跑后端时 ──> Spring /static/** resource handler（兜底）
 ```
+
+## 注意事项
+
+### 包管理
+- 前端用 **pnpm**（`packageManager` 已锁定 `pnpm@11.17.0`），**不要用 npm** 安装依赖。esbuild 的构建脚本已在 `pnpm-workspace.yaml`（`allowBuilds`）里放行。
+
+### 后端部署
+- 后端 Dockerfile 是 `COPY target/*.jar`，**docker 构建前必须先本地打包**：
+  ```bash
+  cd backend && ./mvnw package   # 产出 backend/target/*.jar
+  docker compose up -d --build
+  ```
+  否则镜像里没有 jar，容器起不来。
+- `application.yml` 里的数据库密码、JWT 密钥是**开发默认值**，生产环境必须用环境变量覆盖（`MYSQL_PASSWORD`、`JWT_SECRET`，见 `application.example.yml`），不要把默认密钥带上生产。
+
+### 端口
+- docker 的 nginx 占用宿主机 **8080**；裸跑后端（Spring Boot 默认也是 8080）会**端口冲突**。裸跑调试时改 `SERVER_PORT` 环境变量，或停掉 nginx 容器。
+
+### 静态资源
+- `static/` 是用户上传数据，**不入库**。首次部署克隆后为空目录：docker 会自动创建挂载目录，上传时后端用 `mkdirs()` 自动建 `songs/` 等子目录。
+- 修改 `nginx/conf/nginx.conf` 后，运行中的容器仍是旧配置，必须**重建镜像**才生效：`docker compose up -d --build nginx`。
+
+### 前端开发
+- dev 下 Vite 把 `/api`、`/static` 代理到 `127.0.0.1:8080`（docker nginx）。**docker 没启动时接口会 502**。
+- `VITE_API_URL` 留空 = 相对路径，依赖 nginx / Vite 代理；如果前端裸跑（无代理），图片与接口会 404。
+- 生产环境把 `web/dist` 构建产物放到 `nginx/html/`，由 Nginx 托管 SPA。
+
+### 已知问题
+- `web/public/` 缺少 `/default-cover.png`（[PlaylistCard.vue](web/src/views/playlist/playlists/components/PlaylistCard.vue) 引用了它做封面兜底），当前会 404。需要补一个默认封面图。
 
 ## 重构历程
 
