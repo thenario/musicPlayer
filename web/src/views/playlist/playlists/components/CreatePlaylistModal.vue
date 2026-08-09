@@ -1,37 +1,37 @@
 <template>
   <Teleport to="body">
-    <div v-if="open" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-      <div class="bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl">
-        <h2 class="text-xl text-white font-bold mb-4">创建新歌单</h2>
+    <div v-if="open" class="create-playlist-modal">
+      <div class="create-playlist-modal__dialog">
+        <h2 class="create-playlist-modal__title">创建新歌单</h2>
 
-        <div class="space-y-4">
+        <div class="create-playlist-modal__body">
           <div>
-            <label class="block text-sm text-gray-400 mb-2">封面</label>
+            <label class="create-playlist-modal__label">封面</label>
             <div @click="fileInput?.click()"
-              class="relative w-32 h-32 bg-gray-700 rounded-lg overflow-hidden cursor-pointer hover:ring-2 ring-blue-500">
-              <img v-if="previewUrl" :src="previewUrl" alt="歌单封面" class="w-full h-full object-cover">
-              <div v-else class="flex items-center justify-center h-full text-gray-500 text-2xl">+</div>
+              class="create-playlist-modal__cover">
+              <img v-if="previewUrl" :src="previewUrl" alt="歌单封面" class="create-playlist-modal__cover-img">
+              <div v-else class="create-playlist-modal__cover-placeholder">+</div>
               <input type="file" ref="fileInput" hidden @change="handleFileChange" accept="image/*">
             </div>
           </div>
 
           <div>
-            <label class="block text-sm text-gray-400 mb-1">名称</label>
+            <label class="create-playlist-modal__label--compact">名称</label>
             <input v-model="form.name" type="text"
-              class="w-full bg-gray-900 border text-white border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none">
+              class="create-playlist-modal__input">
           </div>
 
           <div>
-            <label class="block text-sm text-gray-400 mb-1">描述</label>
+            <label class="create-playlist-modal__label--compact">描述</label>
             <textarea v-model="form.description" rows="3"
-              class="w-full bg-gray-900 border text-white border-gray-700 rounded-lg px-4 py-2 focus:border-blue-500 outline-none resize-none"></textarea>
+              class="create-playlist-modal__textarea"></textarea>
           </div>
         </div>
 
-        <div class="flex justify-end space-x-3 mt-8">
-          <button @click="emit('update:open', false)" class="px-6 py-2 text-gray-400 hover:text-white">取消</button>
+        <div class="create-playlist-modal__footer">
+          <button @click="emit('update:open', false)" class="create-playlist-modal__cancel">取消</button>
           <button @click="handleSubmit" :disabled="loading || !form.name"
-            class="px-6 py-2 bg-blue-600 rounded-lg hover:bg-blue-500 disabled:opacity-50">
+            class="create-playlist-modal__submit">
             {{ loading ? '上传中...' : '立即创建' }}
           </button>
         </div>
@@ -81,3 +81,87 @@ const handleSubmit = () => {
   })
 }
 </script>
+
+<style scoped>
+@reference "../../../../assets/index.css";
+
+.create-playlist-modal {
+  @apply fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm;
+}
+
+.create-playlist-modal__dialog {
+  @apply bg-gray-800 w-full max-w-md rounded-2xl p-6 shadow-2xl;
+}
+
+.create-playlist-modal__title {
+  @apply text-xl text-white font-bold mb-4;
+}
+
+.create-playlist-modal__body {
+  @apply space-y-4;
+}
+
+.create-playlist-modal__label {
+  @apply block text-sm text-gray-400 mb-2;
+}
+
+.create-playlist-modal__label--compact {
+  @apply block text-sm text-gray-400 mb-1;
+}
+
+.create-playlist-modal__cover {
+  @apply relative w-32 h-32 bg-gray-700 rounded-lg overflow-hidden cursor-pointer;
+}
+
+.create-playlist-modal__cover:hover {
+  @apply ring-2 ring-blue-500;
+}
+
+.create-playlist-modal__cover-img {
+  @apply w-full h-full object-cover;
+}
+
+.create-playlist-modal__cover-placeholder {
+  @apply flex items-center justify-center h-full text-gray-500 text-2xl;
+}
+
+.create-playlist-modal__input {
+  @apply w-full bg-gray-900 border text-white border-gray-700 rounded-lg px-4 py-2 outline-none;
+}
+
+.create-playlist-modal__input:focus {
+  @apply border-blue-500;
+}
+
+.create-playlist-modal__textarea {
+  @apply w-full bg-gray-900 border text-white border-gray-700 rounded-lg px-4 py-2 outline-none resize-none;
+}
+
+.create-playlist-modal__textarea:focus {
+  @apply border-blue-500;
+}
+
+.create-playlist-modal__footer {
+  @apply flex justify-end space-x-3 mt-8;
+}
+
+.create-playlist-modal__cancel {
+  @apply px-6 py-2 text-gray-400;
+}
+
+.create-playlist-modal__cancel:hover {
+  @apply text-white;
+}
+
+.create-playlist-modal__submit {
+  @apply px-6 py-2 bg-blue-600 rounded-lg;
+}
+
+.create-playlist-modal__submit:hover {
+  @apply bg-blue-500;
+}
+
+.create-playlist-modal__submit:disabled {
+  @apply opacity-50;
+}
+</style>

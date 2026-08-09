@@ -1,15 +1,15 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-950 text-white p-6">
+  <div class="page">
     <!-- 1. 顶部搜索栏 -->
-    <div class="flex justify-between items-center mb-6 shrink-0">
-      <h1 class="text-3xl font-black tracking-tight">歌曲库</h1>
-      <div class="relative group">
+    <div class="page__header">
+      <h1 class="page__title">歌曲库</h1>
+      <div class="page__search">
         <el-input v-model="searchKeyword" placeholder="搜索歌名、歌手或专辑..." :prefix-icon="Search" clearable
           class="custom-search-input" @input="debouncedSearch" />
       </div>
     </div>
 
-    <div class="flex-1 overflow-hidden">
+    <div class="page__table">
       <SongTable
         :songs="songs"
         :loading="loading"
@@ -19,7 +19,7 @@
       />
     </div>
 
-    <div class="py-6 flex justify-center shrink-0">
+    <div class="page__pagination">
       <AppPagination
         :current="pagination.state.current"
         :page-size="pagination.state.pageSize"
@@ -66,3 +66,31 @@ const debouncedSearch = debounce(() => {
 
 onMounted(load)
 </script>
+
+<style scoped>
+@reference "../../../assets/index.css";
+
+.page {
+  @apply h-full flex flex-col bg-gray-950 text-white p-6;
+}
+
+.page__header {
+  @apply flex justify-between items-center mb-6 shrink-0;
+}
+
+.page__title {
+  @apply text-3xl font-black tracking-tight;
+}
+
+.page__search {
+  @apply relative;
+}
+
+.page__table {
+  @apply flex-1 overflow-hidden;
+}
+
+.page__pagination {
+  @apply py-6 flex justify-center shrink-0;
+}
+</style>

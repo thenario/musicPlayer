@@ -1,6 +1,6 @@
 <template>
   <div v-if="playerStore.currentSong"
-    class="w-full shrink-0 h-24 bg-gray-900/90 backdrop-blur-lg border-t border-white/5 px-6 flex items-center justify-between z-50 select-none">
+    class="player-bar">
 
     <SongInfo
       :cover="currentSongCover"
@@ -34,3 +34,11 @@ const currentSongCover = computed(() => getImageUrl(playerStore.currentSong?.son
 
 useKeyboardShortcuts()
 </script>
+
+<style scoped>
+@reference "../../assets/index.css";
+
+.player-bar {
+  @apply w-full shrink-0 h-24 bg-gray-900/90 backdrop-blur-lg border-t border-white/5 px-6 flex items-center justify-between z-50 select-none;
+}
+</style>

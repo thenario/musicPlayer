@@ -1,15 +1,16 @@
 <template>
-  <el-table :data="songs" style="width: 100%" row-class-name="song-row group" @row-dblclick="onRowDblClick"
+  <el-table :data="songs" style="width: 100%" row-class-name="song-row" @row-dblclick="onRowDblClick"
     class="playlist-table">
     <el-table-column type="index" width="50" label="#" />
 
     <el-table-column label="标题" min-width="200">
       <template #default="{ row }">
-        <div class="flex items-center gap-3">
-          <span :class="{ 'text-green-500 font-bold': currentSongId === row.song_id }">
+        <div class="playlist-song-table__title-wrap">
+          <span class="playlist-song-table__title"
+            :class="{ 'is-current': currentSongId === row.song_id }">
             {{ row.song_title }}
           </span>
-          <el-icon v-if="currentSongId === row.song_id && isPlaying" class="text-green-500 animate-bounce">
+          <el-icon v-if="currentSongId === row.song_id && isPlaying" class="playlist-song-table__playing">
             <VideoPlay />
           </el-icon>
         </div>
@@ -25,30 +26,30 @@
 
     <el-table-column label="操作" width="180" align="right">
       <template #default="{ row }">
-        <div class="flex justify-end items-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity pr-2">
+        <div class="playlist-song-table__actions">
           <el-tooltip content="立即播放">
-            <el-icon class="cursor-pointer text-blue-400 hover:text-blue-300" :size="20"
+            <el-icon class="playlist-song-table__action-play" :size="20"
               @click="emit('play-song', row as ISong)">
               <VideoPlay />
             </el-icon>
           </el-tooltip>
 
           <el-tooltip content="下一首播放">
-            <el-icon class="cursor-pointer text-gray-400 hover:text-white" :size="20"
+            <el-icon class="playlist-song-table__action-next" :size="20"
               @click="emit('play-next', row as ISong)">
               <List />
             </el-icon>
           </el-tooltip>
 
           <el-tooltip content="添加到队列">
-            <el-icon class="cursor-pointer text-gray-400 hover:text-white" :size="20"
+            <el-icon class="playlist-song-table__action-queue" :size="20"
               @click="emit('add-to-queue', row as ISong)">
               <CirclePlus />
             </el-icon>
           </el-tooltip>
 
           <el-tooltip v-if="isOwner" content="从歌单移除">
-            <el-icon class="cursor-pointer text-gray-500 hover:text-red-500" :size="18"
+            <el-icon class="playlist-song-table__action-remove" :size="18"
               @click="emit('remove-song', row.song_id)">
               <Delete />
             </el-icon>
@@ -80,3 +81,59 @@ const emit = defineEmits<{
 
 const onRowDblClick = (row: ISong) => emit('play-song', row)
 </script>
+
+<style scoped>
+@reference "../../../../assets/index.css";
+
+.playlist-song-table__title-wrap {
+  @apply flex items-center gap-3;
+}
+
+.playlist-song-table__title.is-current {
+  @apply text-green-500 font-bold;
+}
+
+.playlist-song-table__playing {
+  @apply text-green-500 animate-bounce;
+}
+
+.playlist-song-table__actions {
+  @apply flex justify-end items-center gap-3 opacity-0 transition-opacity pr-2;
+}
+
+:deep(.song-row):hover .playlist-song-table__actions {
+  @apply opacity-100;
+}
+
+.playlist-song-table__action-play {
+  @apply cursor-pointer text-blue-400;
+}
+
+.playlist-song-table__action-play:hover {
+  @apply text-blue-300;
+}
+
+.playlist-song-table__action-next {
+  @apply cursor-pointer text-gray-400;
+}
+
+.playlist-song-table__action-next:hover {
+  @apply text-white;
+}
+
+.playlist-song-table__action-queue {
+  @apply cursor-pointer text-gray-400;
+}
+
+.playlist-song-table__action-queue:hover {
+  @apply text-white;
+}
+
+.playlist-song-table__action-remove {
+  @apply cursor-pointer text-gray-500;
+}
+
+.playlist-song-table__action-remove:hover {
+  @apply text-red-500;
+}
+</style>

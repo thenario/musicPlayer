@@ -1,8 +1,8 @@
 <template>
-  <div class="flex flex-col items-center gap-2" :style="{ width: 'var(--width-control, 40%)' }">
-    <div class="flex items-center gap-6">
+  <div class="player-control" :style="{ width: 'var(--width-control, 40%)' }">
+    <div class="player-control__buttons">
       <button @click="togglePlayMode" class="ctrl-btn" :title="playModeTitle">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="player-control__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path v-if="playerStore.playMode === 'repeat_one'" stroke-linecap="round" stroke-linejoin="round"
             stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -11,37 +11,37 @@
         </svg>
       </button>
 
-      <button @click="playerStore.previousSong" :disabled="!playerStore.hasPrevious" class="ctrl-btn scale-125">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+      <button @click="playerStore.previousSong" :disabled="!playerStore.hasPrevious" class="ctrl-btn ctrl-btn--skip">
+        <svg class="player-control__icon--lg" fill="currentColor" viewBox="0 0 20 20">
           <path
             d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z" />
         </svg>
       </button>
 
       <button @click="playerStore.togglePlay"
-        class="w-12 h-12 flex items-center justify-center bg-white text-black rounded-full hover:scale-110 active:scale-95 transition-all shadow-lg">
-        <svg v-if="playerStore.isPlaying" class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+        class="player-control__play-btn">
+        <svg v-if="playerStore.isPlaying" class="player-control__icon--lg" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd"
             d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z"
             clip-rule="evenodd" />
         </svg>
-        <svg v-else class="w-6 h-6 ml-1" fill="currentColor" viewBox="0 0 20 20">
+        <svg v-else class="player-control__icon--lg-spaced" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd"
             d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
             clip-rule="evenodd" />
         </svg>
       </button>
 
-      <button @click="() => playerStore.nextSong()" :disabled="!playerStore.hasNext" class="ctrl-btn scale-125">
-        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+      <button @click="() => playerStore.nextSong()" :disabled="!playerStore.hasNext" class="ctrl-btn ctrl-btn--skip">
+        <svg class="player-control__icon--lg" fill="currentColor" viewBox="0 0 20 20">
           <path
             d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z" />
         </svg>
       </button>
 
       <button @click="playerStore.toggleQueueVisibility"
-        :class="['ctrl-btn', { 'text-green-400': playerStore.isQueueVisible }]" title="播放队列">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        :class="['ctrl-btn', { 'is-active': playerStore.isQueueVisible }]" title="播放队列">
+        <svg class="player-control__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
         </svg>
       </button>
@@ -62,6 +62,48 @@ const { playModeTitle, togglePlayMode } = usePlayMode()
 </script>
 
 <style scoped>
+@reference "../../assets/index.css";
+
+.player-control {
+  @apply flex flex-col items-center gap-2;
+}
+
+.player-control__buttons {
+  @apply flex items-center gap-6;
+}
+
+.player-control__icon {
+  @apply w-5 h-5;
+}
+
+.player-control__icon--lg {
+  @apply w-6 h-6;
+}
+
+.player-control__icon--lg-spaced {
+  @apply w-6 h-6 ml-1;
+}
+
+.player-control__play-btn {
+  @apply w-12 h-12 flex items-center justify-center bg-white text-black rounded-full transition-all shadow-lg;
+}
+
+.player-control__play-btn:hover {
+  @apply scale-110;
+}
+
+.player-control__play-btn:active {
+  @apply scale-95;
+}
+
+.ctrl-btn--skip {
+  @apply scale-125;
+}
+
+.ctrl-btn.is-active {
+  @apply text-green-400;
+}
+
 .ctrl-btn {
   color: #9ca3af;
   transition: color 0.2s;

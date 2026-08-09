@@ -1,6 +1,6 @@
 <template>
-  <div class="h-full flex flex-col bg-gray-950 text-white">
-    <div v-if="loading" v-loading="true" element-loading-background="transparent" class="flex-1"></div>
+  <div class="playlist-detail">
+    <div v-if="loading" v-loading="true" element-loading-background="transparent" class="playlist-detail__loading"></div>
 
     <template v-else-if="playlist">
       <PlaylistHeader
@@ -14,7 +14,7 @@
         @delete="confirmDeletePlaylist"
       />
 
-      <div class="flex-1 overflow-hidden px-6">
+      <div class="playlist-detail__body">
         <PlaylistSongTable
           :songs="songs"
           :is-owner="isOwner"
@@ -28,7 +28,7 @@
       </div>
     </template>
 
-    <div v-else class="flex-1 flex items-center justify-center">
+    <div v-else class="playlist-detail__empty">
       <el-empty description="暂无歌单详情" />
     </div>
 
@@ -115,6 +115,24 @@ const deletePlaylistAction = async () => {
 </script>
 
 <style scoped>
+@reference "../../../assets/index.css";
+
+.playlist-detail {
+  @apply h-full flex flex-col bg-gray-950 text-white;
+}
+
+.playlist-detail__loading {
+  @apply flex-1;
+}
+
+.playlist-detail__body {
+  @apply flex-1 overflow-hidden px-6;
+}
+
+.playlist-detail__empty {
+  @apply flex-1 flex items-center justify-center;
+}
+
 :deep(.song-row:hover) {
   background-color: rgba(255, 255, 255, 0.05) !important;
   cursor: default;

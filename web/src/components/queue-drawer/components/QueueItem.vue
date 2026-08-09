@@ -1,15 +1,15 @@
 <template>
-  <tr :id="`song-${item.song?.song_id}`" class="group transition-all hover:bg-white/5 cursor-default"
-    :class="{ 'bg-blue-600/10 active-row': isActive }" @dblclick="emit('play')">
-    <td class="w-12 py-3 text-center">
-      <div class="relative flex justify-center items-center h-5">
+  <tr :id="`song-${item.song?.song_id}`" class="queue-item"
+    :class="{ 'queue-item--active active-row': isActive }" @dblclick="emit('play')">
+    <td class="queue-item__icon-col">
+      <div class="queue-item__icon-wrap">
         <!-- 拖拽手柄 -->
         <el-icon
-          class="drag-handle opacity-0 group-hover:opacity-100 cursor-grab text-gray-500 hover:text-white transition-opacity">
+          class="drag-handle queue-item__handle">
           <Rank />
         </el-icon>
         <!-- 播放状态动画 -->
-        <div v-if="isActive" class="absolute text-blue-500">
+        <div v-if="isActive" class="queue-item__status">
           <span v-if="isPlaying" class="playing-bar-animation"></span>
           <el-icon v-else>
             <VideoPause />
@@ -18,18 +18,18 @@
       </div>
     </td>
 
-    <td class="px-2">
-      <div class="flex flex-col truncate max-w-60">
-        <span class="text-sm truncate font-medium"
-          :class="isActive ? 'text-blue-400' : 'text-gray-200'">
+    <td class="queue-item__title-col">
+      <div class="queue-item__meta">
+        <span class="queue-item__title"
+          :class="isActive ? 'queue-item__title--active' : 'queue-item__title--inactive'">
           {{ item.song?.song_title }}
         </span>
-        <span class="text-[10px] text-gray-500 truncate">{{ item.song?.artist }}</span>
+        <span class="queue-item__artist">{{ item.song?.artist }}</span>
       </div>
     </td>
 
-    <td class="pr-4 text-right">
-      <el-button link type="info" :icon="Close" class="opacity-0 group-hover:opacity-100 transition-opacity"
+    <td class="queue-item__action-col">
+      <el-button link type="info" :icon="Close" class="queue-item__remove"
         @click="emit('remove')" />
     </td>
   </tr>
@@ -53,6 +53,80 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
+@reference "../../../assets/index.css";
+
+.queue-item {
+  @apply transition-all cursor-default;
+}
+
+.queue-item:hover {
+  @apply bg-white/5;
+}
+
+.queue-item--active {
+  @apply bg-blue-600/10;
+}
+
+.queue-item__icon-col {
+  @apply w-12 py-3 text-center;
+}
+
+.queue-item__icon-wrap {
+  @apply relative flex justify-center items-center h-5;
+}
+
+.queue-item__handle {
+  @apply opacity-0 cursor-grab text-gray-500 transition-opacity;
+}
+
+.queue-item:hover .queue-item__handle {
+  @apply opacity-100;
+}
+
+.queue-item__handle:hover {
+  @apply text-white;
+}
+
+.queue-item__status {
+  @apply absolute text-blue-500;
+}
+
+.queue-item__title-col {
+  @apply px-2;
+}
+
+.queue-item__meta {
+  @apply flex flex-col truncate max-w-60;
+}
+
+.queue-item__title {
+  @apply text-sm truncate font-medium;
+}
+
+.queue-item__title--inactive {
+  @apply text-gray-200;
+}
+
+.queue-item__title--active {
+  @apply text-blue-400;
+}
+
+.queue-item__artist {
+  @apply text-[10px] text-gray-500 truncate;
+}
+
+.queue-item__action-col {
+  @apply pr-4 text-right;
+}
+
+.queue-item__remove {
+  @apply opacity-0 transition-opacity;
+}
+
+.queue-item:hover .queue-item__remove {
+  @apply opacity-100;
+}
+
 .playing-bar-animation {
   display: inline-block;
   width: 12px;

@@ -1,36 +1,36 @@
 <template>
     <!-- 1. 这里的 h-full 会占据父级（Layout）的所有高度 -->
-    <div class="h-full flex flex-col bg-gray-50">
+    <div class="page">
 
         <!-- 2. 这里的容器负责滚动 -->
-        <div class="flex-1 overflow-y-auto p-4 sm:p-8 custom-scrollbar">
+        <div class="page__scroll custom-scrollbar">
 
             <!-- 3. 卡片居中限制宽度 -->
             <el-card
-                class="w-full max-w-3xl mx-auto border-none shadow-lg rounded-3xl overflow-hidden animate-fade-in mb-10"
+                class="edit-card animate-fade-in"
                 :body-style="{ padding: '0px' }">
                 <!-- 顶部装饰栏 -->
-                <div class="h-24 bg-linear-to-r from-indigo-600 to-purple-600 flex items-center px-8 shrink-0">
-                    <el-button circle @click="router.back()" class="hover:scale-110 transition-transform">
+                <div class="edit-card__header">
+                    <el-button circle @click="router.back()" class="edit-card__back">
                         <el-icon>
                             <Back />
                         </el-icon>
                     </el-button>
-                    <h1 class="text-white text-xl font-bold ml-4">编辑歌曲：{{ formData.song_name || '加载中...' }}</h1>
+                    <h1 class="edit-card__title">编辑歌曲：{{ formData.song_name || '加载中...' }}</h1>
                 </div>
 
-                <div class="p-8">
+                <div class="edit-card__body">
                     <el-form ref="formRef" :model="formData" :rules="rules" label-position="top">
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="form__grid">
                             <!-- 左侧：封面编辑 -->
-                            <div class="flex justify-center mb-4">
+                            <div class="cover-field">
                                 <div
-                                    class="relative w-48 h-48 group cursor-pointer shadow-xl rounded-2xl overflow-hidden border-4 border-white">
-                                    <el-image :src="previewUrl" class="w-full h-full object-cover">
+                                    class="cover-field__box">
+                                    <el-image :src="previewUrl" class="cover-field__image">
                                         <template #error>
                                             <div
-                                                class="w-full h-full bg-gray-50 flex items-center justify-center text-gray-300">
+                                                class="cover-field__placeholder">
                                                 <el-icon :size="48">
                                                     <Mic />
                                                 </el-icon>
@@ -39,35 +39,35 @@
                                     </el-image>
 
                                     <div
-                                        class="absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-all duration-300 backdrop-blur-sm">
+                                        class="cover-field__overlay">
                                         <el-icon :size="32"
-                                            class="mb-2 transform group-hover:scale-110 transition-transform">
+                                            class="cover-field__camera">
                                             <Camera />
                                         </el-icon>
-                                        <span class="text-xs font-bold tracking-wider">更换封面</span>
+                                        <span class="cover-field__hint">更换封面</span>
                                         <div v-if="songCoverFile"
-                                            class="mt-2 px-2 py-0.5 bg-green-500 rounded text-[10px]">已选择新图片</div>
+                                            class="cover-field__badge">已选择新图片</div>
                                     </div>
                                     <input type="file" accept="image/*"
-                                        class="absolute inset-0 opacity-0 cursor-pointer z-10"
+                                        class="cover-field__input"
                                         @change="handleFileChange" />
                                 </div>
                             </div>
 
                             <!-- 右侧：基础信息 -->
-                            <div class="md:col-span-2">
+                            <div class="form__main">
                                 <el-form-item label="歌曲名称" prop="song_name">
                                     <el-input v-model="formData.song_name" placeholder="请输入歌名" size="large"
                                         class="custom-input" />
                                 </el-form-item>
-                                <div class="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-                                    <p class="text-xs text-blue-600">提示：修改封面或歌名后，请点击下方保存按钮生效。</p>
+                                <div class="form__notice">
+                                    <p class="form__notice-text">提示：修改封面或歌名后，请点击下方保存按钮生效。</p>
                                 </div>
                             </div>
                         </div>
 
                         <!-- 下方：歌词编辑 -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+                        <div class="lyrics-grid">
                             <el-form-item label="LRC 原文歌词" prop="lyrics">
                                 <el-input v-model="formData.lyrics" type="textarea" :rows="12"
                                     placeholder="[00:00.00] 歌词内容" class="lyrics-input" v-loading="lyricsLoading" />
@@ -79,12 +79,12 @@
                         </div>
 
                         <!-- 操作按钮 -->
-                        <div class="flex gap-4 mt-10">
-                            <el-button type="primary" size="large" class="flex-1 save-btn" :loading="submitting"
+                        <div class="form__actions">
+                            <el-button type="primary" size="large" class="form__save save-btn" :loading="submitting"
                                 @click="submitForm">
                                 确认修改并保存
                             </el-button>
-                            <el-button size="large" class="px-10 rounded-xl" @click="router.back()">取消</el-button>
+                            <el-button size="large" class="form__cancel" @click="router.back()">取消</el-button>
                         </div>
                     </el-form>
                 </div>
@@ -144,6 +144,136 @@ const submitForm = async () => {
 </script>
 
 <style scoped>
+@reference "../../../assets/index.css";
+
+.page {
+    @apply h-full flex flex-col bg-gray-50;
+}
+
+.page__scroll {
+    @apply flex-1 overflow-y-auto p-4;
+}
+
+@media (min-width: 640px) {
+    .page__scroll {
+        @apply p-8;
+    }
+}
+
+.edit-card {
+    @apply w-full max-w-3xl mx-auto border-none shadow-lg rounded-3xl overflow-hidden mb-10;
+}
+
+.edit-card__header {
+    @apply h-24 bg-linear-to-r from-indigo-600 to-purple-600 flex items-center px-8 shrink-0;
+}
+
+.edit-card__back {
+    @apply transition-transform;
+}
+
+.edit-card__back:hover {
+    @apply scale-110;
+}
+
+.edit-card__title {
+    @apply text-white text-xl font-bold ml-4;
+}
+
+.edit-card__body {
+    @apply p-8;
+}
+
+.form__grid {
+    @apply grid grid-cols-1 gap-8;
+}
+
+@media (min-width: 768px) {
+    .form__grid {
+        @apply grid-cols-3;
+    }
+}
+
+.cover-field {
+    @apply flex justify-center mb-4;
+}
+
+.cover-field__box {
+    @apply relative w-48 h-48 cursor-pointer shadow-xl rounded-2xl overflow-hidden border-4 border-white;
+}
+
+.cover-field__image {
+    @apply w-full h-full object-cover;
+}
+
+.cover-field__placeholder {
+    @apply w-full h-full bg-gray-50 flex items-center justify-center text-gray-300;
+}
+
+.cover-field__overlay {
+    @apply absolute inset-0 bg-black/50 flex flex-col items-center justify-center text-white opacity-0 transition-all duration-300 backdrop-blur-sm;
+}
+
+.cover-field__box:hover .cover-field__overlay {
+    @apply opacity-100;
+}
+
+.cover-field__camera {
+    @apply mb-2 transition-transform;
+}
+
+.cover-field__box:hover .cover-field__camera {
+    @apply scale-110;
+}
+
+.cover-field__hint {
+    @apply text-xs font-bold tracking-wider;
+}
+
+.cover-field__badge {
+    @apply mt-2 px-2 py-0.5 bg-green-500 rounded text-[10px];
+}
+
+.cover-field__input {
+    @apply absolute inset-0 opacity-0 cursor-pointer z-10;
+}
+
+@media (min-width: 768px) {
+    .form__main {
+        @apply col-span-2;
+    }
+}
+
+.form__notice {
+    @apply mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100;
+}
+
+.form__notice-text {
+    @apply text-xs text-blue-600;
+}
+
+.lyrics-grid {
+    @apply grid grid-cols-1 gap-6 mt-8;
+}
+
+@media (min-width: 768px) {
+    .lyrics-grid {
+        @apply grid-cols-2;
+    }
+}
+
+.form__actions {
+    @apply flex gap-4 mt-10;
+}
+
+.form__save {
+    @apply flex-1;
+}
+
+.form__cancel {
+    @apply px-10 rounded-xl;
+}
+
 /* 核心修复：确保容器高度 */
 .h-full {
     height: 100%;

@@ -1,19 +1,19 @@
 <template>
-  <div class="w-full flex items-center gap-3 group">
-    <span class="text-[10px] font-mono text-gray-500 w-10 text-right">{{ formatDuration(sliderValue) }}</span>
+  <div class="progress-bar">
+    <span class="progress-bar__time progress-bar__time--current">{{ formatDuration(sliderValue) }}</span>
 
-    <div class="relative flex-1 h-6 flex items-center">
-      <div class="absolute w-full h-1 bg-gray-700 rounded-full"></div>
-      <div class="absolute h-1 bg-gray-500 rounded-full transition-all duration-300"
+    <div class="progress-bar__track-wrap">
+      <div class="progress-bar__track"></div>
+      <div class="progress-bar__buffer"
         :style="{ width: bufferPercent + '%' }"></div>
-      <div class="absolute h-1 bg-green-500 rounded-full"
+      <div class="progress-bar__played"
         :style="{ width: (sliderValue / (safeDuration || 1)) * 100 + '%' }"></div>
 
       <input type="range" v-model="sliderValue" :max="safeDuration" step="0.1" @input="handleSeekInput"
-        @change="handleSeekChange" class="custom-range absolute w-full h-full cursor-pointer z-10" />
+        @change="handleSeekChange" class="custom-range" />
     </div>
 
-    <span class="text-[10px] font-mono text-gray-500 w-10">{{ formatDuration(safeDuration) }}</span>
+    <span class="progress-bar__time">{{ formatDuration(safeDuration) }}</span>
   </div>
 </template>
 
@@ -28,11 +28,40 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
 <style scoped>
 @reference "../../../assets/index.css";
 
+.progress-bar {
+  @apply w-full flex items-center gap-3;
+}
+
+.progress-bar__time {
+  @apply text-[10px] font-mono text-gray-500 w-10;
+}
+
+.progress-bar__time--current {
+  @apply text-right;
+}
+
+.progress-bar__track-wrap {
+  @apply relative flex-1 h-6 flex items-center;
+}
+
+.progress-bar__track {
+  @apply absolute w-full h-1 bg-gray-700 rounded-full;
+}
+
+.progress-bar__buffer {
+  @apply absolute h-1 bg-gray-500 rounded-full transition-all duration-300;
+}
+
+.progress-bar__played {
+  @apply absolute h-1 bg-green-500 rounded-full;
+}
+
 .custom-range {
   appearance: none;
   background: transparent;
   margin: 0;
   outline: none;
+  @apply absolute w-full h-full cursor-pointer z-10;
 }
 
 .custom-range::-webkit-slider-runnable-track {
@@ -53,7 +82,7 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
   transition: opacity 0.2s;
 }
 
-.group:hover .custom-range::-webkit-slider-thumb {
+.progress-bar:hover .custom-range::-webkit-slider-thumb {
   opacity: 1;
 }
 </style>

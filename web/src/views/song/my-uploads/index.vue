@@ -1,19 +1,19 @@
 <template>
     <!-- 1. 父容器设为 h-full flex flex-col，确保高度填满父级 -->
-    <div class="h-full flex flex-col bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div class="page">
 
         <!-- 2. 顶部导航：设为 shrink-0，防止被压缩 -->
-        <div class="flex items-center justify-between mb-8 shrink-0">
-            <div class="flex items-center gap-4">
+        <div class="page__header">
+            <div class="page__header-left">
                 <el-button @click="router.push('/user-profile')" circle>
                     <el-icon>
                         <Back />
                     </el-icon>
                 </el-button>
-                <h1 class="text-2xl font-bold text-gray-900">我的上传</h1>
+                <h1 class="page__title">我的上传</h1>
             </div>
             <el-button type="primary" class="upload-btn" @click="router.push('/upload')">
-                <el-icon class="mr-1">
+                <el-icon class="page__upload-icon">
                     <Upload />
                 </el-icon>
                 上传新歌曲
@@ -22,9 +22,9 @@
 
         <!-- 3. 歌曲列表区：关键点！设为 flex-1 和 overflow-y-auto -->
         <!-- 这样它会自动占据中间所有空间，多出内容时内部滚动 -->
-        <div class="flex-1 overflow-y-auto pr-2 custom-scrollbar" v-loading="loading">
+        <div class="page__list custom-scrollbar" v-loading="loading">
             <div v-if="songs && songs.length > 0">
-                <div class="max-w-4xl mx-auto grid gap-4">
+                <div class="page__list-grid">
                     <UploadedSongCard
                         v-for="song in songs"
                         :key="song.song_url"
@@ -40,7 +40,7 @@
         </div>
 
         <!-- 4. 分页组件：设为 shrink-0，固定在底部 -->
-        <div class="flex justify-center py-6 shrink-0">
+        <div class="page__pagination">
             <AppPagination
                 :current="pagination.state.current"
                 :page-size="pagination.state.pageSize"
@@ -76,6 +76,52 @@ onMounted(load);
 </script>
 
 <style scoped>
+@reference "../../../assets/index.css";
+
+.page {
+    @apply h-full flex flex-col bg-gray-50 p-4;
+}
+
+@media (min-width: 640px) {
+    .page {
+        @apply p-6;
+    }
+}
+
+@media (min-width: 1024px) {
+    .page {
+        @apply p-8;
+    }
+}
+
+.page__header {
+    @apply flex items-center justify-between mb-8 shrink-0;
+}
+
+.page__header-left {
+    @apply flex items-center gap-4;
+}
+
+.page__title {
+    @apply text-2xl font-bold text-gray-900;
+}
+
+.page__upload-icon {
+    @apply mr-1;
+}
+
+.page__list {
+    @apply flex-1 overflow-y-auto pr-2;
+}
+
+.page__list-grid {
+    @apply max-w-4xl mx-auto grid gap-4;
+}
+
+.page__pagination {
+    @apply flex justify-center py-6 shrink-0;
+}
+
 /* 确保页面填满高度 */
 :deep(.h-full) {
     height: 100%;
