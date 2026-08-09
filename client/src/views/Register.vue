@@ -57,6 +57,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
 
@@ -89,12 +90,10 @@ const handleRegister = async () => {
       redirectTimer = globalThis.setTimeout(() => {
         router.push('/login')
       }, 2000)
-    } else {
-      ElMessage.error(result.message || '注册失败')
     }
   } catch (err) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.log(err)
-    ElMessage.error('网络请求失败，请稍后再试')
   } finally {
     loading.value = false
   }

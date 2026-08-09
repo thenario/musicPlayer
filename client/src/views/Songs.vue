@@ -69,6 +69,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
+import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { songApi } from '../../axios/songApi'
@@ -95,26 +96,22 @@ const loadSongs = async () => {
     songs.value = res.songs || []
     totalSongs.value = res.pagination?.total_items || (res.songs.length > 0 ? 100 : 0)
   } catch (err) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.error(err)
-    ElMessage.error("加载时出错")
   } finally {
     loading.value = false
   }
 }
 
 const handlePlayNow = async (song: ISong) => {
-  const res = await playerStore.playSong(song, "now")
-  if (!res.success) ElMessage.error("播放失败")
+  await playerStore.playSong(song, "now")
 }
 
 const handlePlayNext = async (song: ISong) => {
   const res = await playerStore.playSong(song, "next")
   if (res.success) {
-    return ElMessage(
-      `已将《${song.song_title}》添加到下一首播放`,
-    )
+    ElMessage.success(`已将《${song.song_title}》添加到下一首播放`)
   }
-  return ElMessage("添加失败")
 }
 
 const debouncedSearch = debounce(() => {

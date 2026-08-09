@@ -110,8 +110,8 @@ const submitForm = async () => {
     await loadPlaylists()
     closeModal()
   } catch (error) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.log(error)
-    ElMessage.error("创建失败")
   } finally {
     isSubmitting.value = false
   }
@@ -123,8 +123,8 @@ const loadPlaylists = async () => {
       const res = await playlistApi.getMyPlaylists()
       playlists.value = res.playlists
     } catch (err: any) {
+      // 错误已由拦截器统一提示，这里只记录日志
       console.log(err)
-      ElMessage.error("加载歌单失败")
     }
   }
 }

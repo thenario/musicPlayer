@@ -114,8 +114,8 @@ const submitForm = async () => {
             }
             router.push('/userProfile');
         } catch (err) {
+            // 错误已由拦截器统一提示，这里只记录日志
             console.error(err);
-            ElMessage.error("修改失败");
         } finally {
             submitting.value = false;
         }

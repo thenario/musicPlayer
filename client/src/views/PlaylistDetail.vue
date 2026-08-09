@@ -211,8 +211,8 @@ const loadPlaylist = async () => {
     songs.value = res.songs ? res.songs.sort((a: any, b: any) => a.song_playlist_position - b.song_playlist_position) : []
     is_liked.value = (res as any).is_liked
   } catch (error) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.error(error)
-    ElMessage.error("获取列表失败")
     router.push('/playlists')
   } finally {
     loading.value = false
@@ -225,24 +225,21 @@ const playAll = async () => {
     return
   }
   const res = await playerStore.playPlaylist(playlist.value.playlist_id)
-  if (!res.success) ElMessage.error("播放时出错")
+  if (res.success) ElMessage.success("开始播放歌单")
 }
 
 const playSong = async (song: ISong) => {
-  const res = await playerStore.playSong(song, "now")
-  if (!res.success) ElMessage.error("播放时出错")
+  await playerStore.playSong(song, "now")
 }
 
 const handlePlayNext = async (song: ISong) => {
   const res = await playerStore.addToQueue(song, true)
   if (res.success) ElMessage.success(`《${song.song_title}》已设为下一首播放`)
-  else ElMessage.error("设置时出错")
 }
 
 const handleAddToQueue = async (song: ISong) => {
   const res = await playerStore.addToQueue(song, false)
   if (res.success) ElMessage.success("已添加到播放队列")
-  else ElMessage.error("添加时出错")
 }
 
 const toggleLike = async () => {
@@ -263,8 +260,8 @@ const toggleLike = async () => {
       ElMessage.success(is_liked.value ? "已点赞" : "取消点赞成功")
     }
   } catch (err) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.log(err)
-    ElMessage.error("操作失败")
   }
 }
 
@@ -285,7 +282,7 @@ const deletePlaylistAction = async () => {
     ElMessage.success("歌单已删除")
     router.push('/playlists')
   } catch (error) {
-    ElMessage.error("删除失败")
+    // 错误已由拦截器统一提示，这里只记录日志
     console.error('Delete error:', error)
   }
 }
@@ -298,7 +295,7 @@ const handleRemoveSong = async (songId: number) => {
     songs.value = songs.value.filter(s => s.song_id !== songId)
     playlist.value.song_count--
   } catch (error) {
-    ElMessage.error("移除失败")
+    // 错误已由拦截器统一提示，这里只记录日志
     console.error('Remove error:', error)
   }
 }
@@ -325,8 +322,8 @@ const addSongToPlaylist = async (songId: number) => {
     ElMessage.success("添加成功")
     await loadPlaylist()
   } catch (error: any) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.log(error)
-    ElMessage.warning("添加失败")
   }
 }
 

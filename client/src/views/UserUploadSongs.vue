@@ -89,7 +89,6 @@
 import { useRouter } from 'vue-router';
 import { onMounted, ref } from 'vue';
 import { songApi } from '../../axios/songApi';
-import { ElMessage } from 'element-plus';
 import { useSongStore } from '@/stores/song';
 import { Back, Upload, Mic, EditPen, Calendar } from '@element-plus/icons-vue';
 
@@ -121,8 +120,8 @@ const fetchSongs = async () => {
         songs.value = res.songs;
         total.value = res.total;
     } catch (err) {
+        // 错误已由拦截器统一提示，这里只记录日志
         console.error(err);
-        ElMessage.error("加载列表失败");
     } finally {
         loading.value = false;
     }

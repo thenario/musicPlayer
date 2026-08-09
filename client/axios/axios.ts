@@ -1,5 +1,16 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
+import { ElMessage } from 'element-plus'
 import { router } from '../src/router/index'
+
+// 允许请求按需静默（silent: true 时不集中弹错误，由调用方自行处理）
+declare module 'axios' {
+  interface AxiosRequestConfig {
+    silent?: boolean
+  }
+  interface InternalAxiosRequestConfig {
+    silent?: boolean
+  }
+}
 
 //自定义错误类
 class AxiosBusinessError extends Error {
@@ -72,9 +83,9 @@ request.interceptors.response.use(
     //获取返回的结果，axios会自动调用浏览器把结果反序列化
     const res = response.data
     if (res.code !== 200) {
-      //出现错误
+      //出现错误：集中显示错误信息，仍向上抛异常
       const errorMsg = res.message || '业务逻辑错误'
-      //向上层抛出异常，被axios捕获，进入下面的error块
+      if (!response.config.silent) ElMessage.error(errorMsg)
       throw new AxiosBusinessError(errorMsg, res.code || 500, res.data)
     }
 
@@ -107,19 +118,21 @@ request.interceptors.response.use(
 
       //如果是登录过期，token过期
       if (status === 401) {
-        message = backendData?.message || '登录已过期，请重新登录'
         localStorage.removeItem('token') //移除旧的token
         localStorage.removeItem('user') //移除旧的用户信息
-
-        //跳转到登录页
+        message = backendData?.message || '登录已过期，请重新登录'
+        //跳转到登录页（已在登录页时只提示错误，不重复跳转）
         if (router && router.currentRoute.value.path !== '/login') {
+          ElMessage.error('登录已失效，请重新登录')
           router.push({
             path: '/login',
             query: { redirect: router.currentRoute.value.fullPath },
           })
+        } else if (!error.config?.silent) {
+          ElMessage.error(message)
         }
       }
-      //非401错误，正常抛出错误，待外层函数捕获处理
+      //非401错误：集中显示错误信息，再抛出错误待调用方处理
       else {
         const statusMap: Record<number, string> = {
           403: '拒绝访问',
@@ -129,11 +142,14 @@ request.interceptors.response.use(
           504: '网关超时',
         }
         message = backendData?.message || statusMap[status] || `网络错误: ${status}`
+        if (!error.config?.silent) ElMessage.error(message)
       }
     } else if (error.request) {
       message = '服务器未响应，请检查网络'
+      if (!error.config?.silent) ElMessage.error(message)
     } else {
       message = error.message
+      if (!error.config?.silent) ElMessage.error(message)
     }
 
     throw new AxiosBusinessError(message, status, backendData)

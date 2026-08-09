@@ -1,5 +1,5 @@
 import request from './axios'
-import type { ILogin, ILogout, IRegister, IAxiosRes } from '../type'
+import type { IAxiosRes } from '../type'
 
 //加密函数
 export async function encryptPassword(password: string) {
@@ -18,10 +18,6 @@ async function login(user_name: string, password: string) {
     password: encryptedPassword,
   })
 
-  if (!res.success) {
-    return { success: false, message: res.message } as ILogin
-  }
-  console.log('后端返回全貌:', res)
   localStorage.setItem('user', JSON.stringify(res.data.user))
   localStorage.setItem('token', res.data.token)
 
@@ -47,8 +43,6 @@ async function register(registerFormdata: {
     password: encryptedPassword,
   })
 
-  if (!res.success) return { success: false, message: res.message } as IRegister
-
   return {
     success: true,
     message: res.message,
@@ -58,8 +52,6 @@ async function register(registerFormdata: {
 //登出函数
 async function logout() {
   const res = await request.post<any, IAxiosRes<any>>('/users/logout')
-
-  if (!res.success) return { success: false, message: res.message } as ILogout
 
   localStorage.removeItem('user')
   localStorage.removeItem('token')
@@ -71,8 +63,6 @@ async function logout() {
 async function getUSerCover() {
   const res = await request.get<any, IAxiosRes<any>>(`/users/cover`)
 
-  if (!res.success) return { success: false, message: res.message }
-
   return {
     success: res.success,
     user_cover_url: res.data.user_cover_url,
@@ -82,8 +72,6 @@ async function getUSerCover() {
 //编辑用户信息
 async function editUserProfile(formdata: FormData) {
   const res = await request.patch<any, IAxiosRes<any>>('/users/me', formdata)
-
-  if (!res.success) return { success: false, message: res.message }
 
   return {
     success: true,

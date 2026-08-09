@@ -72,6 +72,7 @@
 
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '../stores/player'
@@ -111,12 +112,10 @@ const handleLogin = async () => {
       playStore.fetchUserQueues()
       playStore.fetchCurrentQueue()
       router.push('/')
-    } else {
-      ElMessage.error(result.message || "登录失败，请检查用户名或密码")
     }
   } catch (err) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.log(err)
-    alert('网络连接超时，请稍后重试')
   } finally {
     loading.value = false
   }

@@ -1,4 +1,4 @@
-import type { IGetSongs, IUploadSong, IAxiosRes } from '../type'
+import type { IUploadSong, IAxiosRes } from '../type'
 import request from './axios'
 
 //获取歌曲，涵盖查询歌曲的功能
@@ -6,13 +6,6 @@ const getSongs = async (search_page: number, searchKeyword: string) => {
   const res = await request.get<any, IAxiosRes<any>>('/songs', {
     params: { page: search_page, keyword: searchKeyword },
   })
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IGetSongs
-  }
 
   return {
     success: true,
@@ -41,12 +34,6 @@ const uploadSong = async (
 //获取歌词
 const getLyrics = async (songId: number) => {
   const res = await request.get<any, any>(`/songs/${songId}/lyrics`)
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    }
-  }
 
   return {
     success: true,

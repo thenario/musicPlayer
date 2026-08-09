@@ -1,31 +1,9 @@
-import type {
-  IAddSongToQueue,
-  IAlterQueueTocurrent,
-  IClearQueue,
-  ICreatQueueFromPlaylist,
-  IDeleteQueue,
-  IGetCurrentQueue,
-  IGetMyQueues,
-  IGetQueueById,
-  IQueueState,
-  IReorderQueue,
-  ISetPlayMode,
-  IUpdateCurrentQueueState,
-  IRemoveSongFromQueue,
-  IAxiosRes,
-} from '../type'
+import type { IQueueState, IAxiosRes } from '../type'
 import request from './axios'
 
 //获取用户的播放队列
 const getMyQueues = async () => {
   const res = await request.get<any, IAxiosRes<any>>('/queues')
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IGetMyQueues
-  }
 
   return {
     success: true,
@@ -38,13 +16,6 @@ const getMyQueues = async () => {
 const getQueueById = async (queueId: number) => {
   const res = await request.get<any, IAxiosRes<any>>(`/queues/${queueId}`)
 
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IGetQueueById
-  }
-
   return {
     success: true,
     message: res.message,
@@ -55,13 +26,6 @@ const getQueueById = async (queueId: number) => {
 //获取用户当前的队列信息
 const getCurrentQueue = async () => {
   const res = await request.get<any, IAxiosRes<any>>('/queues/current')
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IGetCurrentQueue
-  }
 
   return {
     success: true,
@@ -77,13 +41,6 @@ const alterQueueToCurrent = async (queueId: number) => {
     queue_id: queueId,
   })
 
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IAlterQueueTocurrent
-  }
-
   return {
     success: true,
     message: res.message,
@@ -93,13 +50,6 @@ const alterQueueToCurrent = async (queueId: number) => {
 //删除队列
 const deletQueue = async (queueId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}`)
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IDeleteQueue
-  }
 
   return {
     success: true,
@@ -115,13 +65,6 @@ const addSongToQueue = async (song_id: number, queue_id: number, mode: boolean) 
     mode, //true下一首播放，false直接播放
   })
 
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IAddSongToQueue
-  }
-
   return {
     success: res.success,
     message: res.message,
@@ -132,13 +75,6 @@ const addSongToQueue = async (song_id: number, queue_id: number, mode: boolean) 
 //从队列移除歌曲
 const removeSongFromQueue = async (queueId: number, itemId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs/${itemId}`)
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IRemoveSongFromQueue
-  }
 
   return {
     success: true,
@@ -152,13 +88,6 @@ const setPlayMode = async (queueId: number, play_mode: string) => {
     play_mode: play_mode,
   })
 
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as ISetPlayMode
-  }
-
   return {
     success: true,
     message: res.message,
@@ -170,13 +99,6 @@ const reorderQueue = async (song_ids: number[], queue_id: number) => {
   const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queue_id}/reorder`, {
     song_ids,
   })
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IReorderQueue
-  }
 
   return {
     success: true,
@@ -190,13 +112,6 @@ const createQueueFromPlaylist = async (playlist_id: number) => {
     source: 'playlist',
     playlist_id,
   })
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as ICreatQueueFromPlaylist
-  }
 
   return {
     success: true,
@@ -212,13 +127,6 @@ const updateCurrentQueueState = async (stateData: IQueueState) => {
     stateData,
   })
 
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IUpdateCurrentQueueState
-  }
-
   return {
     success: true,
     message: res.message,
@@ -227,13 +135,6 @@ const updateCurrentQueueState = async (stateData: IQueueState) => {
 //清空队列
 const clearQueue = async (queueId: number) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs`)
-
-  if (!res.success) {
-    return {
-      success: false,
-      message: res.message,
-    } as IClearQueue
-  }
 
   return {
     success: true,

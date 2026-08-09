@@ -175,8 +175,8 @@ const fetchLyrics = async () => {
         // }
 
     } catch (err) {
+        // 错误已由拦截器统一提示，这里只记录日志
         console.error('获取歌曲详情失败:', err);
-        ElMessage.error("部分歌曲数据加载失败");
     } finally {
         lyricsLoading.value = false;
     }
@@ -212,8 +212,8 @@ const submitForm = async () => {
             ElMessage.success("修改成功");
             router.push('/userUploadSongs');
         } catch (err) {
+            // 错误已由拦截器统一提示，这里只记录日志
             console.error('保存失败:', err);
-            ElMessage.error("保存失败");
         } finally {
             submitting.value = false;
         }

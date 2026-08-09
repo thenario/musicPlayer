@@ -39,6 +39,7 @@
 </template>
 
 <script setup lang="ts">
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '../stores/user'
 import { useRouter, useRoute } from 'vue-router'
 
@@ -48,8 +49,7 @@ const route = useRoute()
 
 const logout = async () => {
   if (!userStore.user) return
-  const res = await userStore.logout(userStore.user.user_id)
-  if (!res.success) return ElMessage.error("登出失败")
+  await userStore.logout()
   ElMessage.success("登出成功")
   router.push('/login')
 }

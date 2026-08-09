@@ -120,7 +120,7 @@ const handleAudioDrop = (e: DragEvent) => {
 const validateAndSetAudio = (file: File) => {
   const validTypes = ['.mp3', '.flac', '.wav', '.m4a']
   const isAudio = validTypes.some(ext => file.name.toLowerCase().endsWith(ext))
-  if (!isAudio) return ElMessage.error('不支持的文件格式')
+  if (!isAudio) return ElMessage.warning('不支持的文件格式')
   audioFile.value = file
 
   if (!form.value.title && file.name.includes('_')) {
@@ -167,8 +167,8 @@ const submitUpload = async () => {
     ElMessage.success('歌曲上传成功！')
     resetForm()
   } catch (error: any) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.error('Upload Error:', error)
-    ElMessage.error(error.message || '上传失败，请稍后重试')
   } finally {
     uploading.value = false
   }

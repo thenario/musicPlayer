@@ -180,8 +180,7 @@ const handlePreviewQueue = (queueId: number) => {
 
 const playFromPreview = async (index: number) => {
   if (previewQueueId.value === -1) return
-  const res = await playerStore.playSongInQueue(previewQueueId.value, index)
-  if (!res.success) ElMessage.error("播放失败")
+  await playerStore.playSongInQueue(previewQueueId.value, index)
   activeTab.value = 'queue'
   previewQueueId.value = -1
 }
@@ -197,13 +196,11 @@ const dragQueue = computed({
 })
 
 const playFromQueue = async (index: number) => {
-  const res = await playerStore.playAtIndex(index)
-  if (!res.success) ElMessage.error("播放时出错")
+  await playerStore.playAtIndex(index)
 }
 
 const removeFromQueue = async (itemId: number | string) => {
-  const res = await playerStore.removeQueueItem(itemId)
-  if (!res.success) ElMessage.error("播放时出错")
+  await playerStore.removeQueueItem(itemId)
 }
 const confirmClear = () => {
   ElMessageBox.confirm('确定要清空当前播放队列吗？', '提示', {
@@ -227,8 +224,8 @@ const handleSwitchQueue = async (queueId: number) => {
     activeTab.value = 'queue'
   }
   catch (err: any) {
+    // 错误已由拦截器统一提示，这里只记录日志
     console.log(err)
-    ElMessage.error("切换失败")
   }
 }
 

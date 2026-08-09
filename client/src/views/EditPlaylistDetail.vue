@@ -125,7 +125,8 @@ onMounted(async () => {
             previewImage.value = getImageUrl(res.playlist.playlist_cover_url)
         }
     } catch (err: any) {
-        ElMessage.error(err.message || '加载歌单信息失败')
+        // 错误已由拦截器统一提示，这里只记录日志
+        console.error(err)
     }
 })
 
@@ -159,9 +160,8 @@ const submitForm = async () => {
         router.push(`/playlists/${playlistId}`)
 
     } catch (err: any) {
-        // 🚩 统一捕获 401, 403, 500 等所有异常
+        // 错误已由拦截器统一提示，这里只记录日志
         console.error('更新失败:', err)
-        ElMessage.error(err.message || '更新失败')
     } finally {
         submitting.value = false
     }

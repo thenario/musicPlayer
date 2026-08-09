@@ -32,7 +32,7 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  const logout = async (user_id: number) => {
+  const logout = async () => {
     try {
       const res = await userApi.logout()
       user.value = null

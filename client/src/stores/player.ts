@@ -491,7 +491,6 @@ export const usePlayerStore = defineStore('player', () => {
 
   const syncRemoveToServer = async (id: number) => {
     if (!currentQueueId.value) {
-      ElMessage.error('移除歌曲时出错')
       return { success: false }
     }
     try {
@@ -698,7 +697,6 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   const playPlaylist = async (playlistId: number, startSongId = null) => {
-    ElMessage.success(`播放歌单: ${playlistId}`)
     try {
       await queueApi.createQueueFromPlaylist(playlistId)
       await fetchCurrentQueue()
