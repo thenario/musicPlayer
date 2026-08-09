@@ -1,4 +1,4 @@
-import type { IUploadSong, IAxiosRes } from '../type'
+import type { IUploadSong, IAxiosRes } from '@/types'
 import request from './axios'
 
 //获取歌曲，涵盖查询歌曲的功能

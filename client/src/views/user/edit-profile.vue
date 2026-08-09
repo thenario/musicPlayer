@@ -49,7 +49,7 @@
 
 <script setup lang="ts">
 import { useUserStore } from '@/stores/user';
-import { userApi } from '../../axios/userApi';
+import { userApi } from '@/api/userApi';
 import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { storeToRefs } from 'pinia';
@@ -112,7 +112,7 @@ const submitForm = async () => {
                 user.value.user_name = res.user_name;
                 userCoverUrl.value = res.user_cover_url;
             }
-            router.push('/userProfile');
+            router.push('/user-profile');
         } catch (err) {
             // 错误已由拦截器统一提示，这里只记录日志
             console.error(err);
@@ -123,7 +123,7 @@ const submitForm = async () => {
 };
 
 const goBack = () => {
-    router.push('/userProfile');
+    router.push('/user-profile');
 };
 </script>
 

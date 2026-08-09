@@ -53,11 +53,11 @@ const userStore = useUserStore();
 const { user, userCoverUrl } = storeToRefs(userStore);
 
 const goToEdit = () => {
-    router.push({ path: '/editUserProfile' });
+    router.push({ path: '/edit-user-profile' });
 };
 
 const goToMyUploadSongs = () => {
-    router.push({ path: '/userUploadSongs' });
+    router.push({ path: '/user-uploads' });
 };
 </script>
 

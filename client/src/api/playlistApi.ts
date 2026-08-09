@@ -1,4 +1,4 @@
-import type { IAxiosRes } from '../type'
+import type { IAxiosRes } from '@/types'
 import request from './axios'
 
 //创建歌单

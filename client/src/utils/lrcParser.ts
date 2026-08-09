@@ -1,4 +1,4 @@
-import type { LyricLine } from 'type'
+import type { LyricLine } from '@/types'
 
 export const parseLyrics = (lrc: string, t_lrc: string = ''): LyricLine[] => {
   const timeReg = /\[(\d{2}):(\d{2})\.(\d{2,3})\]/

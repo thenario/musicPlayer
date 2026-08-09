@@ -1,4 +1,4 @@
-import type { IQueueState, IAxiosRes } from '../type'
+import type { IQueueState, IAxiosRes } from '@/types'
 import request from './axios'
 
 //获取用户的播放队列

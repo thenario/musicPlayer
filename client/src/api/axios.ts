@@ -1,6 +1,7 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { ElMessage } from 'element-plus'
-import { router } from '../src/router/index'
+import { router } from '@/router'
+import { tokenStorage, userStorage } from '@/utils/storage'
 
 // 允许请求按需静默（silent: true 时不集中弹错误，由调用方自行处理）
 declare module 'axios' {
@@ -63,7 +64,7 @@ request.interceptors.request.use(
     config.signal = controller.signal //将控制器和请求绑定
     pendingMap.set(getRequestKey(config), controller) //把新的指令加入字典
     //在请求头加上token
-    const token = localStorage.getItem('token') //获取本地存储的token
+    const token = tokenStorage.get() //获取本地存储的token
     if (token) {
       //加上anth请求头，存入token信息
       config.headers['Authorization'] = `Bearer ${token}`
@@ -118,8 +119,8 @@ request.interceptors.response.use(
 
       //如果是登录过期，token过期
       if (status === 401) {
-        localStorage.removeItem('token') //移除旧的token
-        localStorage.removeItem('user') //移除旧的用户信息
+        tokenStorage.remove() //移除旧的token
+        userStorage.remove() //移除旧的用户信息
         message = backendData?.message || '登录已过期，请重新登录'
         //跳转到登录页（已在登录页时只提示错误，不重复跳转）
         if (router && router.currentRoute.value.path !== '/login') {

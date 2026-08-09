@@ -91,7 +91,7 @@ import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { ElMessage } from 'element-plus'
-import { playlistApi } from "../../axios/playlistApi"
+import { playlistApi } from "@/api/playlistApi"
 import { storeToRefs } from 'pinia'
 import { Edit, Camera, Plus } from '@element-plus/icons-vue'
 

@@ -1,74 +1,88 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
+import { userStorage } from '@/utils/storage'
+
+declare module 'vue-router' {
+  interface RouteMeta {
+    requiresAuth?: boolean
+    requiresGuest?: boolean
+    title?: string
+  }
+}
 
 //创建一个数组保存路由
 const routes = [
   {
-    path: '/', //跳转时的路径
-    name: 'Home', //该路径的名字
-    component: () => import('../views/Home.vue'), //懒加载，声明时不执行，被调用时执行
+    path: '/',
+    name: 'home',
+    component: () => import('@/views/home/index.vue'),
+    meta: { title: '首页' },
   },
   {
     path: '/login',
-    name: 'Login',
-    component: () => import('../views/Login.vue'),
-    meta: { requiresGuest: true }, //在meta里加入标识，表明是否保护该页面
+    name: 'login',
+    component: () => import('@/views/user/login.vue'),
+    meta: { requiresGuest: true, title: '登录' },
   },
   {
     path: '/register',
-    name: 'Register',
-    component: () => import('../views/Register.vue'),
-    meta: { requiresGuest: true },
+    name: 'register',
+    component: () => import('@/views/user/register.vue'),
+    meta: { requiresGuest: true, title: '注册' },
   },
   {
-    path: '/userProfile',
-    name: 'UserProfile',
-    component: () => import('../views/UserProfile.vue'),
-    meta: { requiresAuth: true },
+    path: '/user-profile',
+    name: 'user-profile',
+    component: () => import('@/views/user/index.vue'),
+    meta: { requiresAuth: true, title: '个人中心' },
   },
   {
-    path: '/editUserProfile',
-    name: 'EditUserProfile',
-    component: () => import('../views/EditUserProfile.vue'),
-    meta: { requiresAuth: true },
+    path: '/edit-user-profile',
+    name: 'edit-user-profile',
+    component: () => import('@/views/user/edit-profile.vue'),
+    meta: { requiresAuth: true, title: '编辑资料' },
   },
   {
-    path: '/userUploadSongs',
-    name: 'UserUploadSongs',
-    component: () => import('../views/UserUploadSongs.vue'),
-    meta: { requiresAuth: true },
+    path: '/user-uploads',
+    name: 'user-uploads',
+    component: () => import('@/views/song/my-uploads.vue'),
+    meta: { requiresAuth: true, title: '我的上传' },
   },
   {
-    path: '/EditUserUploadSong/:id',
-    name: 'EditUserUploadSong',
-    component: () => import('../views/EditUserUploadSongs.vue'),
-    meta: { requiresAuth: true },
+    path: '/user-uploads/:id/edit',
+    name: 'edit-user-upload',
+    component: () => import('@/views/song/edit-upload.vue'),
+    meta: { requiresAuth: true, title: '编辑上传歌曲' },
   },
   {
     path: '/songs',
-    name: 'Songs',
-    component: () => import('../views/Songs.vue'),
+    name: 'songs',
+    component: () => import('@/views/song/index.vue'),
+    meta: { title: '歌曲库' },
   },
   {
     path: '/upload',
-    name: 'Upload',
-    component: () => import('../views/Upload.vue'),
-    meta: { requiresAuth: true },
+    name: 'upload',
+    component: () => import('@/views/song/upload.vue'),
+    meta: { requiresAuth: true, title: '上传歌曲' },
   },
   {
     path: '/playlists',
-    name: 'Playlists',
-    component: () => import('../views/Playlists.vue'),
+    name: 'playlists',
+    component: () => import('@/views/playlist/index.vue'),
+    meta: { title: '歌单' },
   },
   {
     path: '/playlists/:id',
-    name: 'PlaylistDetail',
-    component: () => import('../views/PlaylistDetail.vue'),
+    name: 'playlist-detail',
+    component: () => import('@/views/playlist/detail.vue'),
+    meta: { title: '歌单详情' },
   },
   {
     path: '/playlists/:id/edit',
-    name: 'EditPlaylist',
-    component: () => import('../views/EditPlaylistDetail.vue'),
+    name: 'edit-playlist',
+    component: () => import('@/views/playlist/edit.vue'),
+    meta: { requiresAuth: true, title: '编辑歌单' },
   },
 ]
 
@@ -81,10 +95,10 @@ export const router = createRouter({
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
   if (!userStore.isAuthenticated) {
-    const savedUser = localStorage.getItem('user')
+    const savedUser = userStorage.get()
     if (savedUser) {
       userStore.isAuthenticated = true
-      userStore.user = JSON.parse(savedUser)
+      userStore.user = savedUser
     }
   }
 
@@ -92,7 +106,7 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !userStore.isAuthenticated) {
     next('/login')
   }
-  // //如果跳转的页面不需要登录且用户认证，跳转至主页
+  //如果跳转的页面不需要登录且用户认证，跳转至主页
   else if (to.meta.requiresGuest && userStore.isAuthenticated) {
     next('/')
   }
@@ -100,4 +114,8 @@ router.beforeEach((to, from, next) => {
   else {
     next()
   }
+})
+
+router.afterEach((to) => {
+  document.title = to.meta.title ? `${to.meta.title} · 音乐播放器` : '音乐播放器'
 })

@@ -1,5 +1,6 @@
 import request from './axios'
-import type { IAxiosRes } from '../type'
+import type { IAxiosRes } from '@/types'
+import { tokenStorage, userStorage } from '@/utils/storage'
 
 //加密函数
 export async function encryptPassword(password: string) {
@@ -18,8 +19,8 @@ async function login(user_name: string, password: string) {
     password: encryptedPassword,
   })
 
-  localStorage.setItem('user', JSON.stringify(res.data.user))
-  localStorage.setItem('token', res.data.token)
+  userStorage.set(res.data.user)
+  tokenStorage.set(res.data.token)
 
   return {
     success: true,
@@ -53,8 +54,8 @@ async function register(registerFormdata: {
 async function logout() {
   const res = await request.post<any, IAxiosRes<any>>('/users/logout')
 
-  localStorage.removeItem('user')
-  localStorage.removeItem('token')
+  userStorage.remove()
+  tokenStorage.remove()
 
   return { success: true, message: res.message }
 }

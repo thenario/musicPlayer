@@ -21,7 +21,7 @@
               <span class="username">{{ userStore.user?.user_name || "用户" }}</span>
             </div>
           </template>
-          <el-menu-item index="/userProfile">个人中心</el-menu-item>
+          <el-menu-item index="/user-profile">个人中心</el-menu-item>
           <el-menu-item @click="logout" class="logout-item">
             <span class="text-red-400">退出登录</span>
           </el-menu-item>

@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import type { IQueue, IQueueItem, ISong, LyricLine } from '../../type'
-import { queueApi } from '../../axios/queueApi'
-import { songApi } from '../../axios/songApi'
+import type { IQueue, IQueueItem, ISong, LyricLine } from '@/types'
+import { queueApi } from '@/api/queueApi'
+import { songApi } from '@/api/songApi'
 import { parseLyrics } from '../utils/lrcParser'
 const API_BASE_URL = import.meta.env.VITE_API_URL
 

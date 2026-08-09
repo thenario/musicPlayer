@@ -152,7 +152,7 @@ import { VueDraggable } from 'vue-draggable-plus'
 import { ElMessageBox } from 'element-plus'
 import { Close, ArrowLeft, Delete } from '@element-plus/icons-vue'
 
-import type { IQueue } from '../../type'
+import type { IQueue } from '@/types'
 const playerStore = usePlayerStore()
 const { currentQueue, currentSong, isPlaying, isQueueVisible, currentQueueId, userQueues } = storeToRefs(playerStore)
 

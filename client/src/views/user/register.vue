@@ -58,8 +58,9 @@
 <script setup lang="ts">
 import { ref, reactive, onUnmounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
+import { USERNAME_MIN_LENGTH, REGISTER_PASSWORD_MIN_LENGTH, EMAIL_PATTERN } from './const'
 
 const userStore = useUserStore()
 const router = useRouter()
@@ -72,9 +73,9 @@ let redirectTimer: number | null = null
 
 const validate = () => {
   let isValid = true
-  errors.user_name = form.user_name.length < 3 ? '用户名至少3个字符' : ''
-  errors.user_email = /^\S+@\S+\.\S+$/.test(form.user_email) ? '' : '邮箱格式不正确'
-  errors.password = form.password.length < 8 ? '密码至少8位' : ''
+  errors.user_name = form.user_name.length < USERNAME_MIN_LENGTH ? `用户名至少${USERNAME_MIN_LENGTH}个字符` : ''
+  errors.user_email = EMAIL_PATTERN.test(form.user_email) ? '' : '邮箱格式不正确'
+  errors.password = form.password.length < REGISTER_PASSWORD_MIN_LENGTH ? `密码至少${REGISTER_PASSWORD_MIN_LENGTH}位` : ''
 
   if (errors.user_name || errors.user_email || errors.password) isValid = false
   return isValid

@@ -79,114 +79,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { songApi } from '../../axios/songApi'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
-import { ElMessage } from 'element-plus'
+import { useSongUpload } from './composables/useSongUpload'
 
 const userstore = useUserStore()
 const { user } = storeToRefs(userstore)
 
-const audioInput = ref<HTMLInputElement | null>(null)
-const coverInput = ref<HTMLInputElement | null>(null)
-const audioFile = ref<File | null>(null)
-const coverFile = ref<File | null>(null)
-const coverPreview = ref<string>('')
-const isDragging = ref(false)
+const {
+  audioInput,
+  coverInput,
+  audioFile,
+  coverFile,
+  coverPreview,
+  isDragging,
+  uploading,
+  uploadProgress,
+  form,
+  handleAudioSelect,
+  handleAudioDrop,
+  handleCoverSelect,
+  submit,
+} = useSongUpload()
 
-const uploading = ref(false)
-const uploadProgress = ref(0)
-
-const form = ref({
-  title: '',
-  artist: '',
-  album: '',
-  lyrics: ''
-})
-
-
-const handleAudioSelect = (e: Event) => {
-  const files = (e.target as HTMLInputElement).files
-  if (files && files[0]) validateAndSetAudio(files[0])
-}
-
-const handleAudioDrop = (e: DragEvent) => {
-  isDragging.value = false
-  const files = e.dataTransfer?.files
-  if (files && files[0]) validateAndSetAudio(files[0])
-}
-
-const validateAndSetAudio = (file: File) => {
-  const validTypes = ['.mp3', '.flac', '.wav', '.m4a']
-  const isAudio = validTypes.some(ext => file.name.toLowerCase().endsWith(ext))
-  if (!isAudio) return ElMessage.warning('不支持的文件格式')
-  audioFile.value = file
-
-  if (!form.value.title && file.name.includes('_')) {
-    const parts = file.name.split('.')[0]!.split('_')
-    form.value.title = parts[0]!
-    form.value.artist = parts[1] || ''
-  } else if (!form.value.title) {
-    form.value.title = file.name.split('.')[0]!
-  }
-}
-
-const handleCoverSelect = (e: Event) => {
-  const files = (e.target as HTMLInputElement).files
-  if (files && files[0]) {
-    coverFile.value = files[0]
-    coverPreview.value = URL.createObjectURL(files[0])
-  }
-}
-
-const submitUpload = async () => {
-  if (!audioFile.value) return ElMessage.warning('请选择音频文件')
-  if (!coverFile.value) return ElMessage.warning('请选择封面图片')
-  if (!form.value.title) return ElMessage.warning('请输入歌曲标题')
-
-  uploading.value = true
-  uploadProgress.value = 0
-
-  try {
-    const formData = new FormData()
-    formData.append('audiofile', audioFile.value)
-    formData.append('coverfile', coverFile.value)
-    formData.append('uploader_id', String(user.value?.user_id || 0))
-    formData.append('title', form.value.title)
-    formData.append('artist', form.value.artist)
-    formData.append('album', form.value.album)
-    formData.append('lyrics', form.value.lyrics)
-
-    await songApi.uploadSong(formData, (progressEvent: any) => {
-      if (progressEvent.total) {
-        uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-      }
-    })
-
-    ElMessage.success('歌曲上传成功！')
-    resetForm()
-  } catch (error: any) {
-    // 错误已由拦截器统一提示，这里只记录日志
-    console.error('Upload Error:', error)
-  } finally {
-    uploading.value = false
-  }
-}
-
-const resetForm = () => {
-  audioFile.value = null
-  coverFile.value = null
-  coverPreview.value = ''
-  uploadProgress.value = 0
-  form.value = { title: '', artist: '', album: '', lyrics: '' }
-  if (audioInput.value) audioInput.value.value = ''
-  if (coverInput.value) coverInput.value.value = ''
-}
+const submitUpload = () => submit(user.value?.user_id)
 </script>
 
 <style scoped>
-@reference "../assets/index.css";
+@reference "../../assets/index.css";
 
 .input-style {
   @apply w-full bg-gray-900 border border-gray-700 rounded-lg p-3 focus:border-blue-500 outline-none transition-all placeholder:text-gray-600;

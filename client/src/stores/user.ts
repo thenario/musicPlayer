@@ -1,12 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { userApi } from '../../axios/userApi'
-import type { IUser } from '../../type'
+import { userApi } from '@/api/userApi'
+import type { IUser } from '@/types'
+import { userStorage } from '@/utils/storage'
 
 export const useUserStore = defineStore('user', () => {
-  const localuser = localStorage.getItem('user') || null
-  const user = ref<IUser | null>(localuser ? JSON.parse(localuser) : null)
-  const isAuthenticated = ref(!!localuser)
+  const user = ref<IUser | null>(userStorage.get())
+  const isAuthenticated = ref(!!user.value)
   const userCoverUrl = ref<string>()
 
   const login = async (user_name: string, password: string) => {

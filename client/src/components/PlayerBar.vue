@@ -57,8 +57,8 @@ import { ref, computed, watch } from 'vue'
 import { usePlayerStore } from '../stores/player'
 import { useMagicKeys, useActiveElement } from '@vueuse/core'
 import { ArrowUpBold } from '@element-plus/icons-vue'
-import PlayerControl from './playerControl.vue'
-import SongDetail from './songDetail.vue'
+import PlayerControl from './PlayerControl.vue'
+import SongDetail from './SongDetail.vue'
 
 const playerStore = usePlayerStore()
 const API_BASE_URL = import.meta.env.VITE_API_URL

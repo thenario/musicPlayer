@@ -73,9 +73,10 @@
 <script setup lang="ts">
 import { ref, reactive } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useUserStore } from '../stores/user'
+import { useUserStore } from '@/stores/user'
 import { useRouter } from 'vue-router'
-import { usePlayerStore } from '../stores/player'
+import { usePlayerStore } from '@/stores/player'
+import { USERNAME_MIN_LENGTH, LOGIN_PASSWORD_MIN_LENGTH } from './const'
 
 const userStore = useUserStore()
 const playStore = usePlayerStore()
@@ -94,8 +95,8 @@ const errors = reactive({
 
 const validate = () => {
   let isValid = true
-  errors.user_name = form.user_name.length < 3 ? '用户名长度至少为 3 位' : ''
-  errors.password = form.password.length < 6 ? '密码长度至少为 6 位' : ''
+  errors.user_name = form.user_name.length < USERNAME_MIN_LENGTH ? `用户名长度至少为 ${USERNAME_MIN_LENGTH} 位` : ''
+  errors.password = form.password.length < LOGIN_PASSWORD_MIN_LENGTH ? `密码长度至少为 ${LOGIN_PASSWORD_MIN_LENGTH} 位` : ''
 
   if (errors.user_name || errors.password) isValid = false
   return isValid

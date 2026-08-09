@@ -94,60 +94,43 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSongStore } from '@/stores/song';
-import { songApi } from '../../axios/songApi';
-import type { FormInstance, FormRules } from 'element-plus';
 import { ElMessage } from 'element-plus';
 import { Back, Camera, Mic } from '@element-plus/icons-vue';
+import { getImageUrl } from '@/utils/format';
+import { useEditUpload } from './composables/useEditUpload';
 
 const route = useRoute();
 const router = useRouter();
 const songStore = useSongStore();
 
-// 获取环境变量
-const API_BASE_URL = import.meta.env.VITE_API_URL;
 const song_id = Number(route.params.id);
 
-const formRef = ref<FormInstance>();
-const submitting = ref(false);
-const lyricsLoading = ref(false);
-const song_cover_file = ref<File>();
-const previewUrl = ref<string>('');
+const {
+    formRef,
+    submitting,
+    lyricsLoading,
+    song_cover_file,
+    previewUrl,
+    formData,
+    rules,
+    fetchLyrics,
+    handleFileChange,
+    save,
+} = useEditUpload(song_id);
 
-const formData = reactive({
-    song_name: '',
-    lyrics: '',
-    t_lyrics: '',
-});
-
-const rules = reactive<FormRules>({
-    song_name: [{ required: true, message: '歌名是必填项', trigger: 'blur' }]
-});
-
-// 处理图片完整路径的函数
-const getCoverUrl = (url: string) => {
-    if (!url) return '';
-    if (url.startsWith('http')) return url;
-    const separator = url.startsWith('/') ? '' : '/';
-    return `${import.meta.env.VITE_API_BASE_URL}${separator}${url}`;
-};
+const getCoverUrl = (url: string) => getImageUrl(url);
 
 onMounted(async () => {
-    console.log('当前编辑的歌曲ID:', song_id);
-
     const cached = songStore.currentEditingSong;
-    console.log('缓存中的完整歌曲数据:', cached);
-
-    if (cached) {
-        if (Number(cached.song_id) === song_id) {
-            formData.song_name = cached.song_title || '';
-            previewUrl.value = getCoverUrl(cached.song_cover_url || '');
-        }
+    if (cached && Number(cached.song_id) === song_id) {
+        formData.song_name = cached.song_title || '';
+        previewUrl.value = getCoverUrl(cached.song_cover_url || '');
     }
 
-    // 2. 无论是否有缓存，都去获取歌词数据
+    // 无论是否有缓存，都去获取歌词数据
     if (song_id) {
         fetchLyrics();
     } else {
@@ -155,69 +138,8 @@ onMounted(async () => {
     }
 });
 
-const fetchLyrics = async () => {
-    try {
-        lyricsLoading.value = true;
-        // 获取歌词
-        const res = await songApi.getLyrics(song_id);
-        console.log('获取到的歌词详情:', res);
-
-        formData.lyrics = res.lyrics || '';
-        formData.t_lyrics = res.t_lyrics || '';
-
-        // // 3. 保底逻辑：如果用户直接在当前页面刷新，Pinia 缓存会丢失
-        // // 此时从 API 返回值中重新补全歌名和封面
-        // if (!formData.song_name && res.song_title) {
-        //     formData.song_name = res.song_title;
-        // }
-        // if (!previewUrl.value && res.song_cover_url) {
-        //     previewUrl.value = getCoverUrl(res.song_cover_url);
-        // }
-
-    } catch (err) {
-        // 错误已由拦截器统一提示，这里只记录日志
-        console.error('获取歌曲详情失败:', err);
-    } finally {
-        lyricsLoading.value = false;
-    }
-};
-
-const handleFileChange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    const file = target.files?.[0];
-    if (file) {
-        if (file.size > 2 * 1024 * 1024) return ElMessage.warning('图片不能超过 2MB');
-        song_cover_file.value = file;
-        previewUrl.value = URL.createObjectURL(file);
-    }
-};
-
 const submitForm = async () => {
-    if (!formRef.value) return;
-    await formRef.value.validate(async (valid) => {
-        if (!valid) return;
-        submitting.value = true;
-
-        const finalData = new FormData();
-        if (song_cover_file.value) {
-            finalData.append('song_cover', song_cover_file.value);
-        }
-        // 后端接收的字段应保持一致
-        finalData.append('song_name', formData.song_name);
-        finalData.append('lyrics', formData.lyrics);
-        finalData.append('t_lyrics', formData.t_lyrics);
-
-        try {
-            await songApi.EditUserUploadSongs(finalData, song_id);
-            ElMessage.success("修改成功");
-            router.push('/userUploadSongs');
-        } catch (err) {
-            // 错误已由拦截器统一提示，这里只记录日志
-            console.error('保存失败:', err);
-        } finally {
-            submitting.value = false;
-        }
-    });
+    if (await save()) router.push('/user-uploads');
 };
 </script>
 

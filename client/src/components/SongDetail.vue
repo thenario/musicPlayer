@@ -75,7 +75,7 @@ import { ref, watch, onBeforeUpdate, nextTick, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '../stores/player'
 import { ArrowDownBold, Share } from '@element-plus/icons-vue'
-import PlayerControl from './playerControl.vue'
+import PlayerControl from './PlayerControl.vue'
 
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying, lyrics, currentTime } = storeToRefs(playerStore)

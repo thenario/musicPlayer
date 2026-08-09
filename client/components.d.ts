@@ -39,11 +39,11 @@ declare module 'vue' {
     ElUpload: typeof import('element-plus/es')['ElUpload']
     NavBar: typeof import('./src/components/NavBar.vue')['default']
     PlayerBar: typeof import('./src/components/PlayerBar.vue')['default']
-    PlayerControl: typeof import('./src/components/playerControl.vue')['default']
+    PlayerControl: typeof import('./src/components/PlayerControl.vue')['default']
     QueueDrawer: typeof import('./src/components/QueueDrawer.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SongDetail: typeof import('./src/components/songDetail.vue')['default']
+    SongDetail: typeof import('./src/components/SongDetail.vue')['default']
   }
   export interface GlobalDirectives {
     vLoading: typeof import('element-plus/es')['ElLoadingDirective']
@@ -79,9 +79,9 @@ declare global {
   const ElUpload: typeof import('element-plus/es')['ElUpload']
   const NavBar: typeof import('./src/components/NavBar.vue')['default']
   const PlayerBar: typeof import('./src/components/PlayerBar.vue')['default']
-  const PlayerControl: typeof import('./src/components/playerControl.vue')['default']
+  const PlayerControl: typeof import('./src/components/PlayerControl.vue')['default']
   const QueueDrawer: typeof import('./src/components/QueueDrawer.vue')['default']
   const RouterLink: typeof import('vue-router')['RouterLink']
   const RouterView: typeof import('vue-router')['RouterView']
-  const SongDetail: typeof import('./src/components/songDetail.vue')['default']
+  const SongDetail: typeof import('./src/components/SongDetail.vue')['default']
 }
