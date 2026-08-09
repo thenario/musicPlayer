@@ -18,7 +18,7 @@
 --
 -- Table structure for table `play_state`
 --
-USE musicplayer;
+USE musicPlayer;
 
 DROP TABLE IF EXISTS `play_state`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
