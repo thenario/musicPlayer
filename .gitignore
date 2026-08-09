@@ -1,103 +1,69 @@
+# ===== 系统文件 =====
 .DS_Store
 Thumbs.db
-.vscode/
+*.local
+*.sock
+
+# ===== 编辑器 / IDE =====
 .idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
 
+# ===== 依赖 =====
+**/node_modules/
 
-client/node_modules/
+# ===== 构建产物 =====
 client/dist/
 client/dist-ssr/
-client/*.local
+client/coverage/
 client/.eslintcache
+client/.vite/
+*.tsbuildinfo
 
-
-server/venv/
-server/env/
-server/.venv/
-server/__pycache__/
-server/*.py[cod]
-server/.env
-server/.flaskenv
-
-
-server/*.db
-server/*.sqlite3
-
-
-*.log
-npm-debug.log*
-__pycache__/
-node_modules/
-.DS_Store
-dist/
-
-
-*.mp3
-*.wav
-*.flac
-*.jpg
-*.jpeg
-*.png
-*.gif
-
-**/static/uploader/
-**/node_modules/
-**/__pycache__/
-
-HELP.md
+# ===== Java / Spring Boot / Maven =====
 target/
+*.class
+HELP.md
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
+# ===== 旧 Python 后端 =====
+server/venv/
+server/env/
+server/.venv/
+server/.flaskenv
+server/.env
+server/*.py[cod]
+server/*.db
+server/*.sqlite3
+server_py/
+**/__pycache__/
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
+# ===== 用户上传的媒体文件（不入库） =====
+server/static/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+# ===== 本地 nginx：只跟踪 Docker 构建所需 =====
+nginx-1.26.3/*
+!nginx-1.26.3/Dockerfile
+!nginx-1.26.3/conf/
+!nginx-1.26.3/conf/nginx.conf
 
-### VS Code ###
-.vscode/
+# ===== 数据库（Docker 数据卷） =====
+mysql/data/
 
-*.yml
+# ===== SonarQube 扫描中间产物 =====
+.scannerwork/
 
+# ===== 环境变量 =====
+# 仅含密钥的本地覆盖文件不入库
 .env
 .env.local
-.env.development
 .env.test.local
-.env.production
+# .env.development / .env.production 只含 URL 不含密钥，需要提交
 
-nginx-1.26.3/
-
-
-mysql/data/
-*.sock
-
-# 忽略 Node.js 依赖
-node_modules/
-
-# 忽略 Java 编译产物
-target/
-*.class
-
-# 忽略日志文件
+# ===== 日志 =====
 *.log
+npm-debug.log*
