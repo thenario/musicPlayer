@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kyf.mp.javaserver.common.ResultModel;
+import com.kyf.mp.javaserver.common.auth.JwtAuthenticationFilter;
+import com.kyf.mp.javaserver.common.auth.TokenBlacklistService;
 import com.kyf.mp.javaserver.modules.UserModule.DTO.EditUserDTO;
 import com.kyf.mp.javaserver.modules.UserModule.VO.EditVO;
 import com.kyf.mp.javaserver.modules.UserModule.VO.LoginVO;
@@ -35,6 +37,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 public class UsersController {
 
     private final IUsersService userService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
     public ResultModel<LoginVO> login(@RequestBody Users user) {
@@ -47,7 +50,9 @@ public class UsersController {
     }
 
     @PostMapping("/logout")
-    public ResultModel<Object> logout() {
+    public ResultModel<Object> logout(
+            @RequestAttribute(value = JwtAuthenticationFilter.TOKEN_ATTRIBUTE, required = false) String token) {
+        tokenBlacklistService.revoke(token);
         ResultModel<Object> result = ResultModel.success(null);
         result.setMessage("登出成功，期待下次再见");
         return result;
