@@ -1,16 +1,13 @@
 package com.kyf.mp.javaserver.modules.playlistmodule.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.kyf.mp.javaserver.modules.playlistmodule.entity.UsersPlaylistsRelation;
-
 /**
  * <p>
- * 服务类
+ * 服务类：业务逻辑层，不再继承 IService（基础 CRUD 由 business 层提供）。
  * </p>
  *
  * @author kyf
  * @since 2026-04-05
  */
-public interface IUsersPlaylistsRelationService extends IService<UsersPlaylistsRelation> {
+public interface IUsersPlaylistsRelationService {
 
 }

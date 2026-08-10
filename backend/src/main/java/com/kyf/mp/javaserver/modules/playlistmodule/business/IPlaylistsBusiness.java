@@ -1,22 +1,18 @@
-package com.kyf.mp.javaserver.modules.playlistmodule.service;
+package com.kyf.mp.javaserver.modules.playlistmodule.business;
 
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.javaserver.common.ResultModel;
+import com.kyf.mp.javaserver.common.business.IBaseBusiness;
+import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.AddSongToPlaylistVO;
-import com.kyf.mp.javaserver.modules.playlistmodule.vo.MyPlaylistsVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistActionVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistDetailVO;
 
 /**
- * <p>
- * 服务类：业务逻辑层，不再继承 IService（基础 CRUD 由 business 层提供）。
- * </p>
- *
- * @author kyf
- * @since 2026-04-05
+ * 歌单数据访问层：复杂数据库操作在此定义。
  */
-public interface IPlaylistsService {
+public interface IPlaylistsBusiness extends IBaseBusiness<Playlists> {
     ResultModel<PlaylistActionVO> createPlaylist(MultipartFile file, String name, String description,
             Integer userId);
 
@@ -24,8 +20,6 @@ public interface IPlaylistsService {
             String description, Integer userId);
 
     ResultModel<Void> deletePlaylist(Integer playlistId, Integer userId);
-
-    ResultModel<MyPlaylistsVO> getMyPlaylists(Integer userId);
 
     ResultModel<PlaylistDetailVO> getPlaylistDetail(Integer playlistId, Integer userId);
 
