@@ -51,7 +51,7 @@ public class QueuesController {
         if (userId == null || userId <= 0) {
             throw new BusinessException(401, "用户未登录或非法请求");
         }
-        return queueService.getCurrentQueue(userId);
+        return ResultModel.success(queueService.getCurrentQueue(userId));
     }
 
     @PatchMapping("/current/state")
@@ -68,7 +68,8 @@ public class QueuesController {
         if (dto.getCurrentQueueId() == null) {
             throw new BusinessException(400, "缺少队列ID");
         }
-        return queueService.updateCurrentQueueState(userId, dto);
+        queueService.updateCurrentQueueState(userId, dto);
+        return ResultModel.success(null);
     }
 
     @PutMapping("/player/current-queue")
@@ -84,7 +85,7 @@ public class QueuesController {
             throw new BusinessException(400, "缺少 queue_id");
         }
 
-        return queueService.alterQueueToCurrent(userId, dto.getQueueId());
+        return ResultModel.success(queueService.alterQueueToCurrent(userId, dto.getQueueId()));
     }
 
     @GetMapping
@@ -92,7 +93,7 @@ public class QueuesController {
         if (userId == null || userId <= 0) {
             throw new BusinessException(401, "用户未登录或非法请求");
         }
-        return queueService.getMyQueues(userId);
+        return ResultModel.success(queueService.getMyQueues(userId));
     }
 
     @PostMapping
@@ -108,12 +109,12 @@ public class QueuesController {
             throw new BusinessException(400, "歌单ID不能为空且必须合法");
         }
 
-        return queueService.createQueueFromPlaylist(userId, dto.getPlaylistId());
+        return ResultModel.success(queueService.createQueueFromPlaylist(userId, dto.getPlaylistId()));
     }
 
     @GetMapping("/{queueId}")
     public ResultModel<SingleQueue> getQueueById(@PathVariable Integer queueId) {
-        return queueService.getQueueById(queueId);
+        return ResultModel.success(queueService.getQueueById(queueId));
     }
 
     @DeleteMapping("/{queueId}")
@@ -122,7 +123,7 @@ public class QueuesController {
         if (userId == null || userId <= 0) {
             throw new BusinessException(401, "用户未登录或非法请求");
         }
-        return queueService.deleteQueue(userId, queueId);
+        return ResultModel.success(queueService.deleteQueue(userId, queueId));
     }
 
     @DeleteMapping("/{queueId}/songs")
@@ -138,7 +139,8 @@ public class QueuesController {
             throw new BusinessException(400, "无效的队列ID");
         }
 
-        return queueService.clearQueue(userId, queueId);
+        queueService.clearQueue(userId, queueId);
+        return ResultModel.success(null);
     }
 
     @PostMapping("/{queueId}/songs")
@@ -160,7 +162,7 @@ public class QueuesController {
 
         Integer finalParamId = (queueId == null || queueId <= 0) ? null : queueId;
 
-        return queueService.addSongToQueue(userId, finalParamId, dto);
+        return ResultModel.success(queueService.addSongToQueue(userId, finalParamId, dto));
     }
 
     @DeleteMapping("/{queueId}/songs/{queueItemId}")
@@ -174,7 +176,8 @@ public class QueuesController {
         if (queueItemId == null || queueItemId <= 0) {
             throw new BusinessException(400, "缺少有效的队列项ID");
         }
-        return queueService.removeSongFromQueue(userId, queueItemId);
+        queueService.removeSongFromQueue(userId, queueItemId);
+        return ResultModel.success(null);
     }
 
     @PatchMapping("/{queueId}/play-mode")
@@ -189,7 +192,8 @@ public class QueuesController {
         if (queueId == null || dto == null || dto.getPlayMode() == null) {
             throw new BusinessException(400, "缺少必要参数");
         }
-        return queueService.setPlayMode(userId, queueId, dto.getPlayMode());
+        queueService.setPlayMode(userId, queueId, dto.getPlayMode());
+        return ResultModel.success(null);
     }
 
     @PatchMapping("/{queueId}/reorder")
@@ -206,6 +210,7 @@ public class QueuesController {
         if (dto == null || dto.getSongIds() == null || dto.getSongIds().isEmpty()) {
             throw new BusinessException(400, "无效的歌曲列表");
         }
-        return queueService.reorderQueue(userId, queueId, dto.getSongIds());
+        queueService.reorderQueue(userId, queueId, dto.getSongIds());
+        return ResultModel.success(null);
     }
 }

@@ -1,10 +1,9 @@
-package com.kyf.mp.javaserver.modules.queuemodule.serviceImp;
+package com.kyf.mp.javaserver.modules.queuemodule.service.serviceImp;
 
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.queuemodule.business.IQueuesBusiness;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.AddSongToQueue;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.UpdateCurrentQueueStateDTO;
@@ -34,62 +33,62 @@ public class QueuesServiceImpl implements IQueuesService {
     private final IQueuesBusiness queuesBusiness;
 
     @Override
-    public ResultModel<CurrentQueue> getCurrentQueue(Integer userId) {
+    public CurrentQueue getCurrentQueue(Integer userId) {
         return queuesBusiness.getCurrentQueue(userId);
     }
 
     @Override
-    public ResultModel<MyQueues> getMyQueues(Integer userId) {
+    public MyQueues getMyQueues(Integer userId) {
         return queuesBusiness.getMyQueues(userId);
     }
 
     @Override
-    public ResultModel<SingleQueue> getQueueById(Integer queueId) {
+    public SingleQueue getQueueById(Integer queueId) {
         return queuesBusiness.getQueueById(queueId);
     }
 
     @Override
-    public ResultModel<DeleteQueueVO> deleteQueue(Integer userId, Integer queueId) {
+    public DeleteQueueVO deleteQueue(Integer userId, Integer queueId) {
         return queuesBusiness.deleteQueue(userId, queueId);
     }
 
     @Override
-    public ResultModel<Void> clearQueue(Integer userId, Integer queueId) {
-        return queuesBusiness.clearQueue(userId, queueId);
+    public void clearQueue(Integer userId, Integer queueId) {
+        queuesBusiness.clearQueue(userId, queueId);
     }
 
     @Override
-    public ResultModel<CreateQueueFromPlaylist> createQueueFromPlaylist(Integer userId, Integer playlistId) {
+    public CreateQueueFromPlaylist createQueueFromPlaylist(Integer userId, Integer playlistId) {
         return queuesBusiness.createQueueFromPlaylist(userId, playlistId);
     }
 
     @Override
-    public ResultModel<AddSongToQueueVO> addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto) {
+    public AddSongToQueueVO addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto) {
         return queuesBusiness.addSongToQueue(userId, paramQueueId, dto);
     }
 
     @Override
-    public ResultModel<Void> removeSongFromQueue(Integer userId, Integer queueItemId) {
-        return queuesBusiness.removeSongFromQueue(userId, queueItemId);
+    public void removeSongFromQueue(Integer userId, Integer queueItemId) {
+        queuesBusiness.removeSongFromQueue(userId, queueItemId);
     }
 
     @Override
-    public ResultModel<Void> updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO wrapper) {
-        return queuesBusiness.updateCurrentQueueState(userId, wrapper);
+    public void updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO wrapper) {
+        queuesBusiness.updateCurrentQueueState(userId, wrapper);
     }
 
     @Override
-    public ResultModel<AlterQueueVO> alterQueueToCurrent(Integer userId, Integer queueId) {
+    public AlterQueueVO alterQueueToCurrent(Integer userId, Integer queueId) {
         return queuesBusiness.alterQueueToCurrent(userId, queueId);
     }
 
     @Override
-    public ResultModel<Void> setPlayMode(Integer userId, Integer queueId, String playMode) {
-        return queuesBusiness.setPlayMode(userId, queueId, playMode);
+    public void setPlayMode(Integer userId, Integer queueId, String playMode) {
+        queuesBusiness.setPlayMode(userId, queueId, playMode);
     }
 
     @Override
-    public ResultModel<Void> reorderQueue(Integer userId, Integer queueId, List<Integer> songIds) {
-        return queuesBusiness.reorderQueue(userId, queueId, songIds);
+    public void reorderQueue(Integer userId, Integer queueId, List<Integer> songIds) {
+        queuesBusiness.reorderQueue(userId, queueId, songIds);
     }
 }

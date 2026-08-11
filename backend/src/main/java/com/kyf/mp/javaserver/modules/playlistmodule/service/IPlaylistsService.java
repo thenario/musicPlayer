@@ -2,7 +2,6 @@ package com.kyf.mp.javaserver.modules.playlistmodule.service;
 
 import org.springframework.web.multipart.MultipartFile;
 
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.AddSongToPlaylistVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.MyPlaylistsVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistActionVO;
@@ -17,21 +16,21 @@ import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistDetailVO;
  * @since 2026-04-05
  */
 public interface IPlaylistsService {
-    ResultModel<PlaylistActionVO> createPlaylist(MultipartFile file, String name, String description,
+    PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
             Integer userId);
 
-    ResultModel<PlaylistActionVO> editPlaylist(MultipartFile file, Integer playlistId, String name,
+    PlaylistActionVO editPlaylist(MultipartFile file, Integer playlistId, String name,
             String description, Integer userId);
 
-    ResultModel<Void> deletePlaylist(Integer playlistId, Integer userId);
+    void deletePlaylist(Integer playlistId, Integer userId);
 
-    ResultModel<MyPlaylistsVO> getMyPlaylists(Integer userId);
+    MyPlaylistsVO getMyPlaylists(Integer userId);
 
-    ResultModel<PlaylistDetailVO> getPlaylistDetail(Integer playlistId, Integer userId);
+    PlaylistDetailVO getPlaylistDetail(Integer playlistId, Integer userId);
 
-    ResultModel<Void> toggleLike(Integer playlistId, Integer userId, boolean isLike);
+    void toggleLike(Integer playlistId, Integer userId, boolean isLike);
 
-    ResultModel<AddSongToPlaylistVO> addSongToPlaylist(Integer playlistId, Integer songId);
+    AddSongToPlaylistVO addSongToPlaylist(Integer playlistId, Integer songId);
 
-    ResultModel<Void> removeSongFromPlaylist(Integer playlistId, Integer songId);
+    void removeSongFromPlaylist(Integer playlistId, Integer songId);
 }

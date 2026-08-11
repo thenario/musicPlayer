@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.songmodule.dto.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.songmodule.vo.GetSongsVO;
@@ -38,9 +39,9 @@ public class SongsController {
     public ResultModel<GetSongsVO> getSongs(@RequestParam(defaultValue = "1") Integer page,
             @RequestParam(required = false) String keyword) {
         if (page < 1) {
-            return ResultModel.error("请输入正确页码", 400);
+            throw new BusinessException(400, "请输入正确页码");
         }
-        return songsService.getSongsPage(page, keyword);
+        return ResultModel.success(songsService.getSongsPage(page, keyword));
     }
 
     // 获取歌词
@@ -48,9 +49,9 @@ public class SongsController {
     @GetMapping("/{song_id}/lyrics")
     public ResultModel<LyricsVO> getLyrics(@PathVariable("song_id") Integer songId) {
         if (songId == null) {
-            return ResultModel.error("缺少歌曲ID", 400);
+            throw new BusinessException(400, "缺少歌曲ID");
         }
-        return songsService.getLyrics(songId);
+        return ResultModel.success(songsService.getLyrics(songId));
     }
 
     // 上传歌曲
@@ -63,22 +64,24 @@ public class SongsController {
             @RequestParam(required = false) String album,
             @RequestParam(required = false) String lyrics) {
         if (audioFile == null || coverFile == null || uploaderId == null) {
-            return ResultModel.error("请上传完整信息(包含封面与音频文件)", 400);
+            throw new BusinessException(400, "请上传完整信息(包含封面与音频文件)");
         }
-        return songsService.uploadSong(audioFile, coverFile, uploaderId, title, artist, album, lyrics);
+        songsService.uploadSong(audioFile, coverFile, uploaderId, title, artist, album, lyrics);
+        return ResultModel.success(null);
     }
 
     @GetMapping("/my-uploads")
-    public ResultModel<IPage<UploadsVO>> getMethodName(@RequestAttribute("userId") Integer userId,
+    public ResultModel<IPage<UploadsVO>> getUploadSongs(@RequestAttribute("userId") Integer userId,
             @RequestParam(defaultValue = "1") Integer page,
             @RequestParam(defaultValue = "10") Integer size) {
-        return songsService.getUploadSongs(userId, page, size);
+        return ResultModel.success(songsService.getUploadSongs(userId, page, size));
     }
 
     @PatchMapping("/my-uploads/{song_id}")
     public ResultModel<Void> editUploadSong(EDitSongDTO dto, @RequestAttribute("userId") Integer userId,
             @PathVariable("song_id") Integer songId) {
-        return songsService.editUploadSong(dto, userId, songId);
+        songsService.editUploadSong(dto, userId, songId);
+        return ResultModel.success(null);
     }
 
 }

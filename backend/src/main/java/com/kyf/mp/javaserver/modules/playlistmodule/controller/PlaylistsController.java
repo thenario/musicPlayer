@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.AddSongToPlaylistVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.MyPlaylistsVO;
@@ -44,13 +45,13 @@ public class PlaylistsController {
 
         // 参数检查
         if (file == null || file.isEmpty())
-            return ResultModel.error("请上传歌单封面", 400);
+            throw new BusinessException(400, "请上传歌单封面");
         if (name == null || name.trim().isEmpty())
-            return ResultModel.error("歌单名称不能为空", 400);
+            throw new BusinessException(400, "歌单名称不能为空");
         if (userId == null)
-            return ResultModel.error("用户ID不能为空", 400);
+            throw new BusinessException(400, "用户ID不能为空");
 
-        return playlistsService.createPlaylist(file, name, description, userId);
+        return ResultModel.success(playlistsService.createPlaylist(file, name, description, userId));
     }
 
     // 2. 编辑歌单详情
@@ -64,14 +65,14 @@ public class PlaylistsController {
 
         // 参数检查
         if (playlistId == null)
-            return ResultModel.error("歌单ID不能为空", 400);
+            throw new BusinessException(400, "歌单ID不能为空");
         if (userId == null)
-            return ResultModel.error("用户ID不能为空", 400);
+            throw new BusinessException(400, "用户ID不能为空");
         // 如果提供了 name 但为空字符串
         if (name != null && name.trim().isEmpty())
-            return ResultModel.error("歌单名称不能为空", 400);
+            throw new BusinessException(400, "歌单名称不能为空");
 
-        return playlistsService.editPlaylist(file, playlistId, name, description, userId);
+        return ResultModel.success(playlistsService.editPlaylist(file, playlistId, name, description, userId));
     }
 
     // 3. 删除歌单
@@ -81,11 +82,12 @@ public class PlaylistsController {
             @RequestAttribute("userId") Integer userId) {
 
         if (id == null)
-            return ResultModel.error("歌单ID不能为空", 400);
+            throw new BusinessException(400, "歌单ID不能为空");
         if (userId == null)
-            return ResultModel.error("用户ID不能为空", 400);
+            throw new BusinessException(400, "用户ID不能为空");
 
-        return playlistsService.deletePlaylist(id, userId);
+        playlistsService.deletePlaylist(id, userId);
+        return ResultModel.success(null);
     }
 
     // 4. 获取我的歌单列表
@@ -93,9 +95,9 @@ public class PlaylistsController {
     public ResultModel<MyPlaylistsVO> getMyPlaylists(@RequestAttribute("userId") Integer userId) {
 
         if (userId == null)
-            return ResultModel.error("用户ID不能为空", 400);
+            throw new BusinessException(400, "用户ID不能为空");
 
-        return playlistsService.getMyPlaylists(userId);
+        return ResultModel.success(playlistsService.getMyPlaylists(userId));
     }
 
     // 5. 获取歌单详情（含歌曲）
@@ -105,9 +107,9 @@ public class PlaylistsController {
             @RequestAttribute("userId") Integer userId) {
 
         if (id == null)
-            return ResultModel.error("歌单ID不能为空", 400);
+            throw new BusinessException(400, "歌单ID不能为空");
 
-        return playlistsService.getPlaylistDetail(id, userId);
+        return ResultModel.success(playlistsService.getPlaylistDetail(id, userId));
     }
 
     // 6. 点赞/取消点赞
@@ -117,9 +119,10 @@ public class PlaylistsController {
             @RequestAttribute("userId") Integer userId) {
 
         if (id == null || userId == null)
-            return ResultModel.error("参数不完整", 400);
+            throw new BusinessException(400, "参数不完整");
 
-        return playlistsService.toggleLike(id, userId, true);
+        playlistsService.toggleLike(id, userId, true);
+        return ResultModel.success(null);
     }
 
     @DeleteMapping("/{id}/unlikes")
@@ -128,9 +131,10 @@ public class PlaylistsController {
             @RequestAttribute("userId") Integer userId) {
 
         if (id == null || userId == null)
-            return ResultModel.error("参数不完整", 400);
+            throw new BusinessException(400, "参数不完整");
 
-        return playlistsService.toggleLike(id, userId, false);
+        playlistsService.toggleLike(id, userId, false);
+        return ResultModel.success(null);
     }
 
     // 7. 歌单添加/移除歌曲
@@ -140,9 +144,9 @@ public class PlaylistsController {
             @PathVariable("song_id") Integer songId) {
 
         if (playlistId == null || songId == null)
-            return ResultModel.error("歌单ID或歌曲ID不能为空", 400);
+            throw new BusinessException(400, "歌单ID或歌曲ID不能为空");
 
-        return playlistsService.addSongToPlaylist(playlistId, songId);
+        return ResultModel.success(playlistsService.addSongToPlaylist(playlistId, songId));
     }
 
     @DeleteMapping("/{playlist_id}/songs/{song_id}")
@@ -151,8 +155,9 @@ public class PlaylistsController {
             @PathVariable("song_id") Integer songId) {
 
         if (playlistId == null || songId == null)
-            return ResultModel.error("歌单ID或歌曲ID不能为空", 100);
+            throw new BusinessException(400, "歌单ID或歌曲ID不能为空");
 
-        return playlistsService.removeSongFromPlaylist(playlistId, songId);
+        playlistsService.removeSongFromPlaylist(playlistId, songId);
+        return ResultModel.success(null);
     }
 }

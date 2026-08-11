@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.usermodule.businessImp;
+package com.kyf.mp.javaserver.modules.usermodule.business.businessImp;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
 import com.kyf.mp.javaserver.modules.usermodule.business.IUsersBusiness;
 import com.kyf.mp.javaserver.modules.usermodule.dto.EditUserDTO;
@@ -32,7 +31,7 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
     private String userCoverPath;
 
     @Override
-    public ResultModel<EditVO> editUserProfile(EditUserDTO editData, Integer userId) {
+    public EditVO editUserProfile(EditUserDTO editData, Integer userId) {
         Users oldUser = baseMapper.selectById(userId);
         if (oldUser == null)
             throw new BusinessException(404, "用户不存在");
@@ -83,6 +82,6 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
         vo.setUserName(newUser.getUserName() != null ? newUser.getUserName() : oldUser.getUserName());
         vo.setUserCoverUrl(newUser.getUserCoverUrl() != null ? newUser.getUserCoverUrl() : oldUser.getUserCoverUrl());
 
-        return ResultModel.success(vo);
+        return vo;
     }
 }

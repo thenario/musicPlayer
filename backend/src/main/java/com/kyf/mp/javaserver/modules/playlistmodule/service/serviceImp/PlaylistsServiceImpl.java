@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.playlistmodule.serviceImp;
+package com.kyf.mp.javaserver.modules.playlistmodule.service.serviceImp;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.playlistmodule.business.IPlaylistsBusiness;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
 import com.kyf.mp.javaserver.modules.playlistmodule.service.IPlaylistsService;
@@ -35,24 +34,24 @@ public class PlaylistsServiceImpl implements IPlaylistsService {
     private final IPlaylistsBusiness playlistsBusiness;
 
     @Override
-    public ResultModel<PlaylistActionVO> createPlaylist(MultipartFile file, String name, String description,
+    public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
             Integer userId) {
         return playlistsBusiness.createPlaylist(file, name, description, userId);
     }
 
     @Override
-    public ResultModel<PlaylistActionVO> editPlaylist(MultipartFile file, Integer playlistId, String name,
+    public PlaylistActionVO editPlaylist(MultipartFile file, Integer playlistId, String name,
             String description, Integer userId) {
         return playlistsBusiness.editPlaylist(file, playlistId, name, description, userId);
     }
 
     @Override
-    public ResultModel<Void> deletePlaylist(Integer playlistId, Integer userId) {
-        return playlistsBusiness.deletePlaylist(playlistId, userId);
+    public void deletePlaylist(Integer playlistId, Integer userId) {
+        playlistsBusiness.deletePlaylist(playlistId, userId);
     }
 
     @Override
-    public ResultModel<MyPlaylistsVO> getMyPlaylists(Integer userId) {
+    public MyPlaylistsVO getMyPlaylists(Integer userId) {
         if (userId == null)
             throw new BusinessException(401, "请先登录");
 
@@ -70,26 +69,26 @@ public class PlaylistsServiceImpl implements IPlaylistsService {
 
         MyPlaylistsVO vo = new MyPlaylistsVO();
         vo.setPlaylists(playlistVOList);
-        return ResultModel.success(vo);
+        return vo;
     }
 
     @Override
-    public ResultModel<PlaylistDetailVO> getPlaylistDetail(Integer playlistId, Integer userId) {
+    public PlaylistDetailVO getPlaylistDetail(Integer playlistId, Integer userId) {
         return playlistsBusiness.getPlaylistDetail(playlistId, userId);
     }
 
     @Override
-    public ResultModel<Void> toggleLike(Integer playlistId, Integer userId, boolean isLike) {
-        return playlistsBusiness.toggleLike(playlistId, userId, isLike);
+    public void toggleLike(Integer playlistId, Integer userId, boolean isLike) {
+        playlistsBusiness.toggleLike(playlistId, userId, isLike);
     }
 
     @Override
-    public ResultModel<AddSongToPlaylistVO> addSongToPlaylist(Integer playlistId, Integer songId) {
+    public AddSongToPlaylistVO addSongToPlaylist(Integer playlistId, Integer songId) {
         return playlistsBusiness.addSongToPlaylist(playlistId, songId);
     }
 
     @Override
-    public ResultModel<Void> removeSongFromPlaylist(Integer playlistId, Integer songId) {
-        return playlistsBusiness.removeSongFromPlaylist(playlistId, songId);
+    public void removeSongFromPlaylist(Integer playlistId, Integer songId) {
+        playlistsBusiness.removeSongFromPlaylist(playlistId, songId);
     }
 }

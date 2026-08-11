@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.usermodule.serviceImp;
+package com.kyf.mp.javaserver.modules.usermodule.service.serviceImp;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -8,7 +8,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.usermodule.business.IUsersBusiness;
 import com.kyf.mp.javaserver.modules.usermodule.dto.EditUserDTO;
 import com.kyf.mp.javaserver.modules.usermodule.entity.Users;
@@ -38,7 +37,7 @@ public class UsersServiceImpl implements IUsersService {
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override
-    public ResultModel<LoginVO> login(String username, String password) {
+    public LoginVO login(String username, String password) {
         log.info("===> 收到登录请求: username={}", username);
         // 简单查询：直接用 business 的基础 CRUD
         Users user = usersBusiness.lambdaQuery().eq(Users::getUserName, username).one();
@@ -60,12 +59,12 @@ public class UsersServiceImpl implements IUsersService {
         vo.setUser(cleanUser);
         vo.setToken(token);
 
-        log.info("===> 业务逻辑执行完毕，准备返回 ResultModel: {}", vo);
-        return ResultModel.success(vo);
+        log.info("===> 业务逻辑执行完毕，准备返回: {}", vo);
+        return vo;
     }
 
     @Override
-    public ResultModel<String> register(Users user) {
+    public void register(Users user) {
         // 唯一性校验：直接用 business 的基础 CRUD
         long count = usersBusiness.lambdaQuery()
                 .eq(Users::getUserName, user.getUserName())
@@ -84,12 +83,10 @@ public class UsersServiceImpl implements IUsersService {
         if (!saved) {
             throw new BusinessException(500, "注册失败，数据库写入异常");
         }
-
-        return ResultModel.success(null);
     }
 
     @Override
-    public ResultModel<Map<String, String>> getUserCoverUrl(Integer userId) {
+    public Map<String, String> getUserCoverUrl(Integer userId) {
         Users user = usersBusiness.getById(userId);
         if (user == null) {
             throw new BusinessException(404, "用户不存在");
@@ -104,11 +101,11 @@ public class UsersServiceImpl implements IUsersService {
         Map<String, String> resultMap = new HashMap<>();
         resultMap.put("userCoverUrl", userCover);
 
-        return ResultModel.success(resultMap);
+        return resultMap;
     }
 
     @Override
-    public ResultModel<EditVO> editUserProfile(EditUserDTO editData, Integer userId) {
+    public EditVO editUserProfile(EditUserDTO editData, Integer userId) {
         return usersBusiness.editUserProfile(editData, userId);
     }
 }

@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.songmodule.businessImp;
+package com.kyf.mp.javaserver.modules.songmodule.business.businessImp;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,7 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
 import com.kyf.mp.javaserver.modules.songmodule.business.ISongsBusiness;
 import com.kyf.mp.javaserver.modules.songmodule.dto.EDitSongDTO;
@@ -56,7 +55,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
     private String songCoverUrl;
 
     @Override
-    public ResultModel<GetSongsVO> getSongsPage(Integer page, String keyword) {
+    public GetSongsVO getSongsPage(Integer page, String keyword) {
         int current = (page == null || page < 1) ? 1 : page;
         int pageLimit = 15;
 
@@ -82,11 +81,11 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
                 result.getCurrent(),
                 pageLimit));
 
-        return ResultModel.success(vo);
+        return vo;
     }
 
     @Override
-    public ResultModel<LyricsVO> getLyrics(Integer songId) {
+    public LyricsVO getLyrics(Integer songId) {
         Songs song = baseMapper.selectOne(
                 new LambdaQueryWrapper<Songs>()
                         .select(Songs::getLyrics, Songs::getTLyrics)
@@ -100,12 +99,12 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
         vo.setLyrics(StringUtils.hasText(song.getLyrics()) ? song.getLyrics() : "");
         vo.setTLyrics(StringUtils.hasText(song.getTLyrics()) ? song.getTLyrics() : "");
 
-        return ResultModel.success(vo);
+        return vo;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<Void> uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
+    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
             String title, String artist, String album, String lyrics) {
 
         File savedAudioFile = null;
@@ -175,7 +174,6 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
             song.setDateAdded(LocalDateTime.now());
 
             baseMapper.insert(song);
-            return ResultModel.success(null);
 
         } catch (Exception e) {
             cleanupFiles(savedAudioFile, savedCoverFile);
@@ -203,7 +201,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<Void> editUploadSong(EDitSongDTO dto, Integer userId, Integer songId) {
+    public void editUploadSong(EDitSongDTO dto, Integer userId, Integer songId) {
         Songs oldSong = baseMapper.selectById(songId);
         if (oldSong == null)
             throw new BusinessException(404, "歌曲不存在");
@@ -257,7 +255,5 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
         if (needUpdate) {
             baseMapper.updateById(updateEntity);
         }
-
-        return ResultModel.success(null);
     }
 }

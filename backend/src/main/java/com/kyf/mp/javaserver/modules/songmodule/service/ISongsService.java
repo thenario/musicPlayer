@@ -3,7 +3,6 @@ package com.kyf.mp.javaserver.modules.songmodule.service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.songmodule.dto.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.songmodule.vo.GetSongsVO;
 import com.kyf.mp.javaserver.modules.songmodule.vo.LyricsVO;
@@ -18,14 +17,14 @@ import com.kyf.mp.javaserver.modules.songmodule.vo.UploadsVO;
  * @since 2026-04-05
  */
 public interface ISongsService {
-    ResultModel<GetSongsVO> getSongsPage(Integer page, String keyword);
+    GetSongsVO getSongsPage(Integer page, String keyword);
 
-    ResultModel<LyricsVO> getLyrics(Integer songId);
+    LyricsVO getLyrics(Integer songId);
 
-    ResultModel<Void> uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
+    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
             String title, String artist, String album, String lyrics);
 
-    ResultModel<IPage<UploadsVO>> getUploadSongs(Integer userId, Integer page, Integer size);
+    IPage<UploadsVO> getUploadSongs(Integer userId, Integer page, Integer size);
 
-    ResultModel<Void> editUploadSong(EDitSongDTO dto, Integer userId, Integer songID);
+    void editUploadSong(EDitSongDTO dto, Integer userId, Integer songID);
 }

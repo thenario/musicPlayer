@@ -2,7 +2,6 @@ package com.kyf.mp.javaserver.modules.usermodule.service;
 
 import java.util.Map;
 
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.usermodule.dto.EditUserDTO;
 import com.kyf.mp.javaserver.modules.usermodule.entity.Users;
 import com.kyf.mp.javaserver.modules.usermodule.vo.EditVO;
@@ -17,11 +16,11 @@ import com.kyf.mp.javaserver.modules.usermodule.vo.LoginVO;
  * @since 2026-04-05
  */
 public interface IUsersService {
-    ResultModel<LoginVO> login(String username, String password);
+    LoginVO login(String username, String password);
 
-    ResultModel<String> register(Users user);
+    void register(Users user);
 
-    ResultModel<EditVO> editUserProfile(EditUserDTO editData, Integer userId);
+    EditVO editUserProfile(EditUserDTO editData, Integer userId);
 
-    ResultModel<Map<String, String>> getUserCoverUrl(Integer userId);
+    Map<String, String> getUserCoverUrl(Integer userId);
 }

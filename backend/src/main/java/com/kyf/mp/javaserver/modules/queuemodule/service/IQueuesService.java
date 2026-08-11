@@ -2,7 +2,6 @@ package com.kyf.mp.javaserver.modules.queuemodule.service;
 
 import java.util.List;
 
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.AddSongToQueue;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.AddSongToQueueVO;
@@ -22,27 +21,27 @@ import com.kyf.mp.javaserver.modules.queuemodule.vo.SingleQueue;
  * @since 2026-04-05
  */
 public interface IQueuesService {
-    ResultModel<CurrentQueue> getCurrentQueue(Integer userId);
+    CurrentQueue getCurrentQueue(Integer userId);
 
-    ResultModel<MyQueues> getMyQueues(Integer userId);
+    MyQueues getMyQueues(Integer userId);
 
-    ResultModel<SingleQueue> getQueueById(Integer queueId);
+    SingleQueue getQueueById(Integer queueId);
 
-    ResultModel<DeleteQueueVO> deleteQueue(Integer userId, Integer queueId);
+    DeleteQueueVO deleteQueue(Integer userId, Integer queueId);
 
-    ResultModel<Void> clearQueue(Integer userId, Integer queueId);
+    void clearQueue(Integer userId, Integer queueId);
 
-    ResultModel<CreateQueueFromPlaylist> createQueueFromPlaylist(Integer userId, Integer playlistId);
+    CreateQueueFromPlaylist createQueueFromPlaylist(Integer userId, Integer playlistId);
 
-    ResultModel<AddSongToQueueVO> addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto);
+    AddSongToQueueVO addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto);
 
-    ResultModel<Void> removeSongFromQueue(Integer userId, Integer queueItemId);
+    void removeSongFromQueue(Integer userId, Integer queueItemId);
 
-    ResultModel<Void> updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO wrapper);
+    void updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO wrapper);
 
-    ResultModel<AlterQueueVO> alterQueueToCurrent(Integer userId, Integer queueId);
+    AlterQueueVO alterQueueToCurrent(Integer userId, Integer queueId);
 
-    ResultModel<Void> setPlayMode(Integer userId, Integer queueId, String playMode);
+    void setPlayMode(Integer userId, Integer queueId, String playMode);
 
-    ResultModel<Void> reorderQueue(Integer userId, Integer queueId, List<Integer> songIds);
+    void reorderQueue(Integer userId, Integer queueId, List<Integer> songIds);
 }

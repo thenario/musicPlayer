@@ -1,6 +1,7 @@
-package com.kyf.mp.javaserver.modules.playlistmodule.businessImp;
+package com.kyf.mp.javaserver.modules.playlistmodule.business.businessimp;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -19,7 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.common.ResultModel;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
 import com.kyf.mp.javaserver.modules.playlistmodule.business.IPlaylistsBusiness;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
@@ -62,7 +62,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<PlaylistActionVO> createPlaylist(MultipartFile file, String name, String description,
+    public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
             Integer userId) {
         File savedFile = null;
         try {
@@ -98,19 +98,24 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             data.setCoverUrl(coverUrl);
             data.setPlaylistId(playlist.getPlaylistId());
 
-            return ResultModel.success(data);
+            return data;
 
         } catch (Exception e) {
-            if (savedFile != null && savedFile.exists())
-                savedFile.delete();
-            log.error("创建歌单失败: ", e);
+            if (savedFile != null && savedFile.exists()) {
+                try {
+                    Files.delete(savedFile.toPath());
+                } catch (IOException ioe) {
+                    log.error("清理冗余文件时出错，log位置PlaylistBusinessImp的createPlaylist函数:" + ioe);
+                }
+            }
+            log.error("创建歌单失败,log位置PlaylistBusinessImp的createPlaylist函数:" + e);
             throw new BusinessException(500, "创建歌单失败: " + e.getMessage());
         }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<PlaylistActionVO> editPlaylist(MultipartFile file, Integer playlistId, String name,
+    public PlaylistActionVO editPlaylist(MultipartFile file, Integer playlistId, String name,
             String description, Integer userId) {
         File newSavedFile = null;
         try {
@@ -151,7 +156,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             PlaylistActionVO result = new PlaylistActionVO();
             result.setPlaylistId(playlistId);
             result.setCoverUrl(newFileName != null ? updateEntity.getPlaylistCoverUrl() : oldCoverUrl);
-            return ResultModel.success(result);
+            return result;
 
         } catch (BusinessException be) {
             if (newSavedFile != null && newSavedFile.exists())
@@ -166,7 +171,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<Void> deletePlaylist(Integer playlistId, Integer userId) {
+    public void deletePlaylist(Integer playlistId, Integer userId) {
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
@@ -179,11 +184,10 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         if (StringUtils.hasText(coverUrl)) {
             cleanupPlaylistCover(coverUrl);
         }
-        return ResultModel.success(null);
     }
 
     @Override
-    public ResultModel<PlaylistDetailVO> getPlaylistDetail(Integer playlistId, Integer userId) {
+    public PlaylistDetailVO getPlaylistDetail(Integer playlistId, Integer userId) {
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
@@ -222,12 +226,12 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         vo.setPlaylist(playlist);
         vo.setSongs(songVOList);
         vo.setIsLiked(isLiked);
-        return ResultModel.success(vo);
+        return vo;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<Void> toggleLike(Integer playlistId, Integer userId, boolean isLike) {
+    public void toggleLike(Integer playlistId, Integer userId, boolean isLike) {
         if (playlistId == null)
             throw new BusinessException(400, "歌单ID不能为空");
         if (userId == null)
@@ -249,12 +253,11 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
                     .eq(UsersLikeplaylistsRelation::getUserId, userId)
                     .eq(UsersLikeplaylistsRelation::getPlaylistId, playlistId));
         }
-        return ResultModel.success(null);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<AddSongToPlaylistVO> addSongToPlaylist(Integer playlistId, Integer songId) {
+    public AddSongToPlaylistVO addSongToPlaylist(Integer playlistId, Integer songId) {
         int nextPosition = songsPlaylistsRelationMapper.getMaxPosition(playlistId) + 1;
 
         SongsPlaylistsRelation relation = new SongsPlaylistsRelation();
@@ -274,12 +277,12 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
         AddSongToPlaylistVO vo = new AddSongToPlaylistVO();
         vo.setPosition(nextPosition);
-        return ResultModel.success(vo);
+        return vo;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ResultModel<Void> removeSongFromPlaylist(Integer playlistId, Integer songId) {
+    public void removeSongFromPlaylist(Integer playlistId, Integer songId) {
         SongsPlaylistsRelation target = songsPlaylistsRelationMapper.selectOne(
                 new LambdaQueryWrapper<SongsPlaylistsRelation>()
                         .eq(SongsPlaylistsRelation::getPlaylistId, playlistId)
@@ -298,7 +301,6 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         songsPlaylistsRelationMapper.update(null, updatePosWrapper);
 
         this.update().setSql("song_count = GREATEST(song_count - 1, 0)").eq("playlist_id", playlistId).update();
-        return ResultModel.success(null);
     }
 
     private void cleanupPlaylistCover(String coverUrl) {

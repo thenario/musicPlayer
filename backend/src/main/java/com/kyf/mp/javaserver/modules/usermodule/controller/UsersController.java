@@ -21,7 +21,6 @@ import lombok.RequiredArgsConstructor;
 import java.util.Map;
 
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 /**
  * <p>
@@ -41,12 +40,13 @@ public class UsersController {
 
     @PostMapping("/login")
     public ResultModel<LoginVO> login(@RequestBody Users user) {
-        return userService.login(user.getUserName(), user.getPassword());
+        return ResultModel.success(userService.login(user.getUserName(), user.getPassword()));
     }
 
     @PostMapping("/register")
     public ResultModel<String> register(@RequestBody Users user) {
-        return userService.register(user);
+        userService.register(user);
+        return ResultModel.success(null);
     }
 
     @PostMapping("/logout")
@@ -60,12 +60,12 @@ public class UsersController {
 
     @PatchMapping("/me")
     public ResultModel<EditVO> editUserProfile(EditUserDTO editData, @RequestAttribute("userId") Integer userId) {
-        return userService.editUserProfile(editData, userId);
+        return ResultModel.success(userService.editUserProfile(editData, userId));
     }
 
     @GetMapping("/users/cover")
     public ResultModel<Map<String, String>> getUserCoverUrl(@RequestAttribute("userId") Integer userId) {
-        return userService.getUserCoverUrl(userId);
+        return ResultModel.success(userService.getUserCoverUrl(userId));
     }
 
 }
