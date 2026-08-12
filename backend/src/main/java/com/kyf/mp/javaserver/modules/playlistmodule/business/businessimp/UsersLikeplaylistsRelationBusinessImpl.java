@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.playlistmodule.businessImp;
+package com.kyf.mp.javaserver.modules.playlistmodule.business.businessimp;
 
 import org.springframework.stereotype.Service;
 

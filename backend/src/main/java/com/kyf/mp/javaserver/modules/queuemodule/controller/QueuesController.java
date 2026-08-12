@@ -50,13 +50,13 @@ public class QueuesController {
 
     @GetMapping("/current")
     public ResultModel<CurrentQueue> getCurrentQueue(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId) {
         return ResultModel.success(queueService.getCurrentQueue(userId));
     }
 
     @PatchMapping("/current/state")
     public ResultModel<Void> updateCurrentQueueState(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
             @RequestBody @Valid @NotNull(message = "缺少播放状态数据") UpdateQueueStateDataDTO wrapper) {
         queueService.updateCurrentQueueState(userId, wrapper.getStateData());
         return ResultModel.success(null);
@@ -64,20 +64,20 @@ public class QueuesController {
 
     @PutMapping("/player/current-queue")
     public ResultModel<AlterQueueVO> alterQueueToCurrent(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
             @RequestBody @Valid @NotNull(message = "缺少 queue_id") AlterQueueDTO dto) {
         return ResultModel.success(queueService.alterQueueToCurrent(userId, dto.getQueueId()));
     }
 
     @GetMapping
     public ResultModel<MyQueues> getMyQueues(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId) {
         return ResultModel.success(queueService.getMyQueues(userId));
     }
 
     @PostMapping
     public ResultModel<CreateQueueFromPlaylist> createQueueFromPlaylist(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId,
             @RequestBody @Valid @NotNull(message = "歌单ID不能为空") CreateQueueFromPlaylistDTO dto) {
         return ResultModel.success(queueService.createQueueFromPlaylist(userId, dto.getPlaylistId()));
     }
@@ -90,14 +90,14 @@ public class QueuesController {
 
     @DeleteMapping("/{queueId}")
     public ResultModel<DeleteQueueVO> deleteQueue(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId,
             @PathVariable @NotNull(message = "无效的队列ID") @Min(value = 1, message = "无效的队列ID") Integer queueId) {
         return ResultModel.success(queueService.deleteQueue(userId, queueId));
     }
 
     @DeleteMapping("/{queueId}/songs")
     public ResultModel<Void> clearQueue(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Integer userId,
             @PathVariable @NotNull(message = "无效的队列ID") @Min(value = 1, message = "无效的队列ID") Integer queueId) {
         queueService.clearQueue(userId, queueId);
         return ResultModel.success(null);
@@ -105,7 +105,7 @@ public class QueuesController {
 
     @PostMapping("/{queueId}/songs")
     public ResultModel<AddSongToQueueVO> addSongToQueue(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
             @PathVariable Integer queueId,
             @RequestBody @Valid @NotNull(message = "请求体不能为空") AddSongToQueue dto) {
         Integer finalParamId = (queueId == null || queueId <= 0) ? null : queueId;
@@ -114,7 +114,7 @@ public class QueuesController {
 
     @DeleteMapping("/{queueId}/songs/{queueItemId}")
     public ResultModel<Void> removeSongFromQueue(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
             @PathVariable Integer queueId,
             @PathVariable @NotNull(message = "缺少有效的队列项ID") @Min(value = 1, message = "缺少有效的队列项ID") Integer queueItemId) {
         queueService.removeSongFromQueue(userId, queueItemId);
@@ -123,7 +123,7 @@ public class QueuesController {
 
     @PatchMapping("/{queueId}/play-mode")
     public ResultModel<Void> setPlayMode(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
             @PathVariable @NotNull(message = "缺少必要参数") @Min(value = 1, message = "缺少必要参数") Integer queueId,
             @RequestBody @Valid @NotNull(message = "缺少必要参数") SetPlayModeDTO dto) {
         queueService.setPlayMode(userId, queueId, dto.getPlayMode());
@@ -132,7 +132,7 @@ public class QueuesController {
 
     @PatchMapping("/{queueId}/reorder")
     public ResultModel<Void> reorderQueue(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Integer userId,
             @PathVariable @NotNull(message = "缺少队列ID") @Min(value = 1, message = "缺少队列ID") Integer queueId,
             @RequestBody @Valid @NotNull(message = "无效的歌曲列表") ReorderDTO dto) {
         queueService.reorderQueue(userId, queueId, dto.getSongIds());

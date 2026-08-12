@@ -44,7 +44,7 @@ public class PlaylistsController {
             @RequestParam("cover_image") @NotNull(message = "请上传歌单封面") MultipartFile file,
             @RequestParam("name") @NotBlank(message = "歌单名称不能为空") String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestAttribute("userId") @NotNull(message = "用户ID不能为空") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Integer userId) {
         return ResultModel.success(playlistsService.createPlaylist(file, name, description, userId));
     }
 
@@ -55,7 +55,7 @@ public class PlaylistsController {
             @RequestParam("playlist_id") @NotNull(message = "歌单ID不能为空") Integer playlistId,
             @RequestParam(value = "name", required = false) @NotBlank(message = "歌单名称不能为空") String name,
             @RequestParam(value = "description", required = false) String description,
-            @RequestAttribute("userId") @NotNull(message = "用户ID不能为空") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Integer userId) {
         return ResultModel.success(playlistsService.editPlaylist(file, playlistId, name, description, userId));
     }
 
@@ -63,7 +63,7 @@ public class PlaylistsController {
     @DeleteMapping("/{id}")
     public ResultModel<Void> deletePlaylist(
             @PathVariable("id") @NotNull(message = "歌单ID不能为空") Integer id,
-            @RequestAttribute("userId") @NotNull(message = "用户ID不能为空") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Integer userId) {
         playlistsService.deletePlaylist(id, userId);
         return ResultModel.success(null);
     }
@@ -71,7 +71,7 @@ public class PlaylistsController {
     // 4. 获取我的歌单列表
     @GetMapping
     public ResultModel<MyPlaylistsVO> getMyPlaylists(
-            @RequestAttribute("userId") @NotNull(message = "用户ID不能为空") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Integer userId) {
         return ResultModel.success(playlistsService.getMyPlaylists(userId));
     }
 
@@ -87,7 +87,7 @@ public class PlaylistsController {
     @PostMapping("/{id}/likes")
     public ResultModel<Void> like(
             @PathVariable("id") @NotNull(message = "参数不完整") Integer id,
-            @RequestAttribute("userId") @NotNull(message = "参数不完整") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Integer userId) {
         playlistsService.toggleLike(id, userId, true);
         return ResultModel.success(null);
     }
@@ -95,7 +95,7 @@ public class PlaylistsController {
     @DeleteMapping("/{id}/unlikes")
     public ResultModel<Void> unlike(
             @PathVariable("id") @NotNull(message = "参数不完整") Integer id,
-            @RequestAttribute("userId") @NotNull(message = "参数不完整") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Integer userId) {
         playlistsService.toggleLike(id, userId, false);
         return ResultModel.success(null);
     }

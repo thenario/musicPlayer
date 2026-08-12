@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.queuemodule.serviceImp;
+package com.kyf.mp.javaserver.modules.queuemodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 

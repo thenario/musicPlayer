@@ -69,7 +69,7 @@ public class UsersController {
 
     @GetMapping("/users/cover")
     public ResultModel<Map<String, String>> getUserCoverUrl(
-            @RequestAttribute("userId") @NotNull(message = "用户未登录") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") Integer userId) {
         return ResultModel.success(userService.getUserCoverUrl(userId));
     }
 

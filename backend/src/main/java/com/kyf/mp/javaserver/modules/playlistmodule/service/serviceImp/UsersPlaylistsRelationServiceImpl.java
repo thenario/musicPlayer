@@ -1,4 +1,4 @@
-package com.kyf.mp.javaserver.modules.playlistmodule.serviceImp;
+package com.kyf.mp.javaserver.modules.playlistmodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
