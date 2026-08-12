@@ -10,7 +10,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author kyf
@@ -23,12 +23,12 @@ public class PlayState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "user_id", type = IdType.AUTO)
-    private Integer userId;
+    @TableId(value = "user_id", type = IdType.ASSIGN_ID)
+    private Long userId;
 
-    private Integer currentQueueId;
+    private Long currentQueueId;
 
-    private Integer currentSongId;
+    private Long currentSongId;
 
     private Integer currentPosition;
 

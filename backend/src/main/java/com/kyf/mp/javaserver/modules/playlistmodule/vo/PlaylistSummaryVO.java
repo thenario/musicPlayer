@@ -7,7 +7,7 @@ import lombok.Data;
 @Data
 public class PlaylistSummaryVO {
 
-    private Integer playlistId;
+    private Long playlistId;
     private String playlistName;
     private String playlistCoverUrl;
     private Integer songCount;

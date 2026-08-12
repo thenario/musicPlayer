@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import lombok.Data; 
+import lombok.Data;
 
 @Data
 public class UploadsVO {
@@ -14,5 +14,5 @@ public class UploadsVO {
     private LocalDateTime dateAdded;
     private String songCoverUrl;
     private String songUrl;
-    private Integer songId;
+    private Long songId;
 }

@@ -8,9 +8,9 @@ import lombok.Data;
 
 @Data
 public class QueueItemVO {
-    private Integer queueItemId;
+    private Long queueItemId;
     private Integer queueItemPosition;
-    private Integer queueId;
+    private Long queueId;
     private LocalDateTime addedDate;
 
     private SongVO song;

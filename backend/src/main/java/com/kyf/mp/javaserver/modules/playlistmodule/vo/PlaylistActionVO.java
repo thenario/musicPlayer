@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class PlaylistActionVO {
-    private Integer playlistId;
+    private Long playlistId;
     private String coverUrl;
 }

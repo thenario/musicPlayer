@@ -9,7 +9,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author kyf
@@ -21,8 +21,8 @@ public class Songs implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "song_id", type = IdType.AUTO)
-    private Integer songId;
+    @TableId(value = "song_id", type = IdType.ASSIGN_ID)
+    private Long songId;
 
     private String songTitle;
 
@@ -34,7 +34,7 @@ public class Songs implements Serializable {
 
     private String fileSize;
 
-    private Integer uploaderId;
+    private Long uploaderId;
 
     private String uploaderName;
 

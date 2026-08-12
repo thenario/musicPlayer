@@ -35,23 +35,23 @@ public class PlaylistsServiceImpl implements IPlaylistsService {
 
     @Override
     public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
-            Integer userId) {
+            Long userId) {
         return playlistsBusiness.createPlaylist(file, name, description, userId);
     }
 
     @Override
-    public PlaylistActionVO editPlaylist(MultipartFile file, Integer playlistId, String name,
-            String description, Integer userId) {
+    public PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
+            String description, Long userId) {
         return playlistsBusiness.editPlaylist(file, playlistId, name, description, userId);
     }
 
     @Override
-    public void deletePlaylist(Integer playlistId, Integer userId) {
+    public void deletePlaylist(Long playlistId, Long userId) {
         playlistsBusiness.deletePlaylist(playlistId, userId);
     }
 
     @Override
-    public MyPlaylistsVO getMyPlaylists(Integer userId) {
+    public MyPlaylistsVO getMyPlaylists(Long userId) {
         if (userId == null)
             throw new BusinessException(401, "请先登录");
 
@@ -73,22 +73,22 @@ public class PlaylistsServiceImpl implements IPlaylistsService {
     }
 
     @Override
-    public PlaylistDetailVO getPlaylistDetail(Integer playlistId, Integer userId) {
+    public PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId) {
         return playlistsBusiness.getPlaylistDetail(playlistId, userId);
     }
 
     @Override
-    public void toggleLike(Integer playlistId, Integer userId, boolean isLike) {
+    public void toggleLike(Long playlistId, Long userId, boolean isLike) {
         playlistsBusiness.toggleLike(playlistId, userId, isLike);
     }
 
     @Override
-    public AddSongToPlaylistVO addSongToPlaylist(Integer playlistId, Integer songId) {
+    public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId) {
         return playlistsBusiness.addSongToPlaylist(playlistId, songId);
     }
 
     @Override
-    public void removeSongFromPlaylist(Integer playlistId, Integer songId) {
+    public void removeSongFromPlaylist(Long playlistId, Long songId) {
         playlistsBusiness.removeSongFromPlaylist(playlistId, songId);
     }
 }

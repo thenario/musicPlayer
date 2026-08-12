@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class AddSongToQueueVO {
-    private Integer queueId;
+    private Long queueId;
     private Integer queueItemPosition;
-    private Integer queueItemId;
+    private Long queueItemId;
 }

@@ -76,16 +76,16 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
         GetSongsVO vo = new GetSongsVO();
         vo.setSongs(result.getRecords());
         vo.setPagination(new GetSongsVO.PaginationVO(
-                result.getTotal(),
-                result.getPages(),
-                result.getCurrent(),
+                (int) result.getTotal(),
+                (int) result.getPages(),
+                (int) result.getCurrent(),
                 pageLimit));
 
         return vo;
     }
 
     @Override
-    public LyricsVO getLyrics(Integer songId) {
+    public LyricsVO getLyrics(Long songId) {
         Songs song = baseMapper.selectOne(
                 new LambdaQueryWrapper<Songs>()
                         .select(Songs::getLyrics, Songs::getTLyrics)
@@ -104,7 +104,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
+    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
             String title, String artist, String album, String lyrics) {
 
         File savedAudioFile = null;
@@ -201,7 +201,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void editUploadSong(EDitSongDTO dto, Integer userId, Integer songId) {
+    public void editUploadSong(EDitSongDTO dto, Long userId, Long songId) {
         Songs oldSong = baseMapper.selectById(songId);
         if (oldSong == null)
             throw new BusinessException(404, "歌曲不存在");

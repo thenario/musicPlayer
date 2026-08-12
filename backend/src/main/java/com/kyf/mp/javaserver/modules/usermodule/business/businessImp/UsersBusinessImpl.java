@@ -31,7 +31,7 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
     private String userCoverPath;
 
     @Override
-    public EditVO editUserProfile(EditUserDTO editData, Integer userId) {
+    public EditVO editUserProfile(EditUserDTO editData, Long userId) {
         Users oldUser = baseMapper.selectById(userId);
         if (oldUser == null)
             throw new BusinessException(404, "用户不存在");

@@ -23,8 +23,8 @@ public class Users implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "user_id", type = IdType.AUTO)
-    private Integer userId;
+    @TableId(value = "user_id", type = IdType.ASSIGN_ID)
+    private Long userId;
 
     @JsonProperty("user_name")
     @NotBlank(message = "用户名不能为空")

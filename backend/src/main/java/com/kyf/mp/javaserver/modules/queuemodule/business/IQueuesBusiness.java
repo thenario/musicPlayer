@@ -18,27 +18,27 @@ import com.kyf.mp.javaserver.modules.queuemodule.vo.SingleQueue;
  * 队列数据访问层：复杂数据库操作在此定义。
  */
 public interface IQueuesBusiness extends IBaseBusiness<Queues> {
-    CurrentQueue getCurrentQueue(Integer userId);
+    CurrentQueue getCurrentQueue(Long userId);
 
-    MyQueues getMyQueues(Integer userId);
+    MyQueues getMyQueues(Long userId);
 
-    SingleQueue getQueueById(Integer queueId);
+    SingleQueue getQueueById(Long queueId);
 
-    DeleteQueueVO deleteQueue(Integer userId, Integer queueId);
+    DeleteQueueVO deleteQueue(Long userId, Long queueId);
 
-    void clearQueue(Integer userId, Integer queueId);
+    void clearQueue(Long userId, Long queueId);
 
-    CreateQueueFromPlaylist createQueueFromPlaylist(Integer userId, Integer playlistId);
+    CreateQueueFromPlaylist createQueueFromPlaylist(Long userId, Long playlistId);
 
-    AddSongToQueueVO addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto);
+    AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto);
 
-    void removeSongFromQueue(Integer userId, Integer queueItemId);
+    void removeSongFromQueue(Long userId, Long queueItemId);
 
-    void updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO wrapper);
+    void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO wrapper);
 
-    AlterQueueVO alterQueueToCurrent(Integer userId, Integer queueId);
+    AlterQueueVO alterQueueToCurrent(Long userId, Long queueId);
 
-    void setPlayMode(Integer userId, Integer queueId, String playMode);
+    void setPlayMode(Long userId, Long queueId, String playMode);
 
-    void reorderQueue(Integer userId, Integer queueId, List<Integer> songIds);
+    void reorderQueue(Long userId, Long queueId, List<Long> songIds);
 }

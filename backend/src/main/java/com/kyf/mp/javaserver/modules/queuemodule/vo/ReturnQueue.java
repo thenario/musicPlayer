@@ -7,9 +7,9 @@ import lombok.Data;
 
 @Data
 public class ReturnQueue {
-    private Integer queueId;
+    private Long queueId;
     private String queueName;
-    private Integer creatorId;
+    private Long creatorId;
     private Integer songCount;
     private Boolean isCurrent;
     private LocalDateTime createdDate;

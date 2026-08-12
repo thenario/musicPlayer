@@ -51,7 +51,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     private final PlaylistsMapper playlistsMapper;
 
     @Override
-    public CurrentQueue getCurrentQueue(Integer userId) {
+    public CurrentQueue getCurrentQueue(Long userId) {
         if (userId == null) {
             throw new BusinessException(401, "用户未登录");
         }
@@ -78,7 +78,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     }
 
     @Override
-    public MyQueues getMyQueues(Integer userId) {
+    public MyQueues getMyQueues(Long userId) {
         if (userId == null)
             throw new BusinessException(401, "用户未登录");
 
@@ -91,7 +91,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     }
 
     @Override
-    public SingleQueue getQueueById(Integer queueId) {
+    public SingleQueue getQueueById(Long queueId) {
         ReturnQueue queueDetail = queueCustomMapper.selectQueueById(queueId);
 
         if (queueDetail == null) {
@@ -106,7 +106,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public DeleteQueueVO deleteQueue(Integer userId, Integer queueId) {
+    public DeleteQueueVO deleteQueue(Long userId, Long queueId) {
         if (queueId == null || userId == null) {
             throw new BusinessException(400, "参数错误");
         }
@@ -129,7 +129,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                 throw new BusinessException(500, "删除失败，队列不存在或无权限");
             }
 
-            Integer newQueueId = null;
+            Long newQueueId = null;
 
             if (isActive) {
                 Queues latestQueue = queuesMapper.selectOne(
@@ -163,7 +163,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void clearQueue(Integer userId, Integer queueId) {
+    public void clearQueue(Long userId, Long queueId) {
         if (userId == null || queueId == null) {
             log.error("clearQueue 收到空参数: userId={}, queueId={}", userId, queueId);
             throw new BusinessException(400, "参数异常，清空失败");
@@ -204,7 +204,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CreateQueueFromPlaylist createQueueFromPlaylist(Integer userId, Integer playlistId) {
+    public CreateQueueFromPlaylist createQueueFromPlaylist(Long userId, Long playlistId) {
         if (userId == null || playlistId == null || playlistId <= 0) {
             throw new BusinessException(400, "参数错误，歌单ID不能为空");
         }
@@ -215,7 +215,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                     .orderByAsc(Queues::getCreatedDate));
 
             if (existingQueues != null && existingQueues.size() >= 5) {
-                Integer oldestId = existingQueues.get(0).getQueueId();
+                Long oldestId = existingQueues.get(0).getQueueId();
                 queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>().eq(QueueItems::getQueueId, oldestId));
                 queuesMapper.deleteById(oldestId);
             }
@@ -229,7 +229,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             newQueue.setIsCurrent(true);
             newQueue.setSongCount(0);
             queuesMapper.insert(newQueue);
-            Integer newQueueId = newQueue.getQueueId();
+            Long newQueueId = newQueue.getQueueId();
 
             int insertedSongs = queueCustomMapper.copySongsFromPlaylistToQueue(newQueueId, playlistId);
 
@@ -260,12 +260,12 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AddSongToQueueVO addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto) {
-        Integer songId = dto.getSongId();
+    public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto) {
+        Long songId = dto.getSongId();
         boolean mode = dto.getMode() != null && dto.getMode();
 
         QueueContext context = ensureQueueId(userId, paramQueueId);
-        Integer finalQueueId = context.getFinalQueueId();
+        Long finalQueueId = context.getFinalQueueId();
 
         PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
                 .eq(PlayState::getUserId, userId));
@@ -318,7 +318,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         return vo;
     }
 
-    private QueueContext ensureQueueId(Integer userId, Integer qId) {
+    private QueueContext ensureQueueId(Long userId, Long qId) {
         if (qId != null && qId > 0) {
             return new QueueContext(qId, false);
         }
@@ -356,22 +356,22 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     @Data
     @AllArgsConstructor
     private static class QueueContext {
-        private Integer finalQueueId;
+        private Long finalQueueId;
         private boolean isNewQueue;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeSongFromQueue(Integer userId, Integer queueItemId) {
+    public void removeSongFromQueue(Long userId, Long queueItemId) {
         Map<String, Object> itemInfo = queueCustomMapper.selectItemDetailForDelete(queueItemId, userId);
 
         if (itemInfo == null || itemInfo.isEmpty()) {
             throw new BusinessException(404, "未找到该歌曲或无权操作");
         }
 
-        Integer queueId = (Integer) itemInfo.get("queue_id");
+        Long queueId = (Long) itemInfo.get("queue_id");
         Integer removedPos = (Integer) itemInfo.get("queue_item_position");
-        Integer removedSongId = (Integer) itemInfo.get("song_id");
+        Long removedSongId = (Long) itemInfo.get("song_id");
 
         queueItemsMapper.deleteById(queueItemId);
         queueCustomMapper.shiftPositionsDown(queueId, removedPos);
@@ -386,7 +386,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                     .eq(QueueItems::getQueueItemPosition, removedPos)
                     .last("LIMIT 1"));
 
-            Integer nextSongId = (nextItem != null) ? nextItem.getSongId() : null;
+            Long nextSongId = (nextItem != null) ? nextItem.getSongId() : null;
 
             playState.setCurrentSongId(nextSongId);
             playState.setCurrentProgress(0);
@@ -397,7 +397,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO dto) {
+    public void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO dto) {
 
         Integer finalPosition = dto.getCurrentPosition();
 
@@ -439,7 +439,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AlterQueueVO alterQueueToCurrent(Integer userId, Integer queueId) {
+    public AlterQueueVO alterQueueToCurrent(Long userId, Long queueId) {
         Queues queue = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
                 .eq(Queues::getQueueId, queueId)
                 .eq(Queues::getCreatorId, userId));
@@ -453,7 +453,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                 .eq(QueueItems::getQueueItemPosition, 1)
                 .last("LIMIT 1"));
 
-        Integer firstSongId = (firstItem != null) ? firstItem.getSongId() : null;
+        Long firstSongId = (firstItem != null) ? firstItem.getSongId() : null;
 
         PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
                 .eq(PlayState::getUserId, userId));
@@ -475,7 +475,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         return vo;
     }
 
-    private void fillPlayState(PlayState ps, Integer queueId, Integer songId) {
+    private void fillPlayState(PlayState ps, Long queueId, Long songId) {
         ps.setCurrentQueueId(queueId);
         ps.setCurrentSongId(songId);
         ps.setCurrentPosition(1);
@@ -485,7 +485,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void setPlayMode(Integer userId, Integer queueId, String playMode) {
+    public void setPlayMode(Long userId, Long queueId, String playMode) {
         Queues queue = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
                 .eq(Queues::getQueueId, queueId)
                 .eq(Queues::getCreatorId, userId));
@@ -515,7 +515,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reorderQueue(Integer userId, Integer queueId, List<Integer> songIds) {
+    public void reorderQueue(Long userId, Long queueId, List<Long> songIds) {
         Queues queue = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
                 .eq(Queues::getQueueId, queueId)
                 .eq(Queues::getCreatorId, userId));

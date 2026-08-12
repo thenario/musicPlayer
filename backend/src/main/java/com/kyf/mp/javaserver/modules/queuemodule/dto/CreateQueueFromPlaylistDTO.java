@@ -11,5 +11,5 @@ public class CreateQueueFromPlaylistDTO {
     @JsonProperty("playlist_id")
     @NotNull(message = "歌单ID不能为空")
     @Min(value = 1, message = "歌单ID必须合法")
-    private Integer playlistId;
+    private Long playlistId;
 }

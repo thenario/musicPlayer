@@ -12,5 +12,4 @@ import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
  * @since 2026-04-05
  */
 public interface PlaylistsMapper extends BaseMapper<Playlists> {
-    int insertAndGetId(Playlists playlist);
 }

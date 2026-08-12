@@ -11,7 +11,7 @@ public class AddSongToQueue {
     @JsonProperty("song_id")
     @NotNull(message = "歌曲ID不能为空")
     @Min(value = 1, message = "歌曲ID必须合法")
-    private Integer songId;
+    private Long songId;
     @JsonProperty("mode")
     private Boolean mode;
 }

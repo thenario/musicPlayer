@@ -7,7 +7,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author kyf
@@ -20,7 +20,7 @@ public class UsersLikeplaylistsRelation implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    private Integer userId;
+    private Long userId;
 
-    private Integer playlistId;
+    private Long playlistId;
 }

@@ -33,62 +33,62 @@ public class QueuesServiceImpl implements IQueuesService {
     private final IQueuesBusiness queuesBusiness;
 
     @Override
-    public CurrentQueue getCurrentQueue(Integer userId) {
+    public CurrentQueue getCurrentQueue(Long userId) {
         return queuesBusiness.getCurrentQueue(userId);
     }
 
     @Override
-    public MyQueues getMyQueues(Integer userId) {
+    public MyQueues getMyQueues(Long userId) {
         return queuesBusiness.getMyQueues(userId);
     }
 
     @Override
-    public SingleQueue getQueueById(Integer queueId) {
+    public SingleQueue getQueueById(Long queueId) {
         return queuesBusiness.getQueueById(queueId);
     }
 
     @Override
-    public DeleteQueueVO deleteQueue(Integer userId, Integer queueId) {
+    public DeleteQueueVO deleteQueue(Long userId, Long queueId) {
         return queuesBusiness.deleteQueue(userId, queueId);
     }
 
     @Override
-    public void clearQueue(Integer userId, Integer queueId) {
+    public void clearQueue(Long userId, Long queueId) {
         queuesBusiness.clearQueue(userId, queueId);
     }
 
     @Override
-    public CreateQueueFromPlaylist createQueueFromPlaylist(Integer userId, Integer playlistId) {
+    public CreateQueueFromPlaylist createQueueFromPlaylist(Long userId, Long playlistId) {
         return queuesBusiness.createQueueFromPlaylist(userId, playlistId);
     }
 
     @Override
-    public AddSongToQueueVO addSongToQueue(Integer userId, Integer paramQueueId, AddSongToQueue dto) {
+    public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto) {
         return queuesBusiness.addSongToQueue(userId, paramQueueId, dto);
     }
 
     @Override
-    public void removeSongFromQueue(Integer userId, Integer queueItemId) {
+    public void removeSongFromQueue(Long userId, Long queueItemId) {
         queuesBusiness.removeSongFromQueue(userId, queueItemId);
     }
 
     @Override
-    public void updateCurrentQueueState(Integer userId, UpdateCurrentQueueStateDTO wrapper) {
+    public void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO wrapper) {
         queuesBusiness.updateCurrentQueueState(userId, wrapper);
     }
 
     @Override
-    public AlterQueueVO alterQueueToCurrent(Integer userId, Integer queueId) {
+    public AlterQueueVO alterQueueToCurrent(Long userId, Long queueId) {
         return queuesBusiness.alterQueueToCurrent(userId, queueId);
     }
 
     @Override
-    public void setPlayMode(Integer userId, Integer queueId, String playMode) {
+    public void setPlayMode(Long userId, Long queueId, String playMode) {
         queuesBusiness.setPlayMode(userId, queueId, playMode);
     }
 
     @Override
-    public void reorderQueue(Integer userId, Integer queueId, List<Integer> songIds) {
+    public void reorderQueue(Long userId, Long queueId, List<Long> songIds) {
         queuesBusiness.reorderQueue(userId, queueId, songIds);
     }
 }

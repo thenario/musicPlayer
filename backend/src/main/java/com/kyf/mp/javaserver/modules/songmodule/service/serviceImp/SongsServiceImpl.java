@@ -37,18 +37,18 @@ public class SongsServiceImpl implements ISongsService {
     }
 
     @Override
-    public LyricsVO getLyrics(Integer songId) {
+    public LyricsVO getLyrics(Long songId) {
         return songsBusiness.getLyrics(songId);
     }
 
     @Override
-    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
+    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
             String title, String artist, String album, String lyrics) {
         songsBusiness.uploadSong(audioFile, coverFile, uploaderId, title, artist, album, lyrics);
     }
 
     @Override
-    public IPage<UploadsVO> getUploadSongs(Integer userId, Integer page, Integer size) {
+    public IPage<UploadsVO> getUploadSongs(Long userId, Integer page, Integer size) {
         // 简单查询：直接用 business 的基础 CRUD
         Page<Songs> songPage = new Page<>(page, size);
         LambdaQueryWrapper<Songs> wrapper = new LambdaQueryWrapper<Songs>()
@@ -65,7 +65,7 @@ public class SongsServiceImpl implements ISongsService {
     }
 
     @Override
-    public void editUploadSong(EDitSongDTO dto, Integer userId, Integer songID) {
+    public void editUploadSong(EDitSongDTO dto, Long userId, Long songID) {
         songsBusiness.editUploadSong(dto, userId, songID);
     }
 }

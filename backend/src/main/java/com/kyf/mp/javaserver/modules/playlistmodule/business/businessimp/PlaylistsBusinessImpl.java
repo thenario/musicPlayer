@@ -63,7 +63,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     @Override
     @Transactional(rollbackFor = Exception.class)
     public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
-            Integer userId) {
+            Long userId) {
         File savedFile = null;
         try {
             String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
@@ -115,8 +115,8 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public PlaylistActionVO editPlaylist(MultipartFile file, Integer playlistId, String name,
-            String description, Integer userId) {
+    public PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
+            String description, Long userId) {
         File newSavedFile = null;
         try {
             Playlists oldPlaylist = baseMapper.selectById(playlistId);
@@ -171,7 +171,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void deletePlaylist(Integer playlistId, Integer userId) {
+    public void deletePlaylist(Long playlistId, Long userId) {
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
@@ -187,7 +187,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     }
 
     @Override
-    public PlaylistDetailVO getPlaylistDetail(Integer playlistId, Integer userId) {
+    public PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId) {
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
@@ -198,11 +198,11 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
         List<PlaylistSongVO> songVOList = new ArrayList<>();
         if (!relations.isEmpty()) {
-            List<Integer> songIds = relations.stream().map(SongsPlaylistsRelation::getSongId)
+            List<Long> songIds = relations.stream().map(SongsPlaylistsRelation::getSongId)
                     .collect(Collectors.toList());
             List<Songs> songEntities = songsMapper
                     .selectList(new LambdaQueryWrapper<Songs>().in(Songs::getSongId, songIds));
-            Map<Integer, Songs> songMap = songEntities.stream().collect(Collectors.toMap(Songs::getSongId, s -> s));
+            Map<Long, Songs> songMap = songEntities.stream().collect(Collectors.toMap(Songs::getSongId, s -> s));
 
             for (SongsPlaylistsRelation rel : relations) {
                 Songs s = songMap.get(rel.getSongId());
@@ -231,7 +231,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void toggleLike(Integer playlistId, Integer userId, boolean isLike) {
+    public void toggleLike(Long playlistId, Long userId, boolean isLike) {
         if (playlistId == null)
             throw new BusinessException(400, "歌单ID不能为空");
         if (userId == null)
@@ -257,7 +257,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AddSongToPlaylistVO addSongToPlaylist(Integer playlistId, Integer songId) {
+    public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId) {
         int nextPosition = songsPlaylistsRelationMapper.getMaxPosition(playlistId) + 1;
 
         SongsPlaylistsRelation relation = new SongsPlaylistsRelation();
@@ -282,7 +282,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeSongFromPlaylist(Integer playlistId, Integer songId) {
+    public void removeSongFromPlaylist(Long playlistId, Long songId) {
         SongsPlaylistsRelation target = songsPlaylistsRelationMapper.selectOne(
                 new LambdaQueryWrapper<SongsPlaylistsRelation>()
                         .eq(SongsPlaylistsRelation::getPlaylistId, playlistId)

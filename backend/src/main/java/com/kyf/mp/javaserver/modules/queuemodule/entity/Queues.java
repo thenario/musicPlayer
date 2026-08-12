@@ -9,7 +9,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author kyf
@@ -21,12 +21,12 @@ public class Queues implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "queue_id", type = IdType.AUTO)
-    private Integer queueId;
+    @TableId(value = "queue_id", type = IdType.ASSIGN_ID)
+    private Long queueId;
 
     private String queueName;
 
-    private Integer creatorId;
+    private Long creatorId;
 
     private Integer songCount;
 

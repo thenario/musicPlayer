@@ -63,13 +63,13 @@ public class UsersController {
     }
 
     @PatchMapping("/me")
-    public ResultModel<EditVO> editUserProfile(EditUserDTO editData, @RequestAttribute("userId") Integer userId) {
+    public ResultModel<EditVO> editUserProfile(EditUserDTO editData, @RequestAttribute("userId") Long userId) {
         return ResultModel.success(userService.editUserProfile(editData, userId));
     }
 
     @GetMapping("/users/cover")
     public ResultModel<Map<String, String>> getUserCoverUrl(
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") Integer userId) {
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") Long userId) {
         return ResultModel.success(userService.getUserCoverUrl(userId));
     }
 

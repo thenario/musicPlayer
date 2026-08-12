@@ -15,5 +15,5 @@ import com.kyf.mp.javaserver.modules.playlistmodule.entity.SongsPlaylistsRelatio
  */
 public interface SongsPlaylistsRelationMapper extends BaseMapper<SongsPlaylistsRelation> {
     @Select("SELECT IFNULL(MAX(song_playlist_position), 0) FROM songs_playlists_relation WHERE playlist_id = #{playlistId}")
-    Integer getMaxPosition(Integer playlistId);
+    Integer getMaxPosition(Long playlistId);
 }

@@ -4,7 +4,7 @@ import lombok.Data;
 
 @Data
 public class SongVO {
-    private Integer songId;
+    private Long songId;
     private String songTitle;
     private String songCoverUrl;
     private String songUrl;

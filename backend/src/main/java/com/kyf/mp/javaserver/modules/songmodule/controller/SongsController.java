@@ -50,7 +50,7 @@ public class SongsController {
 
     @GetMapping("/{song_id}/lyrics")
     public ResultModel<LyricsVO> getLyrics(
-            @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Integer songId) {
+            @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Long songId) {
         return ResultModel.success(songsService.getLyrics(songId));
     }
 
@@ -59,7 +59,7 @@ public class SongsController {
     public ResultModel<Void> upload(
             @RequestParam("audiofile") @NotNull(message = "请上传完整信息(包含封面与音频文件)") MultipartFile audioFile,
             @RequestParam("coverfile") @NotNull(message = "请上传完整信息(包含封面与音频文件)") MultipartFile coverFile,
-            @RequestParam("uploader_id") @NotNull(message = "请上传完整信息(包含封面与音频文件)") Integer uploaderId,
+            @RequestParam("uploader_id") @NotNull(message = "请上传完整信息(包含封面与音频文件)") Long uploaderId,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String artist,
             @RequestParam(required = false) String album,
@@ -69,15 +69,15 @@ public class SongsController {
     }
 
     @GetMapping("/my-uploads")
-    public ResultModel<IPage<UploadsVO>> getUploadSongs(@RequestAttribute("userId") Integer userId,
+    public ResultModel<IPage<UploadsVO>> getUploadSongs(@RequestAttribute("userId") Long userId,
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "请输入正确页码") Integer page,
             @RequestParam(defaultValue = "10") @Min(value = 1, message = "每页条数不正确") @Max(value = 100, message = "每页条数过大") Integer size) {
         return ResultModel.success(songsService.getUploadSongs(userId, page, size));
     }
 
     @PatchMapping("/my-uploads/{song_id}")
-    public ResultModel<Void> editUploadSong(EDitSongDTO dto, @RequestAttribute("userId") Integer userId,
-            @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Integer songId) {
+    public ResultModel<Void> editUploadSong(EDitSongDTO dto, @RequestAttribute("userId") Long userId,
+            @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Long songId) {
         songsService.editUploadSong(dto, userId, songId);
         return ResultModel.success(null);
     }

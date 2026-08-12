@@ -86,7 +86,7 @@ public class UsersServiceImpl implements IUsersService {
     }
 
     @Override
-    public Map<String, String> getUserCoverUrl(Integer userId) {
+    public Map<String, String> getUserCoverUrl(Long userId) {
         Users user = usersBusiness.getById(userId);
         if (user == null) {
             throw new BusinessException(404, "用户不存在");
@@ -105,7 +105,7 @@ public class UsersServiceImpl implements IUsersService {
     }
 
     @Override
-    public EditVO editUserProfile(EditUserDTO editData, Integer userId) {
+    public EditVO editUserProfile(EditUserDTO editData, Long userId) {
         return usersBusiness.editUserProfile(editData, userId);
     }
 }

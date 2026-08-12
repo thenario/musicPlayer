@@ -74,7 +74,7 @@ public class SongScannerTask {
                     .collect(Collectors.toSet());
 
             // 3. 找出需要删除的记录：数据库里有，但是本地 URL 集合里没有
-            List<Integer> idsToDelete = dbSongs.stream()
+            List<Long> idsToDelete = dbSongs.stream()
                     .filter(s -> !localUrls.contains(s.getSongUrl()))
                     .map(Songs::getSongId)
                     .collect(Collectors.toList());
@@ -125,7 +125,7 @@ public class SongScannerTask {
             // 快速指纹：文件名+大小的哈希，代替全量MD5，速度极快
             song.setFileMd5(java.util.Objects.hash(file.getName(), file.length()) + "");
 
-            song.setUploaderId(1);
+            song.setUploaderId(1L);
             song.setUploaderName("SystemScanner");
 
             String title = (tag != null) ? tag.getFirst(FieldKey.TITLE) : "";

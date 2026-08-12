@@ -15,25 +15,25 @@ public interface QueueCustomMapper {
     /**
      * 根据用户ID查询当前播放状态、队列信息及歌曲列表
      */
-    List<CurrentQueue> selectCurrentQueueDetail(@Param("userId") Integer userId);
+    List<CurrentQueue> selectCurrentQueueDetail(@Param("userId") Long userId);
 
-    List<ReturnQueue> selectMyQueues(@Param("userId") Integer userId);
+    List<ReturnQueue> selectMyQueues(@Param("userId") Long userId);
 
-    ReturnQueue selectQueueById(@Param("queueId") Integer queueId);
+    ReturnQueue selectQueueById(@Param("queueId") Long queueId);
 
-    int copySongsFromPlaylistToQueue(@Param("queueId") Integer queueId, @Param("playlistId") Integer playlistId);
+    int copySongsFromPlaylistToQueue(@Param("queueId") Long queueId, @Param("playlistId") Long playlistId);
 
-    void shiftItemPositions(@Param("queueId") Integer queueId, @Param("pos") int pos);
+    void shiftItemPositions(@Param("queueId") Long queueId, @Param("pos") int pos);
 
-    void incrementSongCount(@Param("queueId") Integer queueId);
+    void incrementSongCount(@Param("queueId") Long queueId);
 
-    void decrementSongCount(@Param("queueId") Integer queueId);
+    void decrementSongCount(@Param("queueId") Long queueId);
 
-    void shiftPositionsDown(@Param("queueId") Integer queueId, @Param("pos") Integer pos);
+    void shiftPositionsDown(@Param("queueId") Long queueId, @Param("pos") Integer pos);
 
-    Map<String, Object> selectItemDetailForDelete(@Param("itemId") Integer itemId, @Param("userId") Integer userId);
+    Map<String, Object> selectItemDetailForDelete(@Param("itemId") Long itemId, @Param("userId") Long userId);
 
-    void batchUpdatePositions(@Param("queueId") Integer queueId, @Param("songIds") List<Integer> songIds);
+    void batchUpdatePositions(@Param("queueId") Long queueId, @Param("songIds") List<Long> songIds);
 
-    void syncPlayStatePosition(@Param("userId") Integer userId, @Param("queueId") Integer queueId);
+    void syncPlayStatePosition(@Param("userId") Long userId, @Param("queueId") Long queueId);
 }

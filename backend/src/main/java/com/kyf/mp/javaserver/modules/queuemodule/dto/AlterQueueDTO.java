@@ -9,5 +9,5 @@ import lombok.Data;
 public class AlterQueueDTO {
     @JsonProperty("queue_id")
     @NotNull(message = "缺少 queue_id")
-    private Integer queueId;
+    private Long queueId;
 }

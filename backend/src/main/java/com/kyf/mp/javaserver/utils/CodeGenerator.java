@@ -20,10 +20,11 @@ public class CodeGenerator {
                 .strategyConfig(builder -> {
                     builder.addInclude("play_state", "playlists", "queue_items", "queues", "songs",
                             "songs_playlists_relation", "users", "users_likeplaylists_relation",
-                            "users_playlists_relation") // 填入你需要生成的表名，多个用逗号隔开
+                            "users_playlists_relation", "tags", "songs_tags_relation", "comments",
+                            "play_history") // 填入你需要生成的表名，多个用逗号隔开
                             .entityBuilder()
                             .enableLombok() // 开启 Lombok 模式，省去 Getter/Setter
-                            .idType(IdType.AUTO); // 主键自增
+                            .idType(IdType.ASSIGN_ID); // 雪花ID，应用层分配
                 })
                 .execute();
     }

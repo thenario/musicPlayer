@@ -5,5 +5,5 @@ import lombok.Data;
 @Data
 public class CreateQueueFromPlaylist {
     private Integer songCount;
-    private Integer queueId;
+    private Long queueId;
 }

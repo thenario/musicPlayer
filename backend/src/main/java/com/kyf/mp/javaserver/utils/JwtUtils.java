@@ -20,7 +20,7 @@ public class JwtUtils {
     public void setExpire(long expire) { JwtUtils.EXPIRE = expire; }
     private JwtUtils() { }
 
-    public static String createToken(Integer userId, String username) {
+    public static String createToken(Long userId, String username) {
         return Jwts.builder().header().type("JWT").and().subject("music-user")
                 .claim("user_id", userId).claim("user_name", username)
                 .expiration(new Date(System.currentTimeMillis() + EXPIRE)).signWith(signingKey()).compact();

@@ -9,7 +9,7 @@ import lombok.Setter;
 
 /**
  * <p>
- * 
+ *
  * </p>
  *
  * @author kyf
@@ -21,12 +21,12 @@ public class Playlists implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "playlist_id", type = IdType.AUTO)
-    private Integer playlistId;
+    @TableId(value = "playlist_id", type = IdType.ASSIGN_ID)
+    private Long playlistId;
 
     private String playlistName;
 
-    private Integer creatorId;
+    private Long creatorId;
 
     private LocalDateTime createdDate;
 

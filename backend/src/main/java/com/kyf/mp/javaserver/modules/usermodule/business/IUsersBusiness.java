@@ -9,5 +9,5 @@ import com.kyf.mp.javaserver.modules.usermodule.vo.EditVO;
  * 用户数据访问层：复杂数据库操作在此定义。
  */
 public interface IUsersBusiness extends IBaseBusiness<Users> {
-    EditVO editUserProfile(EditUserDTO editData, Integer userId);
+    EditVO editUserProfile(EditUserDTO editData, Long userId);
 }

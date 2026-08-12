@@ -13,18 +13,18 @@ import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistDetailVO;
  */
 public interface IPlaylistsBusiness extends IBaseBusiness<Playlists> {
     PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
-            Integer userId);
+            Long userId);
 
-    PlaylistActionVO editPlaylist(MultipartFile file, Integer playlistId, String name,
-            String description, Integer userId);
+    PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
+            String description, Long userId);
 
-    void deletePlaylist(Integer playlistId, Integer userId);
+    void deletePlaylist(Long playlistId, Long userId);
 
-    PlaylistDetailVO getPlaylistDetail(Integer playlistId, Integer userId);
+    PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId);
 
-    void toggleLike(Integer playlistId, Integer userId, boolean isLike);
+    void toggleLike(Long playlistId, Long userId, boolean isLike);
 
-    AddSongToPlaylistVO addSongToPlaylist(Integer playlistId, Integer songId);
+    AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId);
 
-    void removeSongFromPlaylist(Integer playlistId, Integer songId);
+    void removeSongFromPlaylist(Long playlistId, Long songId);
 }

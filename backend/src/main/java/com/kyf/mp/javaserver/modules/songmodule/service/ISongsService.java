@@ -19,12 +19,12 @@ import com.kyf.mp.javaserver.modules.songmodule.vo.UploadsVO;
 public interface ISongsService {
     GetSongsVO getSongsPage(Integer page, String keyword);
 
-    LyricsVO getLyrics(Integer songId);
+    LyricsVO getLyrics(Long songId);
 
-    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Integer uploaderId,
+    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
             String title, String artist, String album, String lyrics);
 
-    IPage<UploadsVO> getUploadSongs(Integer userId, Integer page, Integer size);
+    IPage<UploadsVO> getUploadSongs(Long userId, Integer page, Integer size);
 
-    void editUploadSong(EDitSongDTO dto, Integer userId, Integer songID);
+    void editUploadSong(EDitSongDTO dto, Long userId, Long songID);
 }

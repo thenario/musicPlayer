@@ -20,7 +20,7 @@ public interface IUsersService {
 
     void register(Users user);
 
-    EditVO editUserProfile(EditUserDTO editData, Integer userId);
+    EditVO editUserProfile(EditUserDTO editData, Long userId);
 
-    Map<String, String> getUserCoverUrl(Integer userId);
+    Map<String, String> getUserCoverUrl(Long userId);
 }

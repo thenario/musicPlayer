@@ -9,10 +9,10 @@ import lombok.Data;
 public class UpdateCurrentQueueStateDTO {
     @JsonProperty("current_queue_id")
     @NotNull(message = "缺少队列ID")
-    private Integer currentQueueId;
+    private Long currentQueueId;
 
     @JsonProperty("current_song_id")
-    private Integer currentSongId;
+    private Long currentSongId;
 
     @JsonProperty("current_position")
     private Integer currentPosition;

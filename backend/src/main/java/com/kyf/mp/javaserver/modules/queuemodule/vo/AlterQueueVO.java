@@ -4,6 +4,6 @@ import lombok.Data;
 
 @Data
 public class AlterQueueVO {
-    private Integer currentSongId;
+    private Long currentSongId;
     private Integer currentPosition;
 }

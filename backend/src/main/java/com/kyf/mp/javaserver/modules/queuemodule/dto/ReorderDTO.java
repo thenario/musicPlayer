@@ -11,5 +11,5 @@ import lombok.Data;
 public class ReorderDTO {
     @JsonProperty("song_ids")
     @NotEmpty(message = "无效的歌曲列表")
-    private List<Integer> songIds;
+    private List<Long> songIds;
 }
