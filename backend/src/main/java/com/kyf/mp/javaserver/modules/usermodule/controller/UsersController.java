@@ -1,5 +1,6 @@
 package com.kyf.mp.javaserver.modules.usermodule.controller;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
@@ -16,6 +17,8 @@ import com.kyf.mp.javaserver.modules.usermodule.vo.LoginVO;
 import com.kyf.mp.javaserver.modules.usermodule.entity.Users;
 import com.kyf.mp.javaserver.modules.usermodule.service.IUsersService;
 
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
@@ -30,6 +33,7 @@ import org.springframework.web.bind.annotation.GetMapping;
  * @author kyf
  * @since 2026-04-05
  */
+@Validated
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -39,12 +43,12 @@ public class UsersController {
     private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
-    public ResultModel<LoginVO> login(@RequestBody Users user) {
+    public ResultModel<LoginVO> login(@RequestBody @Valid Users user) {
         return ResultModel.success(userService.login(user.getUserName(), user.getPassword()));
     }
 
     @PostMapping("/register")
-    public ResultModel<String> register(@RequestBody Users user) {
+    public ResultModel<String> register(@RequestBody @Valid Users user) {
         userService.register(user);
         return ResultModel.success(null);
     }
@@ -64,7 +68,8 @@ public class UsersController {
     }
 
     @GetMapping("/users/cover")
-    public ResultModel<Map<String, String>> getUserCoverUrl(@RequestAttribute("userId") Integer userId) {
+    public ResultModel<Map<String, String>> getUserCoverUrl(
+            @RequestAttribute("userId") @NotNull(message = "用户未登录") Integer userId) {
         return ResultModel.success(userService.getUserCoverUrl(userId));
     }
 

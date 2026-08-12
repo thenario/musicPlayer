@@ -2,11 +2,13 @@ package com.kyf.mp.javaserver.modules.queuemodule.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
 public class UpdateCurrentQueueStateDTO {
     @JsonProperty("current_queue_id")
+    @NotNull(message = "缺少队列ID")
     private Integer currentQueueId;
 
     @JsonProperty("current_song_id")
