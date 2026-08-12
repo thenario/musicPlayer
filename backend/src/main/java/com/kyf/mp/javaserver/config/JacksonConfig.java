@@ -6,11 +6,7 @@ import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilde
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-/**
- * 全局 JSON 序列化：Long / long 输出为字符串。
- * 雪花 ID（约 2×10^18）超过 JS number 的 2^53 精度，必须序列化为字符串，
- * 否则前端在 JSON.parse 时丢失精度、查不到数据。
- */
+
 @Configuration
 public class JacksonConfig {
 
