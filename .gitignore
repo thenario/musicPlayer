@@ -55,3 +55,4 @@ mysql/data/
 # ===== 日志 =====
 *.log
 npm-debug.log*
+data/
