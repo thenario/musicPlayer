@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { IQueue, IQueueItem, IQueueState, ISong } from '@/types'
 import { queueApi } from '@/api/queueApi'
-import { getImageUrl } from '@/utils/format'
+import { getImageUrl, sameId } from '@/utils/format'
 import { createAudioEngine } from '@/composables/player/useAudioEngine'
 import { createLyricsLoader } from '@/composables/player/useLyricsLoader'
 import { createQueueMutations } from '@/composables/player/useQueueMutations'
@@ -19,7 +19,7 @@ export const usePlayerStore = defineStore('player', () => {
   const volume = ref<number>(80)
 
   const currentQueue = ref<IQueueItem[]>([])
-  const currentQueueId = ref<number | null>(null)
+  const currentQueueId = ref<number | string | null>(null)
   const userQueues = ref<IQueue[]>([])
   const currentIndex = ref<number>(-1)
   const playMode = ref<string>('sequential')
@@ -240,7 +240,7 @@ export const usePlayerStore = defineStore('player', () => {
 
     if (!state.current_song_id) return
 
-    const idx = currentQueue.value.findIndex((i) => i.song.song_id === state.current_song_id)
+    const idx = currentQueue.value.findIndex((i) => sameId(i.song.song_id, state.current_song_id))
     if (idx === -1) return
 
     currentIndex.value = idx
@@ -251,7 +251,7 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const prepareAudioSource = (songId: number, savedProgress: number) => {
+  const prepareAudioSource = (songId: number | string, savedProgress: number) => {
     const el = audioElement.value!
 
     el.src = currentSong.value!.song_url
@@ -294,7 +294,7 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const fetchQueueDetails = async (queueId: number) => {
+  const fetchQueueDetails = async (queueId: number | string) => {
     try {
       const res = await queueApi.getQueueById(queueId)
       return {
@@ -310,9 +310,9 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const playSongInQueue = async (queueId: number, index: number) => {
+  const playSongInQueue = async (queueId: number | string, index: number) => {
     try {
-      if (currentQueueId.value !== queueId) {
+      if (!sameId(currentQueueId.value, queueId)) {
         await switchQueue(queueId)
       }
       playAtIndex(index)
@@ -323,7 +323,7 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const switchQueue = async (queueId: number) => {
+  const switchQueue = async (queueId: number | string) => {
     try {
       await queueApi.alterQueueToCurrent(queueId)
       currentQueueId.value = queueId
@@ -336,7 +336,7 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const deleteQueue = async (queueId: number) => {
+  const deleteQueue = async (queueId: number | string) => {
     try {
       const res = await queueApi.deleteQueue(queueId)
       const { new_queue_id, was_active } = res.data
@@ -359,10 +359,10 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const clearQueue = async (queueId: number) => {
+  const clearQueue = async (queueId: number | string) => {
     try {
       await queueApi.clearQueue(queueId)
-      if (currentQueueId.value === queueId) {
+      if (sameId(currentQueueId.value, queueId)) {
         currentQueue.value = []
         currentSong.value = null
         currentIndex.value = -1
@@ -377,14 +377,14 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const playPlaylist = async (playlistId: number, startSongId = null) => {
+  const playPlaylist = async (playlistId: number | string, startSongId: number | string | null = null) => {
     try {
       await queueApi.createQueueFromPlaylist(playlistId)
       await fetchCurrentQueue()
       await fetchUserQueues()
       let startIndex = 0
       if (startSongId) {
-        const foundIndex = currentQueue.value.findIndex((item) => item.song.song_id === startSongId)
+        const foundIndex = currentQueue.value.findIndex((item) => sameId(item.song.song_id, startSongId))
         if (foundIndex !== -1) startIndex = foundIndex
       }
       if (currentQueue.value.length > 0) {
@@ -398,7 +398,7 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   const playSong = async (song: ISong, mode: 'now' | 'next') => {
-    if (mode === 'now' && currentSong.value?.song_id === song.song_id) {
+    if (mode === 'now' && sameId(currentSong.value?.song_id, song.song_id)) {
       togglePlay()
       return { success: true }
     }

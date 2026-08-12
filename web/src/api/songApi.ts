@@ -32,7 +32,7 @@ const uploadSong = async (
 }
 
 //获取歌词
-const getLyrics = async (songId: number) => {
+const getLyrics = async (songId: number | string) => {
   const res = await request.get<any, any>(`/songs/${songId}/lyrics`, { silent: true })
 
   return {
@@ -55,12 +55,12 @@ const getUserUploadSongs = async (page: number, size: number) => {
     success: res.success,
     songs: res.data.records,
     message: res.message,
-    total: res.data.total,
+    total: Number(res.data.total),
   }
 }
 
 //编辑上传的歌曲的信息
-const editUserUploadSongs = async (formdata: FormData, song_id: number) => {
+const editUserUploadSongs = async (formdata: FormData, song_id: number | string) => {
   const res = await request.patch<any, any>(`/songs/my-uploads/${song_id}`, formdata)
 
   return { success: res.success, message: res.message }

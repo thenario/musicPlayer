@@ -11,14 +11,14 @@ export interface IError {
 }
 
 export interface IUser {
-  user_id: number
+  user_id: number | string
   user_email: string
   user_name: string
   user_cover?: string
 }
 
 export interface ISong {
-  song_id: number
+  song_id: number | string
   song_title: string
   song_url: string
   artist: string
@@ -31,7 +31,7 @@ export interface ISong {
   play_count: number
   date_added: Date
   last_played: Date
-  uploader_id: number
+  uploader_id: number | string
   uploader_name: string
   song_cover_url: string
   lyrics: string
@@ -45,8 +45,8 @@ export interface IPagination {
 }
 
 export interface IPlaylist {
-  playlist_id: number
-  creator_id: number
+  playlist_id: number | string
+  creator_id: number | string
   playlist_name: string
   playlist_cover_url: string
   song_count: number
@@ -61,13 +61,13 @@ export interface IPlaylist {
 export interface IQueueItem {
   queue_item_id: number | string
   queue_item_position: number
-  queue_id: number
+  queue_id: number | string
   song: ISong
   added_date: Date
 }
 
 export interface IQueue {
-  queue_id: number
+  queue_id: number | string
   queue_name: string
   song_count: number
   is_current: boolean
@@ -77,8 +77,8 @@ export interface IQueue {
 }
 
 export interface IQueueState {
-  current_queue_id: number
-  current_song_id: number
+  current_queue_id: number | string
+  current_song_id: number | string
   current_position: number
   is_playing: boolean
   updated_date: Date
@@ -143,7 +143,7 @@ export interface IGetPlaylistById {
 export interface ICreatePlaylist {
   message: string
   success: boolean
-  playlist_id: number
+  playlist_id: number | string
 }
 export interface IDeletePlaylist {
   message: string
@@ -199,8 +199,8 @@ export interface IClearQueue {
 export interface IAddSongToQueue {
   message: string
   success: boolean
-  queue_id: number
-  song_id: number
+  queue_id: number | string
+  song_id: number | string
   song_position: number
   action: string
   queue_item: IQueueItem
@@ -217,7 +217,7 @@ export interface IReorderQueue {
 export interface ICreatQueueFromPlaylist {
   message: string
   success: boolean
-  queue_id: number
+  queue_id: number | string
   song_count: number
 }
 export interface IUpdateCurrentQueueState {

@@ -7,10 +7,10 @@
       <template #default="{ row }">
         <div class="playlist-song-table__title-wrap">
           <span class="playlist-song-table__title"
-            :class="{ 'is-current': currentSongId === row.song_id }">
+            :class="{ 'is-current': sameId(currentSongId, row.song_id) }">
             {{ row.song_title }}
           </span>
-          <el-icon v-if="currentSongId === row.song_id && isPlaying" class="playlist-song-table__playing">
+          <el-icon v-if="sameId(currentSongId, row.song_id) && isPlaying" class="playlist-song-table__playing">
             <VideoPlay />
           </el-icon>
         </div>
@@ -63,12 +63,12 @@
 <script setup lang="ts">
 import { Delete, VideoPlay, List, CirclePlus } from '@element-plus/icons-vue'
 import type { ISong } from '@/types'
-import { formatDuration } from '@/utils/format'
+import { formatDuration, sameId } from '@/utils/format'
 
 defineProps<{
   songs: ISong[]
   isOwner: boolean
-  currentSongId?: number
+  currentSongId?: number | string
   isPlaying: boolean
 }>()
 
@@ -76,7 +76,7 @@ const emit = defineEmits<{
   (e: 'play-song', song: ISong): void
   (e: 'play-next', song: ISong): void
   (e: 'add-to-queue', song: ISong): void
-  (e: 'remove-song', songId: number): void
+  (e: 'remove-song', songId: number | string): void
 }>()
 
 const onRowDblClick = (row: ISong) => emit('play-song', row)

@@ -57,7 +57,7 @@ export function useSongUpload() {
     }
   }
 
-  const submit = async (uploaderId?: number) => {
+  const submit = async (uploaderId?: number | string) => {
     if (!audioFile.value) return ElMessage.warning('请选择音频文件')
     if (!coverFile.value) return ElMessage.warning('请选择封面图片')
     if (!form.value.title) return ElMessage.warning('请输入歌曲标题')

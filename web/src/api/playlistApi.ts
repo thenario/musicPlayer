@@ -23,7 +23,7 @@ const editPlaylistDetails = async (formData: any) => {
 }
 
 //删除歌单
-const deletePlaylist = async (playlistId: number) => {
+const deletePlaylist = async (playlistId: number | string) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
   return {
@@ -33,7 +33,7 @@ const deletePlaylist = async (playlistId: number) => {
 }
 
 //点赞歌单
-const likePlaylist = async (playlistId: number) => {
+const likePlaylist = async (playlistId: number | string) => {
   const res = await request.post<any, IAxiosRes<any>>(`/playlists/${playlistId}/likes`)
 
   return {
@@ -43,7 +43,7 @@ const likePlaylist = async (playlistId: number) => {
 }
 
 //取消歌单的点赞
-const unlikePlaylist = async (playlistId: number) => {
+const unlikePlaylist = async (playlistId: number | string) => {
   const res = await request.delete<any, IAxiosRes<any>>(`/playlists/${playlistId}/unlikes`)
 
   return {
@@ -64,7 +64,7 @@ const getMyPlaylists = async (): Promise<IGetMyPlaylists> => {
 }
 
 //根据id获取歌单信息
-const getPlaylistById = async (playlistId: number): Promise<IGetPlaylistById> => {
+const getPlaylistById = async (playlistId: number | string): Promise<IGetPlaylistById> => {
   const res = await request.get<any, IAxiosRes<any>>(`/playlists/${playlistId}`)
 
   return {
@@ -77,7 +77,7 @@ const getPlaylistById = async (playlistId: number): Promise<IGetPlaylistById> =>
 }
 
 //加入歌曲到歌单
-const addSongToPlaylist = async (playlistId: number, songId: number) => {
+const addSongToPlaylist = async (playlistId: number | string, songId: number | string) => {
   const res = await request.post<any, IAxiosRes<any>>(`/playlists/${playlistId}/songs/${songId}`)
 
   return {
@@ -88,7 +88,7 @@ const addSongToPlaylist = async (playlistId: number, songId: number) => {
 }
 
 //从歌单移除歌曲
-const removeSongFromPlaylist = async (playlistId: number, songId: number) => {
+const removeSongFromPlaylist = async (playlistId: number | string, songId: number | string) => {
   const res = await request.delete<any, IAxiosRes<any>>(`playlists/${playlistId}/songs/${songId}`)
 
   return {

@@ -29,7 +29,7 @@ import { songApi } from '@/api/songApi'
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{
   (e: 'update:open', value: boolean): void
-  (e: 'add', songId: number): void
+  (e: 'add', songId: number | string): void
 }>()
 
 const songSearchQuery = ref('')

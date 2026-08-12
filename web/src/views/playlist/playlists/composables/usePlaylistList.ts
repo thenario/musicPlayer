@@ -7,7 +7,7 @@ export interface CreatePlaylistPayload {
   name: string
   description: string
   coverFile: File | null
-  creatorId?: number
+  creatorId?: number | string
 }
 
 /** 歌单列表：加载 + 新建。错误提示由拦截器统一弹出，这里只吞掉避免未处理拒绝。 */

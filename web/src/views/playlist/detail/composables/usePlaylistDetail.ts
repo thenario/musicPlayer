@@ -2,6 +2,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { playlistApi } from '@/api/playlistApi'
+import { sameId } from '@/utils/format'
 import type { IPlaylist, PlaylistSong } from '@/types'
 
 /** 歌单详情：数据加载、点赞、增删歌；返回状态与操作供页面编排。 */
@@ -30,7 +31,7 @@ export function usePlaylistDetail() {
 
     loading.value = true
     try {
-      const res = await playlistApi.getPlaylistById(Number(idParam))
+      const res = await playlistApi.getPlaylistById(idParam)
       playlist.value = res.playlist
       songs.value = res.songs
         ? res.songs.sort((a, b) => a.song_playlist_position - b.song_playlist_position)
@@ -68,12 +69,12 @@ export function usePlaylistDetail() {
     }
   }
 
-  const handleRemoveSong = async (songId: number) => {
+  const handleRemoveSong = async (songId: number | string) => {
     if (!playlist.value) return
     try {
       await playlistApi.removeSongFromPlaylist(playlist.value.playlist_id, songId)
       ElMessage.success("已从歌单移除")
-      songs.value = songs.value.filter((s) => s.song_id !== songId)
+      songs.value = songs.value.filter((s) => !sameId(s.song_id, songId))
       playlist.value.song_count--
     } catch (error) {
       // 错误已由拦截器统一提示，这里只记录日志
@@ -81,7 +82,7 @@ export function usePlaylistDetail() {
     }
   }
 
-  const addSongToPlaylist = async (songId: number) => {
+  const addSongToPlaylist = async (songId: number | string) => {
     if (!playlist.value) return
     try {
       await playlistApi.addSongToPlaylist(playlist.value.playlist_id, songId)

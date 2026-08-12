@@ -26,3 +26,12 @@ export function getImageUrl(url?: string): string {
   const separator = url.startsWith('/') ? '' : '/'
   return `${base}${separator}${url}`
 }
+
+/**
+ * 比较两个 ID 是否相同。
+ * 后端雪花 ID 在 JSON 里是字符串，前端可能持有 number/string/临时字符串，
+ * 统一转字符串比较，避免 number/string 混用导致 === 失配。
+ */
+export function sameId(a: number | string | null | undefined, b: number | string | null | undefined): boolean {
+  return a != null && b != null && String(a) === String(b)
+}

@@ -12,7 +12,7 @@ export function useEditPlaylist(playlistId: string) {
 
   const load = async () => {
     try {
-      const res = await playlistApi.getPlaylistById(Number(playlistId))
+      const res = await playlistApi.getPlaylistById(playlistId)
       if (res.playlist) {
         form.value.name = res.playlist.playlist_name
         form.value.description = res.playlist.description || ''

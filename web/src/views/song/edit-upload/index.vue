@@ -99,14 +99,14 @@ import { onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useSongStore } from '@/stores/song';
 import { Back, Camera, Mic } from '@element-plus/icons-vue';
-import { getImageUrl } from '@/utils/format';
+import { getImageUrl, sameId } from '@/utils/format';
 import { useEditUpload } from './composables/useEditUpload';
 
 const route = useRoute();
 const router = useRouter();
 const songStore = useSongStore();
 
-const song_id = Number(route.params.id);
+const song_id = route.params.id as string;
 
 const {
     formRef,
@@ -125,7 +125,7 @@ const getCoverUrl = (url: string) => getImageUrl(url);
 
 onMounted(async () => {
     const cached = songStore.currentEditingSong;
-    if (cached && Number(cached.song_id) === song_id) {
+    if (cached && sameId(cached.song_id, song_id)) {
         formData.song_name = cached.song_title || '';
         previewUrl.value = getCoverUrl(cached.song_cover_url || '');
     }

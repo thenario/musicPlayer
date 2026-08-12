@@ -7,7 +7,7 @@ import { parseLyrics } from '@/utils/lrcParser'
  * 歌词加载：监听当前歌曲 id 变化，拉取并解析歌词。
  * 失败时提供占位歌词（错误提示由拦截器静默处理，见 songApi.getLyrics 的 silent）。
  */
-export function createLyricsLoader(getCurrentSongId: () => number | undefined) {
+export function createLyricsLoader(getCurrentSongId: () => number | string | undefined) {
   const lyrics = ref<LyricLine[]>()
   const isLoadingLyrics = ref(false)
 

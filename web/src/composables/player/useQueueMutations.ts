@@ -1,10 +1,11 @@
 import type { Ref } from 'vue'
 import type { IQueue, IQueueItem, ISong } from '@/types'
 import { queueApi } from '@/api/queueApi'
+import { sameId } from '@/utils/format'
 
 export interface QueueMutationsContext {
   currentQueue: Ref<IQueueItem[]>
-  currentQueueId: Ref<number | null>
+  currentQueueId: Ref<number | string | null>
   userQueues: Ref<IQueue[]>
   currentIndex: Ref<number>
   currentSong: Ref<ISong | null>
@@ -38,7 +39,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     if (ctx.currentSong.value) {
       const tempCurrentSong = ctx.currentSong.value
       const newIndex = ctx.currentQueue.value.findIndex(
-        (item) => item.song.song_id === tempCurrentSong.song_id,
+        (item) => sameId(item.song.song_id, tempCurrentSong.song_id),
       )
       if (newIndex !== -1) {
         ctx.currentIndex.value = newIndex
@@ -48,8 +49,8 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     return res?.success ? { success: true } : { success: false }
   }
 
-  const handleDuplicateSong = (songId: number) => {
-    const idx = ctx.currentQueue.value.findIndex((item) => item.song.song_id === songId)
+  const handleDuplicateSong = (songId: number | string) => {
+    const idx = ctx.currentQueue.value.findIndex((item) => sameId(item.song.song_id, songId))
     if (idx !== -1) {
       ctx.currentQueue.value.splice(idx, 1)
       if (idx < ctx.currentIndex.value) ctx.currentIndex.value--
@@ -69,7 +70,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     }
 
     if (ctx.currentQueueId.value && isNewAddition) {
-      const target = ctx.userQueues.value.find((q) => q.queue_id === ctx.currentQueueId.value)
+      const target = ctx.userQueues.value.find((q) => sameId(q.queue_id, ctx.currentQueueId.value))
       if (target) target.song_count++
     }
   }
@@ -79,7 +80,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     if (idx !== -1) ctx.currentQueue.value.splice(idx, 1)
   }
 
-  const syncRemoveToServer = async (id: number) => {
+  const syncRemoveToServer = async (id: number | string) => {
     if (!ctx.currentQueueId.value) {
       return { success: false }
     }
@@ -142,11 +143,11 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     try {
       const isTempId = typeof itemId === 'string' && itemId.startsWith('temp-')
       if (!isTempId) {
-        const res = await syncRemoveToServer(itemId as number)
+        const res = await syncRemoveToServer(itemId)
         if (!res.success) return { success: false }
       }
 
-      const targetIdx = ctx.currentQueue.value.findIndex((item) => item.queue_item_id === itemId)
+      const targetIdx = ctx.currentQueue.value.findIndex((item) => sameId(item.queue_item_id, itemId))
       if (targetIdx !== -1) {
         handleStateAfterRemoval(targetIdx)
       }
@@ -160,7 +161,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
 
   const updateQueueCount = (delta: number) => {
     if (!ctx.currentQueueId.value) return
-    const target = ctx.userQueues.value.find((q) => q.queue_id === ctx.currentQueueId.value)
+    const target = ctx.userQueues.value.find((q) => sameId(q.queue_id, ctx.currentQueueId.value))
     if (target && target.song_count + delta >= 0) {
       target.song_count += delta
     }
@@ -174,7 +175,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     const others = []
 
     for (const item of ctx.currentQueue.value) {
-      if (item.song.song_id === currentId && !currentItem) {
+      if (sameId(item.song.song_id, currentId) && !currentItem) {
         currentItem = item
       } else {
         others.push(item)
@@ -187,7 +188,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     }
 
     if (currentItem) {
-      const cleanOthers = others.filter((item) => item.queue_item_id !== currentItem.queue_item_id)
+      const cleanOthers = others.filter((item) => !sameId(item.queue_item_id, currentItem.queue_item_id))
       ctx.currentQueue.value = [currentItem, ...cleanOthers]
       ctx.currentIndex.value = 0
     } else {

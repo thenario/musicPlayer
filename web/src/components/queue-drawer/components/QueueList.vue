@@ -6,7 +6,7 @@
         @click="emit('switch-queue', q.queue_id)">
         <div class="queue-list__info">
           <div class="queue-list__avatar">
-            <el-icon v-if="currentQueueId === q.queue_id" class="queue-list__avatar-icon queue-list__avatar-icon--active">
+            <el-icon v-if="sameId(currentQueueId, q.queue_id)" class="queue-list__avatar-icon queue-list__avatar-icon--active">
               <Headset />
             </el-icon>
             <el-icon v-else class="queue-list__avatar-icon">
@@ -15,7 +15,7 @@
           </div>
           <div class="queue-list__meta">
             <span class="queue-list__name"
-              :class="{ 'is-active': currentQueueId === q.queue_id }">
+              :class="{ 'is-active': sameId(currentQueueId, q.queue_id) }">
               {{ q.queue_name }}
             </span>
             <span class="queue-list__count">{{ q.song_count }} 首歌曲</span>
@@ -25,7 +25,7 @@
         <div class="queue-list__actions">
           <el-button link type="primary" size="small"
             @click.stop="emit('preview-queue', q.queue_id)">查看</el-button>
-          <el-button v-if="currentQueueId !== q.queue_id" link type="danger" :icon="Delete"
+          <el-button v-if="!sameId(currentQueueId, q.queue_id)" link type="danger" :icon="Delete"
             class="queue-list__delete"
             @click.stop="emit('delete-queue', q.queue_id)" />
         </div>
@@ -39,17 +39,18 @@
 defineOptions({ name: 'QueueList' })
 import { Headset, List, Delete } from '@element-plus/icons-vue'
 import type { IQueue } from '@/types'
+import { sameId } from '@/utils/format'
 
 defineProps<{
   queues: IQueue[]
-  currentQueueId: number | null
+  currentQueueId: number | string | null
   loading: boolean
 }>()
 
 const emit = defineEmits<{
-  (e: 'switch-queue', queueId: number): void
-  (e: 'preview-queue', queueId: number): void
-  (e: 'delete-queue', queueId: number): void
+  (e: 'switch-queue', queueId: number | string): void
+  (e: 'preview-queue', queueId: number | string): void
+  (e: 'delete-queue', queueId: number | string): void
 }>()
 </script>
 

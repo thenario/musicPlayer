@@ -3,7 +3,7 @@ import type { FormInstance, FormRules } from 'element-plus'
 import { songApi } from '@/api/songApi'
 
 /** 编辑上传歌曲：表单状态、歌词加载、封面上传与保存。 */
-export function useEditUpload(songId: number) {
+export function useEditUpload(songId: number | string) {
   const formRef = ref<FormInstance>()
   const submitting = ref(false)
   const lyricsLoading = ref(false)

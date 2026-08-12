@@ -12,7 +12,7 @@
             </el-icon>
           </div>
           <div class="song-table__title-wrap">
-            <div :class="['song-table__title', currentSongId === row.song_id ? 'is-active' : 'is-idle']">
+            <div :class="['song-table__title', sameId(currentSongId, row.song_id) ? 'is-active' : 'is-idle']">
               {{ row.song_title }}
             </div>
             <div class="song-table__artist">{{ row.artist }}</div>
@@ -51,12 +51,12 @@
 <script setup lang="ts">
 import { Headset, VideoPlay, List } from '@element-plus/icons-vue'
 import type { ISong } from '@/types'
-import { formatDuration, getImageUrl } from '@/utils/format'
+import { formatDuration, getImageUrl, sameId } from '@/utils/format'
 
 defineProps<{
   songs: ISong[]
   loading: boolean
-  currentSongId?: number
+  currentSongId?: number | string
 }>()
 
 const emit = defineEmits<{

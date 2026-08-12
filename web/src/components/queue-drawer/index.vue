@@ -32,7 +32,7 @@
                 <tbody class="queue-drawer__tbody">
                   <QueueItem v-for="(item, index) in currentQueue" :key="item.queue_item_id"
                     :item="item"
-                    :is-active="item.song?.song_id === currentSong?.song_id"
+                    :is-active="sameId(item.song?.song_id, currentSong?.song_id)"
                     :is-playing="isPlaying"
                     @play="playFromQueue(index)"
                     @remove="removeFromQueue(item.queue_item_id)"
@@ -62,6 +62,7 @@ import QueueItem from './components/QueueItem.vue'
 import QueueList from './components/QueueList.vue'
 import QueuePreviewList from './components/QueuePreviewList.vue'
 import { useQueueDrawer } from './composables/useQueueDrawer'
+import { sameId } from '@/utils/format'
 import { QUEUE_TABS } from './const'
 
 const {

@@ -1,6 +1,7 @@
 import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '@/stores/player'
+import { sameId } from '@/utils/format'
 import type { IQueue } from '@/types'
 
 /** 队列抽屉：标签切换、预览、清空/删除/切换队列、拖拽排序与滚动定位。 */
@@ -10,7 +11,7 @@ export function useQueueDrawer() {
     storeToRefs(playerStore)
 
   const activeTab = ref('queue')
-  const previewQueueId = ref<number>(-1)
+  const previewQueueId = ref<number | string>(-1)
   const previewData = ref<IQueue | null>(null)
   const previewLoading = ref(false)
 
@@ -22,9 +23,9 @@ export function useQueueDrawer() {
     }
   }
 
-  const handlePreviewQueue = (queueId: number) => {
+  const handlePreviewQueue = (queueId: number | string) => {
     previewQueueId.value = queueId
-    const found = userQueues.value.find((q) => q.queue_id === queueId)
+    const found = userQueues.value.find((q) => sameId(q.queue_id, queueId))
     if (found) previewData.value = found
   }
 
@@ -65,8 +66,8 @@ export function useQueueDrawer() {
     }).catch(() => { })
   }
 
-  const handleSwitchQueue = async (queueId: number) => {
-    if (queueId === currentQueueId.value) {
+  const handleSwitchQueue = async (queueId: number | string) => {
+    if (sameId(queueId, currentQueueId.value)) {
       activeTab.value = 'queue'
       return
     }
@@ -79,7 +80,7 @@ export function useQueueDrawer() {
     }
   }
 
-  const confirmDeleteQueue = (queueId: number) => {
+  const confirmDeleteQueue = (queueId: number | string) => {
     ElMessageBox.confirm('确定要永久删除这个播放队列吗？', '警告', {
       confirmButtonText: '删除',
       cancelButtonText: '取消',
