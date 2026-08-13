@@ -216,3 +216,19 @@ CREATE TABLE `play_history` (
   CONSTRAINT `fk_play_history_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE,
   CONSTRAINT `fk_play_history_song` FOREIGN KEY (`song_id`) REFERENCES `songs` (`song_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- ------------------------------------------------------------------
+-- 14. 专辑 albums
+-- ------------------------------------------------------------------
+DROP TABLE IF EXISTS `albums`;
+CREATE TABLE `albums` (
+  `album_id`     bigint       NOT NULL COMMENT '专辑ID(雪花)',
+  `album_name`   varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '专辑名称',
+  `artist_name`  varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '艺术家名(未建 artists 表)',
+  `cover_url`    varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '专辑封面',
+  `release_date` date         DEFAULT NULL COMMENT '发行日期',
+  `description`  text         COLLATE utf8mb4_unicode_ci,
+  `created_date` datetime     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`album_id`),
+  KEY `idx_album_name` (`album_name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
