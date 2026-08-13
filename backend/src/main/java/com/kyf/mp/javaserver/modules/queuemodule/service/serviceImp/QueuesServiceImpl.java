@@ -4,10 +4,10 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.queuemodule.business.IQueuesBusiness;
+import com.kyf.mp.javaserver.modules.queuemodule.business.QueuesBusiness;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.AddSongToQueue;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.UpdateCurrentQueueStateDTO;
-import com.kyf.mp.javaserver.modules.queuemodule.service.IQueuesService;
+import com.kyf.mp.javaserver.modules.queuemodule.service.QueuesService;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.AddSongToQueueVO;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.AlterQueueVO;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.CreateQueueFromPlaylist;
@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排，数据访问委托给 IQueuesBusiness。
+ * 服务实现类：业务逻辑编排，数据访问委托给 QueuesBusiness。
  * </p>
  *
  * @author kyf
@@ -28,9 +28,9 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-public class QueuesServiceImpl implements IQueuesService {
+public class QueuesServiceImpl implements QueuesService {
 
-    private final IQueuesBusiness queuesBusiness;
+    private final QueuesBusiness queuesBusiness;
 
     @Override
     public CurrentQueue getCurrentQueue(Long userId) {

@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.songmodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.songmodule.service.ICommentsService;
+import com.kyf.mp.javaserver.modules.songmodule.service.CommentsService;
 
 /**
  * <p>
@@ -13,5 +13,5 @@ import com.kyf.mp.javaserver.modules.songmodule.service.ICommentsService;
  * @since 2026-08-12
  */
 @Service
-public class CommentsServiceImpl implements ICommentsService {
+public class CommentsServiceImpl implements CommentsService {
 }

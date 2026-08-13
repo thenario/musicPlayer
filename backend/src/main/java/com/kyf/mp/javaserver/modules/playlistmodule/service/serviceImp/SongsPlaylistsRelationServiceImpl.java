@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.playlistmodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.songmodule.service.ISongsPlaylistsRelationService;
+import com.kyf.mp.javaserver.modules.songmodule.service.SongsPlaylistsRelationService;
 
 /**
  * <p>
@@ -13,6 +13,6 @@ import com.kyf.mp.javaserver.modules.songmodule.service.ISongsPlaylistsRelationS
  * @since 2026-04-05
  */
 @Service
-public class SongsPlaylistsRelationServiceImpl implements ISongsPlaylistsRelationService {
+public class SongsPlaylistsRelationServiceImpl implements SongsPlaylistsRelationService {
 
 }

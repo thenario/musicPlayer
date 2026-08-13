@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
-import com.kyf.mp.javaserver.modules.usermodule.business.IUsersBusiness;
+import com.kyf.mp.javaserver.modules.usermodule.business.UsersBusiness;
 import com.kyf.mp.javaserver.modules.usermodule.dto.EditUserDTO;
 import com.kyf.mp.javaserver.modules.usermodule.entity.Users;
 import com.kyf.mp.javaserver.modules.usermodule.mapper.UsersMapper;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Slf4j
-public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> implements IUsersBusiness {
+public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> implements UsersBusiness {
 
     @Value("${file.static.user-cover-url}")
     private String userCoverUrl;

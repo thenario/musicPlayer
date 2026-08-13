@@ -8,9 +8,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.modules.playlistmodule.business.IPlaylistsBusiness;
+import com.kyf.mp.javaserver.modules.playlistmodule.business.PlaylistsBusiness;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
-import com.kyf.mp.javaserver.modules.playlistmodule.service.IPlaylistsService;
+import com.kyf.mp.javaserver.modules.playlistmodule.service.PlaylistsService;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.AddSongToPlaylistVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.MyPlaylistsVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistActionVO;
@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排，数据访问委托给 IPlaylistsBusiness。
+ * 服务实现类：业务逻辑编排，数据访问委托给 PlaylistsBusiness。
  * </p>
  *
  * @author kyf
@@ -29,9 +29,9 @@ import lombok.RequiredArgsConstructor;
  */
 @Service
 @RequiredArgsConstructor
-public class PlaylistsServiceImpl implements IPlaylistsService {
+public class PlaylistsServiceImpl implements PlaylistsService {
 
-    private final IPlaylistsBusiness playlistsBusiness;
+    private final PlaylistsBusiness playlistsBusiness;
 
     @Override
     public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,

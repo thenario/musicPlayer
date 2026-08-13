@@ -8,10 +8,10 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.kyf.mp.javaserver.common.BusinessException;
-import com.kyf.mp.javaserver.modules.usermodule.business.IUsersBusiness;
+import com.kyf.mp.javaserver.modules.usermodule.business.UsersBusiness;
 import com.kyf.mp.javaserver.modules.usermodule.dto.EditUserDTO;
 import com.kyf.mp.javaserver.modules.usermodule.entity.Users;
-import com.kyf.mp.javaserver.modules.usermodule.service.IUsersService;
+import com.kyf.mp.javaserver.modules.usermodule.service.UsersService;
 import com.kyf.mp.javaserver.modules.usermodule.vo.EditVO;
 import com.kyf.mp.javaserver.modules.usermodule.vo.LoginVO;
 import com.kyf.mp.javaserver.modules.usermodule.vo.UserVO;
@@ -22,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排（登录/注册），数据访问委托给 IUsersBusiness。
+ * 服务实现类：业务逻辑编排（登录/注册），数据访问委托给 UsersBusiness。
  * </p>
  *
  * @author kyf
@@ -31,9 +31,9 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class UsersServiceImpl implements IUsersService {
+public class UsersServiceImpl implements UsersService {
 
-    private final IUsersBusiness usersBusiness;
+    private final UsersBusiness usersBusiness;
     private final BCryptPasswordEncoder passwordEncoder;
 
     @Override

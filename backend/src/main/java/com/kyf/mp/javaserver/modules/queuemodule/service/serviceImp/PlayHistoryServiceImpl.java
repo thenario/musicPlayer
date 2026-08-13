@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.queuemodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.queuemodule.service.IPlayHistoryService;
+import com.kyf.mp.javaserver.modules.queuemodule.service.PlayHistoryService;
 
 /**
  * <p>
@@ -13,5 +13,5 @@ import com.kyf.mp.javaserver.modules.queuemodule.service.IPlayHistoryService;
  * @since 2026-08-12
  */
 @Service
-public class PlayHistoryServiceImpl implements IPlayHistoryService {
+public class PlayHistoryServiceImpl implements PlayHistoryService {
 }

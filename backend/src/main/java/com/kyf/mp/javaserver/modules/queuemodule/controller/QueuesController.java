@@ -26,7 +26,7 @@ import com.kyf.mp.javaserver.modules.queuemodule.vo.CurrentQueue;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.DeleteQueueVO;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.MyQueues;
 import com.kyf.mp.javaserver.modules.queuemodule.vo.SingleQueue;
-import com.kyf.mp.javaserver.modules.queuemodule.service.IQueuesService;
+import com.kyf.mp.javaserver.modules.queuemodule.service.QueuesService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -46,7 +46,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/queues")
 @RequiredArgsConstructor
 public class QueuesController {
-    private final IQueuesService queueService;
+    private final QueuesService queueService;
 
     @GetMapping("/current")
     public ResultModel<CurrentQueue> getCurrentQueue(

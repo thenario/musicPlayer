@@ -17,7 +17,7 @@ import com.kyf.mp.javaserver.modules.songmodule.dto.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.songmodule.vo.GetSongsVO;
 import com.kyf.mp.javaserver.modules.songmodule.vo.LyricsVO;
 import com.kyf.mp.javaserver.modules.songmodule.vo.UploadsVO;
-import com.kyf.mp.javaserver.modules.songmodule.service.ISongsService;
+import com.kyf.mp.javaserver.modules.songmodule.service.SongsService;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -37,7 +37,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/songs")
 @RequiredArgsConstructor
 public class SongsController {
-    private final ISongsService songsService;
+    private final SongsService songsService;
 
     @GetMapping
     public ResultModel<GetSongsVO> getSongs(

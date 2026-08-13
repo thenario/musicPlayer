@@ -3,7 +3,7 @@ package com.kyf.mp.javaserver.modules.queuemodule.business.businessimp;
 import org.springframework.stereotype.Service;
 
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
-import com.kyf.mp.javaserver.modules.queuemodule.business.IQueueItemsBusiness;
+import com.kyf.mp.javaserver.modules.queuemodule.business.QueueItemsBusiness;
 import com.kyf.mp.javaserver.modules.queuemodule.entity.QueueItems;
 import com.kyf.mp.javaserver.modules.queuemodule.mapper.QueueItemsMapper;
 
@@ -12,5 +12,5 @@ import com.kyf.mp.javaserver.modules.queuemodule.mapper.QueueItemsMapper;
  */
 @Service
 public class QueueItemsBusinessImpl extends BaseBusinessImpl<QueueItemsMapper, QueueItems>
-        implements IQueueItemsBusiness {
+        implements QueueItemsBusiness {
 }

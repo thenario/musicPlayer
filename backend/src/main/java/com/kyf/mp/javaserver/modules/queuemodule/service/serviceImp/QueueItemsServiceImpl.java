@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.queuemodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.queuemodule.service.IQueueItemsService;
+import com.kyf.mp.javaserver.modules.queuemodule.service.QueueItemsService;
 
 /**
  * <p>
@@ -13,6 +13,6 @@ import com.kyf.mp.javaserver.modules.queuemodule.service.IQueueItemsService;
  * @since 2026-04-05
  */
 @Service
-public class QueueItemsServiceImpl implements IQueueItemsService {
+public class QueueItemsServiceImpl implements QueueItemsService {
 
 }

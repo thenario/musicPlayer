@@ -15,7 +15,7 @@ import com.kyf.mp.javaserver.modules.usermodule.dto.EditUserDTO;
 import com.kyf.mp.javaserver.modules.usermodule.vo.EditVO;
 import com.kyf.mp.javaserver.modules.usermodule.vo.LoginVO;
 import com.kyf.mp.javaserver.modules.usermodule.entity.Users;
-import com.kyf.mp.javaserver.modules.usermodule.service.IUsersService;
+import com.kyf.mp.javaserver.modules.usermodule.service.UsersService;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @RequiredArgsConstructor
 public class UsersController {
 
-    private final IUsersService userService;
+    private final UsersService userService;
     private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")

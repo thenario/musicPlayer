@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.songmodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.songmodule.service.IAlbumsService;
+import com.kyf.mp.javaserver.modules.songmodule.service.AlbumsService;
 
 /**
  * <p>
@@ -13,5 +13,5 @@ import com.kyf.mp.javaserver.modules.songmodule.service.IAlbumsService;
  * @since 2026-08-12
  */
 @Service
-public class AlbumsServiceImpl implements IAlbumsService {
+public class AlbumsServiceImpl implements AlbumsService {
 }

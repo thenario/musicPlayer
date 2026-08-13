@@ -20,7 +20,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
-import com.kyf.mp.javaserver.modules.songmodule.business.ISongsBusiness;
+import com.kyf.mp.javaserver.modules.songmodule.business.SongsBusiness;
 import com.kyf.mp.javaserver.modules.songmodule.dto.EDitSongDTO;
 import com.kyf.mp.javaserver.modules.songmodule.entity.Songs;
 import com.kyf.mp.javaserver.modules.songmodule.mapper.SongsMapper;
@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> implements ISongsBusiness {
+public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> implements SongsBusiness {
 
     private final UsersMapper userMapper;
 

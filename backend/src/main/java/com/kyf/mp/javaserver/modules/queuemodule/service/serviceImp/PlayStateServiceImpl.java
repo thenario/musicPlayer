@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.queuemodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.queuemodule.service.IPlayStateService;
+import com.kyf.mp.javaserver.modules.queuemodule.service.PlayStateService;
 
 /**
  * <p>
@@ -13,6 +13,6 @@ import com.kyf.mp.javaserver.modules.queuemodule.service.IPlayStateService;
  * @since 2026-04-05
  */
 @Service
-public class PlayStateServiceImpl implements IPlayStateService {
+public class PlayStateServiceImpl implements PlayStateService {
 
 }

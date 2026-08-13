@@ -10,5 +10,5 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
  * @param <T> 实体类型
  */
 public abstract class BaseBusinessImpl<M extends BaseMapper<T>, T> extends ServiceImpl<M, T>
-        implements IBaseBusiness<T> {
+        implements BaseBusiness<T> {
 }

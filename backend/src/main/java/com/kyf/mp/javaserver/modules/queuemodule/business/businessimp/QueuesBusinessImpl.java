@@ -13,7 +13,7 @@ import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
 import com.kyf.mp.javaserver.modules.playlistmodule.mapper.PlaylistsMapper;
-import com.kyf.mp.javaserver.modules.queuemodule.business.IQueuesBusiness;
+import com.kyf.mp.javaserver.modules.queuemodule.business.QueuesBusiness;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.AddSongToQueue;
 import com.kyf.mp.javaserver.modules.queuemodule.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.javaserver.modules.queuemodule.entity.PlayState;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> implements IQueuesBusiness {
+public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> implements QueuesBusiness {
     private final QueueCustomMapper queueCustomMapper;
     private final PlayStateMapper playStateMapper;
     private final QueueItemsMapper queueItemsMapper;

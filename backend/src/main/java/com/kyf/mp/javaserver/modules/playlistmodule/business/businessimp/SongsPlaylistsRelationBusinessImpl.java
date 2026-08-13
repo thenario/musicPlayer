@@ -3,7 +3,7 @@ package com.kyf.mp.javaserver.modules.playlistmodule.business.businessimp;
 import org.springframework.stereotype.Service;
 
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
-import com.kyf.mp.javaserver.modules.playlistmodule.business.ISongsPlaylistsRelationBusiness;
+import com.kyf.mp.javaserver.modules.playlistmodule.business.SongsPlaylistsRelationBusiness;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.SongsPlaylistsRelation;
 import com.kyf.mp.javaserver.modules.playlistmodule.mapper.SongsPlaylistsRelationMapper;
 
@@ -13,5 +13,5 @@ import com.kyf.mp.javaserver.modules.playlistmodule.mapper.SongsPlaylistsRelatio
 @Service
 public class SongsPlaylistsRelationBusinessImpl
         extends BaseBusinessImpl<SongsPlaylistsRelationMapper, SongsPlaylistsRelation>
-        implements ISongsPlaylistsRelationBusiness {
+        implements SongsPlaylistsRelationBusiness {
 }

@@ -21,7 +21,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.kyf.mp.javaserver.common.BusinessException;
 import com.kyf.mp.javaserver.common.business.BaseBusinessImpl;
-import com.kyf.mp.javaserver.modules.playlistmodule.business.IPlaylistsBusiness;
+import com.kyf.mp.javaserver.modules.playlistmodule.business.PlaylistsBusiness;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.Playlists;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.SongsPlaylistsRelation;
 import com.kyf.mp.javaserver.modules.playlistmodule.entity.UsersLikeplaylistsRelation;
@@ -47,7 +47,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RequiredArgsConstructor
 public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Playlists>
-        implements IPlaylistsBusiness {
+        implements PlaylistsBusiness {
 
     @Value("${file.upload.playlist-cover-path}")
     private String playlistCoverPath;

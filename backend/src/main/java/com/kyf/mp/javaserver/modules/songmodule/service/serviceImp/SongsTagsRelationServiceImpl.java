@@ -2,7 +2,7 @@ package com.kyf.mp.javaserver.modules.songmodule.service.serviceImp;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.javaserver.modules.songmodule.service.ISongsTagsRelationService;
+import com.kyf.mp.javaserver.modules.songmodule.service.SongsTagsRelationService;
 
 /**
  * <p>
@@ -13,5 +13,5 @@ import com.kyf.mp.javaserver.modules.songmodule.service.ISongsTagsRelationServic
  * @since 2026-08-12
  */
 @Service
-public class SongsTagsRelationServiceImpl implements ISongsTagsRelationService {
+public class SongsTagsRelationServiceImpl implements SongsTagsRelationService {
 }

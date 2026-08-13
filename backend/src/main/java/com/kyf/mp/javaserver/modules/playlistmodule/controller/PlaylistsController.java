@@ -17,7 +17,7 @@ import com.kyf.mp.javaserver.modules.playlistmodule.vo.AddSongToPlaylistVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.MyPlaylistsVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistActionVO;
 import com.kyf.mp.javaserver.modules.playlistmodule.vo.PlaylistDetailVO;
-import com.kyf.mp.javaserver.modules.playlistmodule.service.IPlaylistsService;
+import com.kyf.mp.javaserver.modules.playlistmodule.service.PlaylistsService;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -36,7 +36,7 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/api/playlists")
 @RequiredArgsConstructor
 public class PlaylistsController {
-    private final IPlaylistsService playlistsService;
+    private final PlaylistsService playlistsService;
 
     // 1. 创建歌单
     @PostMapping
