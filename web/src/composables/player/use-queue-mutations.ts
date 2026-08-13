@@ -1,6 +1,6 @@
 import type { Ref } from 'vue'
 import type { IQueue, IQueueItem, ISong } from '@/types'
-import { queueApi } from '@/api/queueApi'
+import { queueApi } from '@/api/queue-api'
 import { sameId } from '@/utils/format'
 
 export interface QueueMutationsContext {

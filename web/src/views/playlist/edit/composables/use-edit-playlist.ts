@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { playlistApi } from '@/api/playlistApi'
+import { playlistApi } from '@/api/playlist-api'
 import { getImageUrl } from '@/utils/format'
 import { PLAYLIST_COVER_TYPES } from '../const'
 

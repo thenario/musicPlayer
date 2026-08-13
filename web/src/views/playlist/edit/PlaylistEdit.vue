@@ -93,7 +93,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { Edit, Camera, Plus } from '@element-plus/icons-vue'
-import { useEditPlaylist } from './composables/useEditPlaylist'
+import { useEditPlaylist } from './composables/use-edit-playlist'
 
 const route = useRoute()
 const router = useRouter()

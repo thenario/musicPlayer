@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { songApi } from '@/api/songApi'
+import { songApi } from '@/api/song-api'
 import { AUDIO_EXTENSIONS } from '../const'
 
 /** 上传歌曲：文件选择/拖拽校验、表单状态、上传进度与提交。 */

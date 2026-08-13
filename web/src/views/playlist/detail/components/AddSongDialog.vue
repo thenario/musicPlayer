@@ -24,7 +24,7 @@ import { ref, watch } from 'vue'
 import { debounce } from 'lodash-es'
 import { Search } from '@element-plus/icons-vue'
 import type { ISong } from '@/types'
-import { songApi } from '@/api/songApi'
+import { songApi } from '@/api/song-api'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{

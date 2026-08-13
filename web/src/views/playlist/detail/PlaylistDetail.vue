@@ -43,11 +43,11 @@ import { usePlayerStore } from '@/stores/player'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { playlistApi } from '@/api/playlistApi'
+import { playlistApi } from '@/api/playlist-api'
 import PlaylistHeader from './components/PlaylistHeader.vue'
 import PlaylistSongTable from './components/PlaylistSongTable.vue'
 import AddSongDialog from './components/AddSongDialog.vue'
-import { usePlaylistDetail } from './composables/usePlaylistDetail'
+import { usePlaylistDetail } from './composables/use-playlist-detail'
 import type { ISong } from '@/types'
 
 const router = useRouter()

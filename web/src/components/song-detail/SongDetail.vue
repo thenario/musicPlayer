@@ -59,7 +59,7 @@ import { getImageUrl } from '@/utils/format'
 import { ArrowDownBold, Share } from '@element-plus/icons-vue'
 import RecordDisc from './components/RecordDisc.vue'
 import LyricsPanel from './components/LyricsPanel.vue'
-import PlayerControl from '@/components/player-control/index.vue'
+import PlayerControl from '@/components/player-control/PlayerControl.vue'
 
 const playerStore = usePlayerStore()
 const { currentSong, isPlaying } = storeToRefs(playerStore)

@@ -82,7 +82,7 @@
 defineOptions({ name: 'UploadPage' })
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
-import { useSongUpload } from './composables/useSongUpload'
+import { useSongUpload } from './composables/use-song-upload'
 
 const userStore = useUserStore()
 const { user } = storeToRefs(userStore)

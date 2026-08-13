@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'VolumeControl' })
-import { useVolumeControl } from '../composables/useVolumeControl'
+import { useVolumeControl } from '../composables/use-volume-control'
 
 const { volumeValue, toggleMute, setVolume } = useVolumeControl()
 </script>

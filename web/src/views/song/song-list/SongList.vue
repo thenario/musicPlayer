@@ -40,7 +40,7 @@ import { Search } from '@element-plus/icons-vue'
 import { usePlayerStore } from '@/stores/player'
 import { AppPagination } from '@/common'
 import SongTable from './components/SongTable.vue'
-import { useSongList } from './composables/useSongList'
+import { useSongList } from './composables/use-song-list'
 import type { ISong } from '@/types'
 
 const playerStore = usePlayerStore()

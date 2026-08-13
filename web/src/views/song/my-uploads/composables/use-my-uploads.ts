@@ -1,6 +1,6 @@
 import { ref } from 'vue'
 import type { ISong } from '@/types'
-import { songApi } from '@/api/songApi'
+import { songApi } from '@/api/song-api'
 import { usePagination, useAsyncTask } from '@/common'
 import { UPLOAD_PAGE_SIZE } from '../const'
 

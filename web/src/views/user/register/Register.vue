@@ -50,7 +50,7 @@ defineOptions({ name: 'RegisterPage' })
 import { onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import AuthPageLayout from '@/views/user/components/AuthPageLayout.vue'
-import { useRegister } from './composables/useRegister'
+import { useRegister } from './composables/use-register'
 
 const router = useRouter()
 const { form, errors, loading, register } = useRegister()

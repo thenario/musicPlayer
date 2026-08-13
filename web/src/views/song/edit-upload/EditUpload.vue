@@ -100,7 +100,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useSongStore } from '@/stores/song';
 import { Back, Camera, Mic } from '@element-plus/icons-vue';
 import { getImageUrl, sameId } from '@/utils/format';
-import { useEditUpload } from './composables/useEditUpload';
+import { useEditUpload } from './composables/use-edit-upload';
 
 const route = useRoute();
 const router = useRouter();

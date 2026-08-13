@@ -24,7 +24,7 @@ import { ref, onMounted } from 'vue'
 import { useUserStore } from '@/stores/user'
 import PlaylistCard from './components/PlaylistCard.vue'
 import CreatePlaylistModal from './components/CreatePlaylistModal.vue'
-import { usePlaylistList } from './composables/usePlaylistList'
+import { usePlaylistList } from './composables/use-playlist-list'
 
 const userStore = useUserStore()
 const showModal = ref(false)

@@ -1,7 +1,7 @@
 import { ref, watch } from 'vue'
 import type { LyricLine } from '@/types'
-import { songApi } from '@/api/songApi'
-import { parseLyrics } from '@/utils/lrcParser'
+import { songApi } from '@/api/song-api'
+import { parseLyrics } from '@/utils/lrc-parser'
 
 /**
  * 歌词加载：监听当前歌曲 id 变化，拉取并解析歌词。

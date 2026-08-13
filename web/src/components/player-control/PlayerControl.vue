@@ -55,7 +55,7 @@
 defineOptions({ name: 'PlayerControl' })
 import { usePlayerStore } from '@/stores/player'
 import ProgressBar from './components/ProgressBar.vue'
-import { usePlayMode } from './composables/usePlayMode'
+import { usePlayMode } from './composables/use-play-mode'
 
 const playerStore = usePlayerStore()
 const { playModeTitle, togglePlayMode } = usePlayMode()

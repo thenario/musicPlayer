@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { userApi } from '@/api/userApi'
+import { userApi } from '@/api/user-api'
 import type { IUser } from '@/types'
 import { userStorage } from '@/utils/storage'
 

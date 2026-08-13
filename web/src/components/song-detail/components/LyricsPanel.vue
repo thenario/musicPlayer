@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'LyricsPanel' })
-import { useLyricsScroll } from '../composables/useLyricsScroll'
+import { useLyricsScroll } from '../composables/use-lyrics-scroll'
 
 const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll()
 </script>

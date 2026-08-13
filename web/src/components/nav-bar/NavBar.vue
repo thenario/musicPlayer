@@ -42,7 +42,7 @@ defineOptions({ name: 'NavBar' })
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { NAV_ITEMS } from './const'
-import { useNavBar } from './composables/useNavBar'
+import { useNavBar } from './composables/use-nav-bar'
 
 const userStore = useUserStore()
 const route = useRoute()

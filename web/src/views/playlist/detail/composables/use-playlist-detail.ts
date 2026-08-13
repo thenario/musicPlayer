@@ -1,7 +1,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { playlistApi } from '@/api/playlistApi'
+import { playlistApi } from '@/api/playlist-api'
 import { sameId } from '@/utils/format'
 import type { IPlaylist, PlaylistSong } from '@/types'
 

@@ -31,9 +31,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { usePlayerStore } from './stores/player'
-import NavBar from '@/components/nav-bar/index.vue'
-import PlayerBar from '@/components/player-bar/index.vue'
-import QueueDrawer from '@/components/queue-drawer/index.vue'
+import NavBar from '@/components/nav-bar/NavBar.vue'
+import PlayerBar from '@/components/player-bar/PlayerBar.vue'
+import QueueDrawer from '@/components/queue-drawer/QueueDrawer.vue'
 
 // 把dom节点给到value里
 const audioElement = ref(null)

@@ -58,7 +58,7 @@ defineOptions({ name: 'LoginPage' })
 import { useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 import AuthPageLayout from '@/views/user/components/AuthPageLayout.vue'
-import { useLogin } from './composables/useLogin'
+import { useLogin } from './composables/use-login'
 
 const playStore = usePlayerStore()
 const router = useRouter()

@@ -20,7 +20,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'ProgressBar' })
 import { formatDuration } from '@/utils/format'
-import { useSeekBar } from '../composables/useSeekBar'
+import { useSeekBar } from '../composables/use-seek-bar'
 
 const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekChange } = useSeekBar()
 </script>

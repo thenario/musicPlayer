@@ -59,7 +59,7 @@ import { onMounted } from 'vue';
 import { useSongStore } from '@/stores/song';
 import { AppPagination } from '@/common';
 import UploadedSongCard from './components/UploadedSongCard.vue';
-import { useMyUploads } from './composables/useMyUploads';
+import { useMyUploads } from './composables/use-my-uploads';
 import { Back, Upload } from '@element-plus/icons-vue';
 
 const router = useRouter();

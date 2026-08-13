@@ -1,5 +1,5 @@
 import { ref } from 'vue'
-import { playlistApi } from '@/api/playlistApi'
+import { playlistApi } from '@/api/playlist-api'
 import { useAsyncTask } from '@/common'
 import type { IPlaylist } from '@/types'
 

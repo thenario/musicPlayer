@@ -10,7 +10,7 @@
 
 <script setup lang="ts">
 import { Check, CopyDocument } from '@element-plus/icons-vue'
-import { useClipboard } from '../composables/useClipboard'
+import { useClipboard } from '../composables/use-clipboard'
 
 const props = defineProps<{ value: string }>()
 const { copied, copy } = useClipboard()

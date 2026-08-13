@@ -51,7 +51,7 @@
 defineOptions({ name: 'EditProfilePage' })
 import { useRouter } from 'vue-router';
 import { Camera } from '@element-plus/icons-vue';
-import { useUserProfile } from './composables/useUserProfile';
+import { useUserProfile } from './composables/use-user-profile';
 
 const router = useRouter();
 const { formRef, prevCoverUrl, editForm, rules, submitting, handleFileChange, submit } = useUserProfile();

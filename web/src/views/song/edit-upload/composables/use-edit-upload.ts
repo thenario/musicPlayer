@@ -1,6 +1,6 @@
 import { reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
-import { songApi } from '@/api/songApi'
+import { songApi } from '@/api/song-api'
 
 /** 编辑上传歌曲：表单状态、歌词加载、封面上传与保存。 */
 export function useEditUpload(songId: number | string) {

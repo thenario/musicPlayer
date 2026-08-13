@@ -1,11 +1,11 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { IQueue, IQueueItem, IQueueState, ISong } from '@/types'
-import { queueApi } from '@/api/queueApi'
+import { queueApi } from '@/api/queue-api'
 import { getImageUrl, sameId } from '@/utils/format'
-import { createAudioEngine } from '@/composables/player/useAudioEngine'
-import { createLyricsLoader } from '@/composables/player/useLyricsLoader'
-import { createQueueMutations } from '@/composables/player/useQueueMutations'
+import { createAudioEngine } from '@/composables/player/use-audio-engine'
+import { createLyricsLoader } from '@/composables/player/use-lyrics-loader'
+import { createQueueMutations } from '@/composables/player/use-queue-mutations'
 
 export const usePlayerStore = defineStore('player', () => {
   // ================= 状态 =================

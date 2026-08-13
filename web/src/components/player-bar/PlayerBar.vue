@@ -24,9 +24,9 @@ import { usePlayerStore } from '@/stores/player'
 import { getImageUrl } from '@/utils/format'
 import SongInfo from './components/SongInfo.vue'
 import VolumeControl from './components/VolumeControl.vue'
-import PlayerControl from '@/components/player-control/index.vue'
-import SongDetail from '@/components/song-detail/index.vue'
-import { useKeyboardShortcuts } from './composables/useKeyboardShortcuts'
+import PlayerControl from '@/components/player-control/PlayerControl.vue'
+import SongDetail from '@/components/song-detail/SongDetail.vue'
+import { useKeyboardShortcuts } from './composables/use-keyboard-shortcuts'
 
 const playerStore = usePlayerStore()
 

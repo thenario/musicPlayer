@@ -2,7 +2,7 @@ import { reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { userApi } from '@/api/userApi'
+import { userApi } from '@/api/user-api'
 
 /** 编辑个人资料：表单状态、头像上传与保存（成功后同步 store）。 */
 export function useUserProfile() {

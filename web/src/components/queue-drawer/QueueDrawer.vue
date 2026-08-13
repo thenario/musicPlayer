@@ -61,7 +61,7 @@ import { Delete, ArrowLeft } from '@element-plus/icons-vue'
 import QueueItem from './components/QueueItem.vue'
 import QueueList from './components/QueueList.vue'
 import QueuePreviewList from './components/QueuePreviewList.vue'
-import { useQueueDrawer } from './composables/useQueueDrawer'
+import { useQueueDrawer } from './composables/use-queue-drawer'
 import { sameId } from '@/utils/format'
 import { QUEUE_TABS } from './const'
 
