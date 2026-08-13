@@ -13,7 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kyf.mp.server.common.ResultModel;
-import com.kyf.mp.server.modules.song.dto.EDitSongDTO;
+import com.kyf.mp.server.modules.song.dto.EditSongDTO;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
 import com.kyf.mp.server.modules.song.vo.LyricsVO;
 import com.kyf.mp.server.modules.song.vo.UploadsVO;
@@ -76,7 +76,7 @@ public class SongsController {
     }
 
     @PatchMapping("/my-uploads/{song_id}")
-    public ResultModel<Void> editUploadSong(EDitSongDTO dto, @RequestAttribute("userId") Long userId,
+    public ResultModel<Void> editUploadSong(EditSongDTO dto, @RequestAttribute("userId") Long userId,
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Long songId) {
         songsService.editUploadSong(dto, userId, songId);
         return ResultModel.success(null);

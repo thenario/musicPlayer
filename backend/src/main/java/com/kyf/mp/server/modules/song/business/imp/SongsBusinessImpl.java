@@ -21,7 +21,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.song.business.SongsBusiness;
-import com.kyf.mp.server.modules.song.dto.EDitSongDTO;
+import com.kyf.mp.server.modules.song.dto.EditSongDTO;
 import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
@@ -201,7 +201,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void editUploadSong(EDitSongDTO dto, Long userId, Long songId) {
+    public void editUploadSong(EditSongDTO dto, Long userId, Long songId) {
         Songs oldSong = baseMapper.selectById(songId);
         if (oldSong == null)
             throw new BusinessException(404, "歌曲不存在");

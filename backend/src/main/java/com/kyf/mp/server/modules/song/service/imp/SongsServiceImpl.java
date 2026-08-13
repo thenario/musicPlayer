@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.server.modules.song.business.SongsBusiness;
-import com.kyf.mp.server.modules.song.dto.EDitSongDTO;
+import com.kyf.mp.server.modules.song.dto.EditSongDTO;
 import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.song.service.SongsService;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
@@ -65,7 +65,7 @@ public class SongsServiceImpl implements SongsService {
     }
 
     @Override
-    public void editUploadSong(EDitSongDTO dto, Long userId, Long songID) {
+    public void editUploadSong(EditSongDTO dto, Long userId, Long songID) {
         songsBusiness.editUploadSong(dto, userId, songID);
     }
 }
