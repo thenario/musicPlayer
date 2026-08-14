@@ -329,6 +329,12 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     private QueueContext ensureQueueId(Long userId, Long qId) {
         if (qId != null && qId > 0) {
+            Queues queue = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
+                    .eq(Queues::getQueueId, qId)
+                    .eq(Queues::getCreatorId, userId));
+            if (queue == null) {
+                throw new BusinessException(404, "队列不存在或无权操作");
+            }
             return new QueueContext(qId, false);
         }
 
