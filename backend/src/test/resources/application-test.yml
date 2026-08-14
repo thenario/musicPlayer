@@ -1,0 +1,9 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:music;MODE=MySQL;DB_CLOSE_DELAY=-1;DATABASE_TO_LOWER=TRUE
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+jwt:
+  secret: test-secret-for-jwt-signing-must-be-at-least-32-bytes
