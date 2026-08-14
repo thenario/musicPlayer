@@ -74,9 +74,9 @@ export function useQueueDrawer() {
     try {
       await playerStore.switchQueue(queueId)
       activeTab.value = 'queue'
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.log(err)
+      console.log(err instanceof Error ? err.message : err)
     }
   }
 
