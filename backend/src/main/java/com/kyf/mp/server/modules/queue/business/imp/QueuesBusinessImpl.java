@@ -33,6 +33,7 @@ import com.kyf.mp.server.modules.queue.vo.DeleteQueueVO;
 import com.kyf.mp.server.modules.queue.vo.MyQueues;
 import com.kyf.mp.server.modules.queue.vo.ReturnQueue;
 import com.kyf.mp.server.modules.queue.vo.SingleQueue;
+import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -51,6 +52,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     private final QueueItemsMapper queueItemsMapper;
     private final QueuesMapper queuesMapper;
     private final PlaylistsMapper playlistsMapper;
+    private final SongsMapper songsMapper;
 
     @Override
     public CurrentQueue getCurrentQueue(Long userId) {
@@ -274,6 +276,10 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto) {
         Long songId = dto.getSongId();
         boolean mode = dto.getMode() != null && dto.getMode();
+
+        if (songsMapper.selectById(songId) == null) {
+            throw new BusinessException(404, "歌曲不存在");
+        }
 
         QueueContext context = ensureQueueId(userId, paramQueueId);
         Long finalQueueId = context.getFinalQueueId();
