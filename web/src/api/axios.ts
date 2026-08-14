@@ -15,10 +15,10 @@ declare module 'axios' {
 //自定义错误类
 class AxiosBusinessError extends Error {
   code: number
-  data: any
+  data: unknown
   success: boolean
 
-  constructor(message: string, code: number, data?: any) {
+  constructor(message: string, code: number, data?: unknown) {
     super(message)
     this.name = 'AxiosBusinessError'
     this.code = code
@@ -77,7 +77,7 @@ request.interceptors.request.use(
 
 request.interceptors.response.use(
   //正常返回
-  (response: AxiosResponse): any => {
+  (response: AxiosResponse<BackendPayload>) => {
     //删除命令
     removePendingRequest(response.config)
     //获取返回的结果，axios会自动调用浏览器把结果反序列化
@@ -96,15 +96,20 @@ request.interceptors.response.use(
       code: 200,
     }
   },
-  (error: any) => {
+  (error: unknown) => {
+    //如果是cancel被中断的指令，交由调用方的 catch/finally 收尾
+    if (axios.isCancel(error)) {
+      return Promise.reject(error)
+    }
+    if (!axios.isAxiosError<BackendPayload>(error)) {
+      const message = error instanceof Error ? error.message : '网络连接异常'
+      ElMessage.error(message)
+      throw new AxiosBusinessError(message, 500)
+    }
+
     //移除指令
     if (error.config) {
       removePendingRequest(error.config)
-    }
-    //如果是cancel被中断的指令，进入代码块
-    if (axios.isCancel(error)) {
-      //返回一个空promise，外层的函数不会有任何反应
-      return Promise.reject(error)
     }
 
     let message = '网络连接异常' //默认的内容
