@@ -31,7 +31,7 @@ vue_musicplayer/
 │   ├── .env.development / .env.production / .env.example
 │   └── vite.config.ts   # 开发代理：/api、/static → 127.0.0.1:8080
 ├── backend/             # Spring Boot 后端（Java 21）
-│   └── src/main/java/com/kyf/mp/javaserver/
+│   └── src/main/java/com/kyf/mp/server/
 │       ├── common/      # 统一异常、JWT 过滤器、Token 黑名单
 │       ├── config/      # 安全配置、静态资源映射（/static/** 兜底）
 │       └── modules/     # 按业务分包（Song / Playlist / Queue / User）
@@ -65,7 +65,7 @@ pnpm dev
 ```
 
 > 裸跑后端（不用 nginx）时：`cd backend && ./mvnw spring-boot:run`，
-> `/static/**` 由后端 [StaticResourceConfig](backend/src/main/java/com/kyf/mp/javaserver/config/StaticResourceConfig.java) 兜底提供（同样支持 Range 断点续传）。
+> `/static/**` 由后端 [StaticResourceConfig](backend/src/main/java/com/kyf/mp/server/config/StaticResourceConfig.java) 兜底提供（同样支持 Range 断点续传）。
 
 ### 生产部署
 
