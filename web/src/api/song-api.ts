@@ -1,75 +1,47 @@
-import type { IUploadSong, IAxiosRes } from '@/types'
+import type { AxiosProgressEvent } from 'axios'
+import type { IAxiosRes, IPagination, ISong, IUploadSong } from '@/types'
 import request from './axios'
 
-//获取歌曲，涵盖查询歌曲的功能
-const getSongs = async (search_page: number, searchKeyword: string) => {
-  const res = await request.get<any, IAxiosRes<any>>('/songs', {
-    params: { page: search_page, keyword: searchKeyword },
-  })
+type SongId = number | string
+type LyricsResponse = { lyrics: string; t_lyrics: string }
+type UploadedSong = Pick<ISong, 'song_id' | 'song_title' | 'artist' | 'song_cover_url' | 'song_url'> & {
+  date_added: string
+}
+type UploadPageResponse = { records: UploadedSong[]; total: number }
 
-  return {
-    success: true,
-    message: res.message,
-    songs: res.data.songs,
-    pagination: res.data.pagination,
-  }
+const getSongs = async (page: number, keyword: string) => {
+  const res = await request.get<never, IAxiosRes<{ songs: ISong[]; pagination: IPagination }>>('/songs', {
+    params: { page, keyword },
+  })
+  return { success: true, message: res.message, ...res.data }
 }
 
-//上传歌曲
 const uploadSong = async (
   formData: FormData,
-  onProgress?: (progressEvent: any) => void,
+  onProgress?: (progressEvent: AxiosProgressEvent) => void,
 ): Promise<IUploadSong> => {
-  const res = await request.post<any, IAxiosRes<any>>('/songs', formData, {
+  const res = await request.post<never, IAxiosRes<null>>('/songs', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: onProgress,
   })
-
-  return {
-    success: true,
-    message: res.message,
-  }
+  return { success: true, message: res.message }
 }
 
-//获取歌词
-const getLyrics = async (songId: number | string) => {
-  const res = await request.get<any, any>(`/songs/${songId}/lyrics`, { silent: true })
-
-  return {
-    success: true,
-    lyrics: res.data.lyrics,
-    t_lyrics: res.data.t_lyrics,
-  }
+const getLyrics = async (songId: SongId) => {
+  const res = await request.get<never, IAxiosRes<LyricsResponse>>(`/songs/${songId}/lyrics`, { silent: true })
+  return { success: true, ...res.data }
 }
 
-//获取用户的上传歌曲
 const getUserUploadSongs = async (page: number, size: number) => {
-  const res = await request.get<any, any>(`/songs/my-uploads`, {
-    params: {
-      page: page,
-      size: size,
-    },
+  const res = await request.get<never, IAxiosRes<UploadPageResponse>>('/songs/my-uploads', {
+    params: { page, size },
   })
-
-  return {
-    success: res.success,
-    songs: res.data.records,
-    message: res.message,
-    total: Number(res.data.total),
-  }
+  return { success: res.success, songs: res.data.records, message: res.message, total: res.data.total }
 }
 
-//编辑上传的歌曲的信息
-const editUserUploadSongs = async (formdata: FormData, song_id: number | string) => {
-  const res = await request.patch<any, any>(`/songs/my-uploads/${song_id}`, formdata)
-
+const editUserUploadSongs = async (formdata: FormData, songId: SongId) => {
+  const res = await request.patch<never, IAxiosRes<null>>(`/songs/my-uploads/${songId}`, formdata)
   return { success: res.success, message: res.message }
 }
 
-export const songApi = {
-  getSongs,
-  uploadSong,
-  getLyrics,
-  getUserUploadSongs,
-  editUserUploadSongs,
-}
+export const songApi = { getSongs, uploadSong, getLyrics, getUserUploadSongs, editUserUploadSongs }

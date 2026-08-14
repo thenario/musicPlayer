@@ -16,8 +16,8 @@ public class GetSongsVO {
     @AllArgsConstructor
     public static class PaginationVO {
         private int totalItems;
-        private int totalIages;
-        private int currentIage;
-        private int pageIimit;
+        private int totalPages;
+        private int currentPage;
+        private int pageLimit;
     }
 }
