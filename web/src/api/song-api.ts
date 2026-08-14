@@ -4,7 +4,7 @@ import request from './axios'
 
 type SongId = number | string
 type LyricsResponse = { lyrics: string; t_lyrics: string }
-type UploadedSong = Pick<ISong, 'song_id' | 'song_title' | 'artist' | 'song_cover_url' | 'song_url'> & {
+export type UploadedSong = Pick<ISong, 'song_id' | 'song_title' | 'artist' | 'song_cover_url' | 'song_url'> & {
   date_added: string
 }
 type UploadPageResponse = { records: UploadedSong[]; total: number }

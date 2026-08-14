@@ -69,7 +69,7 @@ const { songs, loading, pagination, changePage, load } = useMyUploads();
 
 const goToSongEdit = (song: EditableUploadSong) => {
     songStore.setEditingSong(song);
-    router.push(`/user-uploads/${song.song_id || song.id}/edit`);
+    router.push(`/user-uploads/${song.song_id}/edit`);
 };
 
 onMounted(load);
