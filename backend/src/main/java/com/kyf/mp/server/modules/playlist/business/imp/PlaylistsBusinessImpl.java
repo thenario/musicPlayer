@@ -100,16 +100,13 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
             return data;
 
+        } catch (BusinessException e) {
+            cleanupNewPlaylistCover(savedFile);
+            throw e;
         } catch (Exception e) {
-            if (savedFile != null && savedFile.exists()) {
-                try {
-                    Files.delete(savedFile.toPath());
-                } catch (IOException ioe) {
-                    log.error("清理冗余文件时出错，log位置PlaylistBusinessImp的createPlaylist函数:" + ioe);
-                }
-            }
-            log.error("创建歌单失败,log位置PlaylistBusinessImp的createPlaylist函数:" + e);
-            throw new BusinessException(500, "创建歌单失败: " + e.getMessage());
+            cleanupNewPlaylistCover(savedFile);
+            log.error("创建歌单失败", e);
+            throw new BusinessException(500, "创建歌单失败");
         }
     }
 
@@ -305,6 +302,16 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         }
     }
 
+    private void cleanupNewPlaylistCover(File savedFile) {
+        if (savedFile == null || !savedFile.exists()) {
+            return;
+        }
+        try {
+            Files.delete(savedFile.toPath());
+        } catch (IOException e) {
+            log.error("清理创建失败的歌单封面文件失败", e);
+        }
+    }
     private void cleanupPlaylistCover(String coverUrl) {
         try {
             String fileName = coverUrl.substring(coverUrl.lastIndexOf("/") + 1);
