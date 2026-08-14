@@ -268,6 +268,8 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         try {
             songsPlaylistsRelationMapper.insert(relation);
         } catch (Exception e) {
+            if (e.getMessage().contains("uq_playlist_song_position"))
+                throw new BusinessException(409, "歌单更新冲突，请重试");
             if (e.getMessage().contains("Duplicate entry"))
                 throw new BusinessException(409, "歌曲已在歌单中");
             throw new BusinessException(500, "添加失败: " + e.getMessage());
