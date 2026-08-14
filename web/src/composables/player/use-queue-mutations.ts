@@ -3,6 +3,12 @@ import type { IQueue, IQueueItem, ISong } from '@/types'
 import { queueApi } from '@/api/queue-api'
 import { sameId } from '@/utils/format'
 
+interface QueueItemAddition {
+  queue_id: number | string
+  queue_item_id: number | string
+  queue_item_position: number
+}
+
 export interface QueueMutationsContext {
   currentQueue: Ref<IQueueItem[]>
   currentQueueId: Ref<number | string | null>
@@ -26,8 +32,8 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
         const songIds = ctx.currentQueue.value.map((item) => item.song.song_id)
         await queueApi.reorderQueue(songIds, ctx.currentQueueId.value)
         return { success: true }
-      } catch (err: any) {
-        console.log(err)
+      } catch (err: unknown) {
+        console.log(err instanceof Error ? err.message : err)
         return { success: false }
       }
     }
@@ -58,7 +64,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     return idx
   }
 
-  const finalizeQueueItem = (tempId: string, data: any, isNewAddition: boolean) => {
+  const finalizeQueueItem = (tempId: string, data: QueueItemAddition, isNewAddition: boolean) => {
     const item = ctx.currentQueue.value.find((i) => i.queue_item_id === tempId)
     if (item && data) {
       Object.assign(item, {
@@ -87,8 +93,8 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     try {
       await queueApi.removeSongFromQueue(ctx.currentQueueId.value, id)
       return { success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(err instanceof Error ? err.message : err)
       return { success: false }
     }
   }
@@ -130,8 +136,8 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       const res = await queueApi.addSongToQueue(song.song_id, ctx.currentQueueId.value || 0, insertNext)
       finalizeQueueItem(tempId, res.data, oldIdx === -1)
       return { targetIndex, success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(err instanceof Error ? err.message : err)
       rollbackQueue(tempId)
       return { targetIndex: -1, success: false }
     }
