@@ -1,8 +1,10 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import { userApi } from '@/api/user-api'
+import { userApi, type RegisterRequest } from '@/api/user-api'
 import type { IUser } from '@/types'
 import { userStorage } from '@/utils/storage'
+
+const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
 
 export const useUserStore = defineStore('user', () => {
   const user = ref<IUser | null>(userStorage.get())
@@ -16,19 +18,19 @@ export const useUserStore = defineStore('user', () => {
       isAuthenticated.value = true
       fetchUserCoverUrl()
       return { success: true, message: res.message }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err)
-      return { success: false, message: err.message }
+      return { success: false, message: errorMessage(err) }
     }
   }
 
-  const register = async (userData: any) => {
+  const register = async (userData: RegisterRequest) => {
     try {
       const res = await userApi.register(userData)
       return { success: true, message: res.message }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err)
-      return { success: false, message: err.message }
+      return { success: false, message: errorMessage(err) }
     }
   }
 
@@ -38,9 +40,9 @@ export const useUserStore = defineStore('user', () => {
       user.value = null
       isAuthenticated.value = false
       return { success: true, message: res.message }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.log(err)
-      return { success: false, message: err.message }
+      return { success: false, message: errorMessage(err) }
     }
   }
 
