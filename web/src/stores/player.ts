@@ -7,6 +7,8 @@ import { createAudioEngine } from '@/composables/player/use-audio-engine'
 import { createLyricsLoader } from '@/composables/player/use-lyrics-loader'
 import { createQueueMutations } from '@/composables/player/use-queue-mutations'
 
+const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
+
 export const usePlayerStore = defineStore('player', () => {
   // ================= 状态 =================
   const audioElement = ref<HTMLAudioElement | null>(null)
@@ -44,8 +46,8 @@ export const usePlayerStore = defineStore('player', () => {
         })
       }
       return { success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return { success: false }
     }
   }
@@ -133,8 +135,8 @@ export const usePlayerStore = defineStore('player', () => {
       updateMediaSession()
       syncPlayStateToBackend()
       return { success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return { success: false }
     }
   }
@@ -199,8 +201,8 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       await queueApi.setPlayMode(currentQueueId.value ?? -1, mode)
       return { success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return { success: false }
     }
   }
@@ -221,9 +223,9 @@ export const usePlayerStore = defineStore('player', () => {
         syncPlaybackState(queue_state)
       }
       return { success: true }
-    } catch (e: any) {
-      console.error(e)
-      return { success: false, message: e.message }
+    } catch (e: unknown) {
+      console.error(errorMessage(e))
+      return { success: false, message: errorMessage(e) }
     }
   }
 
@@ -288,9 +290,9 @@ export const usePlayerStore = defineStore('player', () => {
       })
       userQueues.value = rawQueues
       return { success: true }
-    } catch (e: any) {
-      console.error(e)
-      return { success: false, message: e.message }
+    } catch (e: unknown) {
+      console.error(errorMessage(e))
+      return { success: false, message: errorMessage(e) }
     }
   }
 
@@ -301,8 +303,8 @@ export const usePlayerStore = defineStore('player', () => {
         success: true,
         queue: res.queue,
       }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return {
         success: false,
         message: err.message,
@@ -330,8 +332,8 @@ export const usePlayerStore = defineStore('player', () => {
       await fetchCurrentQueue()
       await fetchUserQueues()
       pauseSong()
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       throw err
     }
   }
@@ -353,8 +355,8 @@ export const usePlayerStore = defineStore('player', () => {
       const resF = await fetchUserQueues()
       if (!resF.success) return { success: false }
       return { success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return { success: false }
     }
   }
@@ -371,8 +373,8 @@ export const usePlayerStore = defineStore('player', () => {
         if (!resF.success) return { success: false }
         return { success: true }
       }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return { success: false }
     }
   }
@@ -391,8 +393,8 @@ export const usePlayerStore = defineStore('player', () => {
         playAtIndex(startIndex)
       }
       return { success: true }
-    } catch (err: any) {
-      console.log(err)
+    } catch (err: unknown) {
+      console.log(errorMessage(err))
       return { success: false }
     }
   }
