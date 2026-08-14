@@ -2,6 +2,8 @@ package com.kyf.mp.server.utils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.kyf.mp.server.modules.song.entity.Songs;
+import com.kyf.mp.server.modules.user.entity.Users;
+import com.kyf.mp.server.modules.user.mapper.UsersMapper;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 
 import lombok.extern.slf4j.Slf4j;
@@ -50,12 +52,19 @@ public class SongScannerTask {
 
     @Autowired
     private SongsMapper songsMapper;
+    @Autowired
+    private UsersMapper usersMapper;
 
     @Async // 异步执行，不影响服务器启动速度
     @EventListener(ApplicationReadyEvent.class)
     public void runTask() {
         if (scannerUploaderId == null || scannerUploaderId <= 0) {
             log.error("歌曲扫描未执行：song.scanner.uploader-id 必须配置为有效用户 ID");
+            return;
+        }
+        Users scannerUploader = usersMapper.selectById(scannerUploaderId);
+        if (scannerUploader == null) {
+            log.error("歌曲扫描未执行：配置的上传者不存在，userId={}", scannerUploaderId);
             return;
         }
         log.info("🚀 启动极速双向同步任务...");
@@ -110,7 +119,7 @@ public class SongScannerTask {
             // 6. 执行新增
             int addedCount = 0;
             for (File file : filesToAdd) {
-                if (insertNewSong(file)) {
+                if (insertNewSong(file, scannerUploader)) {
                     addedCount++;
                 }
             }
@@ -124,7 +133,7 @@ public class SongScannerTask {
         }
     }
 
-    private boolean insertNewSong(File file) {
+    private boolean insertNewSong(File file, Users scannerUploader) {
         try {
             log.info("🎵 正在录入新歌曲: {}", file.getName());
             AudioFile f = AudioFileIO.read(file);
