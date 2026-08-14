@@ -2,8 +2,10 @@ package com.kyf.mp.server.modules.queue.business.imp;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -545,6 +547,17 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
         if (queue == null) {
             throw new BusinessException(403, "无权操作此队列");
+        }
+
+        List<QueueItems> queueItems = queueItemsMapper.selectList(new LambdaQueryWrapper<QueueItems>()
+                .eq(QueueItems::getQueueId, queueId));
+        Set<Long> requestedSongIds = new HashSet<>(songIds);
+        Set<Long> queueSongIds = new HashSet<>();
+        for (QueueItems item : queueItems) {
+            queueSongIds.add(item.getSongId());
+        }
+        if (requestedSongIds.size() != songIds.size() || !requestedSongIds.equals(queueSongIds)) {
+            throw new BusinessException(400, "重排歌曲列表必须与队列内容一致");
         }
 
         queueCustomMapper.batchUpdatePositions(queueId, songIds);
