@@ -35,6 +35,7 @@ public class UsersServiceImpl implements UsersService {
 
     private final UsersBusiness usersBusiness;
     private final BCryptPasswordEncoder passwordEncoder;
+    private final JwtUtils jwtUtils;
 
     @Override
     public LoginVO login(String username, String password) {
@@ -53,7 +54,7 @@ public class UsersServiceImpl implements UsersService {
         UserVO cleanUser = new UserVO();
         BeanUtils.copyProperties(user, cleanUser);
 
-        String token = JwtUtils.createToken(user.getUserId(), user.getUserName());
+        String token = jwtUtils.createToken(user.getUserId(), user.getUserName());
 
         LoginVO vo = new LoginVO();
         vo.setUser(cleanUser);

@@ -21,8 +21,10 @@ public class TokenBlacklistService {
 
     private final ConcurrentHashMap<String, Long> revoked = new ConcurrentHashMap<>();
     private final long defaultTtlMillis;
+    private final JwtUtils jwtUtils;
 
-    public TokenBlacklistService(@Value("${jwt.expire}") long defaultTtlMillis) {
+    public TokenBlacklistService(JwtUtils jwtUtils, @Value("${jwt.expire}") long defaultTtlMillis) {
+        this.jwtUtils = jwtUtils;
         this.defaultTtlMillis = defaultTtlMillis;
     }
 
@@ -33,7 +35,7 @@ public class TokenBlacklistService {
         }
         long expireAt;
         try {
-            Claims claims = JwtUtils.parseToken(token);
+            Claims claims = jwtUtils.parseToken(token);
             Instant exp = Optional.ofNullable(claims.getExpiration())
                     .map(d -> d.toInstant()) // 库返回的 Date 立刻转 Instant
                     .orElse(null);

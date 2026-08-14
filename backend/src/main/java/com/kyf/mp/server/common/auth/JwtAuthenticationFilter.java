@@ -24,6 +24,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public static final String TOKEN_ATTRIBUTE = "com.kyf.mp.server.common.auth.JwtAuthenticationFilter.token";
 
     private final TokenBlacklistService tokenBlacklistService;
+    private final JwtUtils jwtUtils;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
@@ -37,7 +38,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void authenticate(HttpServletRequest request, String token) {
         try {
-            Claims claims = JwtUtils.parseToken(token);
+            Claims claims = jwtUtils.parseToken(token);
             if (tokenBlacklistService.isRevoked(token)) {
                 SecurityContextHolder.clearContext();
                 log.debug("JWT token has been revoked, authentication rejected");
