@@ -6,6 +6,7 @@ import com.kyf.mp.server.modules.user.entity.Users;
 import com.kyf.mp.server.modules.user.mapper.UsersMapper;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -13,7 +14,6 @@ import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.images.Artwork;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 @Profile("!test")
 @ConditionalOnProperty(name = "song.scanner.enabled", havingValue = "true")
 @Slf4j
+@RequiredArgsConstructor
 public class SongScannerTask {
 
     @Value("${file.upload.song-path}")
@@ -49,11 +50,8 @@ public class SongScannerTask {
     private String songCoverUrlPrefix;
     @Value("${song.scanner.uploader-id}")
     private Long scannerUploaderId;
-
-    @Autowired
-    private SongsMapper songsMapper;
-    @Autowired
-    private UsersMapper usersMapper;
+    private final SongsMapper songsMapper;
+    private final UsersMapper usersMapper;
 
     @Async // 异步执行，不影响服务器启动速度
     @EventListener(ApplicationReadyEvent.class)
