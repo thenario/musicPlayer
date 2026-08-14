@@ -112,6 +112,13 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         }
 
         try {
+            Queues queue = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
+                    .eq(Queues::getQueueId, queueId)
+                    .eq(Queues::getCreatorId, userId));
+            if (queue == null) {
+                throw new BusinessException(404, "队列不存在或无权删除");
+            }
+
             PlayState playState = playStateMapper.selectOne(
                     new LambdaQueryWrapper<PlayState>().eq(PlayState::getUserId, userId));
 
@@ -120,13 +127,10 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             queueItemsMapper.delete(
                     new LambdaQueryWrapper<QueueItems>().eq(QueueItems::getQueueId, queueId));
 
-            int affectedRows = queuesMapper.delete(
-                    new LambdaQueryWrapper<Queues>()
-                            .eq(Queues::getQueueId, queueId)
-                            .eq(Queues::getCreatorId, userId));
+            int affectedRows = queuesMapper.deleteById(queueId);
 
             if (affectedRows == 0) {
-                throw new BusinessException(500, "删除失败，队列不存在或无权限");
+                throw new BusinessException(500, "删除队列失败");
             }
 
             Long newQueueId = null;
