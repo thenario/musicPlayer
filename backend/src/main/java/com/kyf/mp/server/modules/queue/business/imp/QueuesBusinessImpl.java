@@ -431,17 +431,16 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             throw new BusinessException(404, "队列不存在或无权操作");
         }
 
-        Integer finalPosition = dto.getCurrentPosition();
-
-        if (finalPosition == null && dto.getCurrentSongId() != null) {
+        Integer finalPosition = 0;
+        if (dto.getCurrentSongId() != null) {
             QueueItems item = queueItemsMapper.selectOne(new LambdaQueryWrapper<QueueItems>()
                     .eq(QueueItems::getQueueId, dto.getCurrentQueueId())
                     .eq(QueueItems::getSongId, dto.getCurrentSongId())
                     .last("LIMIT 1"));
-
-            if (item != null) {
-                finalPosition = item.getQueueItemPosition();
+            if (item == null) {
+                throw new BusinessException(400, "当前歌曲不在该队列中");
             }
+            finalPosition = item.getQueueItemPosition();
         }
 
         PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
