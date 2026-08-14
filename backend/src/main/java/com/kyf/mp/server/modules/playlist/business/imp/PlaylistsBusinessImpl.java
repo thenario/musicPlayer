@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.kyf.mp.server.common.BusinessException;
+import com.kyf.mp.server.common.file.UploadFileValidator;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.playlist.business.PlaylistsBusiness;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
@@ -66,7 +67,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             Long userId) {
         File savedFile = null;
         try {
-            String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+            String extension = UploadFileValidator.validateImage(file);
             String newFileName = UUID.randomUUID() + "-" + System.currentTimeMillis() + "." + extension;
 
             savedFile = new File(playlistCoverPath, newFileName);
@@ -129,7 +130,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             String oldCoverUrl = oldPlaylist.getPlaylistCoverUrl();
 
             if (file != null && !file.isEmpty()) {
-                String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
+                String extension = UploadFileValidator.validateImage(file);
                 newFileName = UUID.randomUUID() + "-" + System.currentTimeMillis() + "." + extension;
                 newSavedFile = new File(playlistCoverPath, newFileName);
                 if (!newSavedFile.getParentFile().exists())
@@ -232,32 +233,44 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void toggleLike(Long playlistId, Long userId, boolean isLike) {
-        if (playlistId == null)
+        if (playlistId == null) {
             throw new BusinessException(400, "歌单ID不能为空");
-        if (userId == null)
+        }
+        if (userId == null) {
             throw new BusinessException(401, "请先登录");
+        }
+        if (baseMapper.selectById(playlistId) == null) {
+            throw new BusinessException(404, "歌单不存在");
+        }
+
+        LambdaQueryWrapper<UsersLikeplaylistsRelation> relationQuery =
+                new LambdaQueryWrapper<UsersLikeplaylistsRelation>()
+                        .eq(UsersLikeplaylistsRelation::getUserId, userId)
+                        .eq(UsersLikeplaylistsRelation::getPlaylistId, playlistId);
 
         if (isLike) {
-            boolean success = this.update().setSql("like_count = like_count + 1").eq("playlist_id", playlistId)
-                    .update();
-            if (!success)
-                throw new BusinessException(404, "歌单不存在");
-
+            if (likeRelationMapper.selectCount(relationQuery) > 0) {
+                return;
+            }
             UsersLikeplaylistsRelation relation = new UsersLikeplaylistsRelation();
             relation.setUserId(userId);
             relation.setPlaylistId(playlistId);
             likeRelationMapper.insert(relation);
-        } else {
-            this.update().setSql("like_count = GREATEST(like_count - 1, 0)").eq("playlist_id", playlistId).update();
-            likeRelationMapper.delete(new LambdaQueryWrapper<UsersLikeplaylistsRelation>()
-                    .eq(UsersLikeplaylistsRelation::getUserId, userId)
-                    .eq(UsersLikeplaylistsRelation::getPlaylistId, playlistId));
+            this.update().setSql("like_count = like_count + 1").eq("playlist_id", playlistId).update();
+            return;
+        }
+
+        int deleted = likeRelationMapper.delete(relationQuery);
+        if (deleted > 0) {
+            this.update().setSql("like_count = GREATEST(like_count - 1, 0)")
+                    .eq("playlist_id", playlistId).update();
         }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId) {
+    public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId) {
+        assertPlaylistOwner(playlistId, userId);
         int nextPosition = songsPlaylistsRelationMapper.getMaxPosition(playlistId) + 1;
 
         SongsPlaylistsRelation relation = new SongsPlaylistsRelation();
@@ -282,7 +295,8 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeSongFromPlaylist(Long playlistId, Long songId) {
+    public void removeSongFromPlaylist(Long playlistId, Long songId, Long userId) {
+        assertPlaylistOwner(playlistId, userId);
         SongsPlaylistsRelation target = songsPlaylistsRelationMapper.selectOne(
                 new LambdaQueryWrapper<SongsPlaylistsRelation>()
                         .eq(SongsPlaylistsRelation::getPlaylistId, playlistId)
@@ -301,6 +315,16 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         songsPlaylistsRelationMapper.update(null, updatePosWrapper);
 
         this.update().setSql("song_count = GREATEST(song_count - 1, 0)").eq("playlist_id", playlistId).update();
+    }
+
+    private void assertPlaylistOwner(Long playlistId, Long userId) {
+        Playlists playlist = baseMapper.selectById(playlistId);
+        if (playlist == null) {
+            throw new BusinessException(404, "歌单不存在");
+        }
+        if (!playlist.getCreatorId().equals(userId)) {
+            throw new BusinessException(403, "无权修改此歌单");
+        }
     }
 
     private void cleanupPlaylistCover(String coverUrl) {

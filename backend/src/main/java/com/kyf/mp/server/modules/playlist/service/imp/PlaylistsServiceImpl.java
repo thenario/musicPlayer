@@ -83,12 +83,12 @@ public class PlaylistsServiceImpl implements PlaylistsService {
     }
 
     @Override
-    public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId) {
-        return playlistsBusiness.addSongToPlaylist(playlistId, songId);
+    public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId) {
+        return playlistsBusiness.addSongToPlaylist(playlistId, songId, userId);
     }
 
     @Override
-    public void removeSongFromPlaylist(Long playlistId, Long songId) {
-        playlistsBusiness.removeSongFromPlaylist(playlistId, songId);
+    public void removeSongFromPlaylist(Long playlistId, Long songId, Long userId) {
+        playlistsBusiness.removeSongFromPlaylist(playlistId, songId, userId);
     }
 }

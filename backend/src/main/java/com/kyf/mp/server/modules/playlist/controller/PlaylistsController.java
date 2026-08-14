@@ -104,15 +104,17 @@ public class PlaylistsController {
     @PostMapping("/{playlist_id}/songs/{song_id}")
     public ResultModel<AddSongToPlaylistVO> addSong(
             @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long playlistId,
-            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long songId) {
-        return ResultModel.success(playlistsService.addSongToPlaylist(playlistId, songId));
+            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long songId,
+            @RequestAttribute("userId") Long userId) {
+        return ResultModel.success(playlistsService.addSongToPlaylist(playlistId, songId, userId));
     }
 
     @DeleteMapping("/{playlist_id}/songs/{song_id}")
     public ResultModel<Void> removeSong(
             @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long playlistId,
-            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long songId) {
-        playlistsService.removeSongFromPlaylist(playlistId, songId);
+            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long songId,
+            @RequestAttribute("userId") Long userId) {
+        playlistsService.removeSongFromPlaylist(playlistId, songId, userId);
         return ResultModel.success(null);
     }
 }

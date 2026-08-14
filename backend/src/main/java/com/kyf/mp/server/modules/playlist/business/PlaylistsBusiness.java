@@ -24,7 +24,7 @@ public interface PlaylistsBusiness extends BaseBusiness<Playlists> {
 
     void toggleLike(Long playlistId, Long userId, boolean isLike);
 
-    AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId);
+    AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId);
 
-    void removeSongFromPlaylist(Long playlistId, Long songId);
+    void removeSongFromPlaylist(Long playlistId, Long songId, Long userId);
 }
