@@ -41,7 +41,9 @@ const playerStore = usePlayerStore()
 
 onMounted(() => {
   // 设置audio，把隐形的音频驱动器上报给全局大仓库
-  playerStore.setAudioElement(audioElement.value)
+  if (audioElement.value) {
+    playerStore.setAudioElement(audioElement.value)
+  }
 })
 </script>
 
