@@ -112,6 +112,11 @@ docker compose up -d --build
 - `static/` 是用户上传数据，**不入库**。首次部署克隆后为空目录：docker 会自动创建挂载目录，上传时后端用 `mkdirs()` 自动建 `songs/` 等子目录。
 - 修改 `nginx/conf/nginx.conf` 后，运行中的容器仍是旧配置，必须**重建镜像**才生效：`docker compose up -d --build nginx`。
 
+### 数据库迁移
+- 表结构由 Flyway 管理；初始结构为 `backend/src/main/resources/db/migration/V1__initial_schema.sql`。
+- 已有数据库首次启动会自动 baseline 到 V1，不会重复建表。后续结构变更必须新增 `V2__说明.sql`、`V3__说明.sql` 等迁移文件，禁止修改已执行的版本文件。
+- `mysql/init/init.sql` 仅用于 Docker 的全新数据卷初始化，保留它以兼容首次部署；生产中的增量变更以 Flyway 迁移为准。
+
 ### 前端开发
 - dev 下 Vite 把 `/api`、`/static` 代理到 `127.0.0.1:8080`（docker nginx）。**docker 没启动时接口会 502**。
 - `VITE_API_URL` 留空 = 相对路径，依赖 nginx / Vite 代理；如果前端裸跑（无代理），图片与接口会 404。
