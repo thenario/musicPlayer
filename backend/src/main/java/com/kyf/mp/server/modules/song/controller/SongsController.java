@@ -59,12 +59,12 @@ public class SongsController {
     public ResultModel<Void> upload(
             @RequestParam("audiofile") @NotNull(message = "请上传完整信息(包含封面与音频文件)") MultipartFile audioFile,
             @RequestParam("coverfile") @NotNull(message = "请上传完整信息(包含封面与音频文件)") MultipartFile coverFile,
-            @RequestParam("uploader_id") @NotNull(message = "请上传完整信息(包含封面与音频文件)") Long uploaderId,
+            @RequestAttribute("userId") Long userId,
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String artist,
             @RequestParam(required = false) String album,
             @RequestParam(required = false) String lyrics) {
-        songsService.uploadSong(audioFile, coverFile, uploaderId, title, artist, album, lyrics);
+        songsService.uploadSong(audioFile, coverFile, userId, title, artist, album, lyrics);
         return ResultModel.success(null);
     }
 

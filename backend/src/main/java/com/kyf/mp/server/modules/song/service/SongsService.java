@@ -21,7 +21,7 @@ public interface SongsService {
 
     LyricsVO getLyrics(Long songId);
 
-    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
+    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long userId,
             String title, String artist, String album, String lyrics);
 
     IPage<UploadsVO> getUploadSongs(Long userId, Integer page, Integer size);

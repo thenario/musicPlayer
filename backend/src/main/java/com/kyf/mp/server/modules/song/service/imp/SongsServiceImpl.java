@@ -42,9 +42,9 @@ public class SongsServiceImpl implements SongsService {
     }
 
     @Override
-    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
+    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long userId,
             String title, String artist, String album, String lyrics) {
-        songsBusiness.uploadSong(audioFile, coverFile, uploaderId, title, artist, album, lyrics);
+        songsBusiness.uploadSong(audioFile, coverFile, userId, title, artist, album, lyrics);
     }
 
     @Override

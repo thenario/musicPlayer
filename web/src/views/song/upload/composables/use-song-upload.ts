@@ -57,7 +57,7 @@ export function useSongUpload() {
     }
   }
 
-  const submit = async (uploaderId?: number | string) => {
+  const submit = async () => {
     if (!audioFile.value) return ElMessage.warning('请选择音频文件')
     if (!coverFile.value) return ElMessage.warning('请选择封面图片')
     if (!form.value.title) return ElMessage.warning('请输入歌曲标题')
@@ -69,7 +69,6 @@ export function useSongUpload() {
       const formData = new FormData()
       formData.append('audiofile', audioFile.value)
       formData.append('coverfile', coverFile.value)
-      formData.append('uploader_id', String(uploaderId ?? 0))
       formData.append('title', form.value.title)
       formData.append('artist', form.value.artist)
       formData.append('album', form.value.album)

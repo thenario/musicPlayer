@@ -80,12 +80,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'UploadPage' })
-import { useUserStore } from '@/stores/user'
-import { storeToRefs } from 'pinia'
 import { useSongUpload } from './composables/use-song-upload'
-
-const userStore = useUserStore()
-const { user } = storeToRefs(userStore)
 
 const {
   audioInput,
@@ -103,7 +98,7 @@ const {
   submit,
 } = useSongUpload()
 
-const submitUpload = () => submit(user.value?.user_id)
+const submitUpload = () => submit()
 </script>
 
 <style scoped>

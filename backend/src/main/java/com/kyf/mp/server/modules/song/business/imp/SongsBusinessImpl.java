@@ -104,7 +104,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
+    public void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long userId,
             String title, String artist, String album, String lyrics) {
 
         File savedAudioFile = null;
@@ -153,13 +153,13 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
             String fileMd5 = calculateMD5(savedAudioFile);
 
-            Users user = userMapper.selectById(uploaderId);
+            Users user = userMapper.selectById(userId);
             if (user == null)
                 throw new BusinessException(401, "上传失败：上传者身份无效");
 
             Songs song = new Songs();
             song.setFileMd5(fileMd5);
-            song.setUploaderId(uploaderId);
+            song.setUploaderId(userId);
             song.setUploaderName(user.getUserName());
             song.setSongTitle(finalTitle);
             song.setArtist(finalArtist);

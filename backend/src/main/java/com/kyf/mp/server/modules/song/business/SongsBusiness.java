@@ -16,7 +16,7 @@ public interface SongsBusiness extends BaseBusiness<Songs> {
 
     LyricsVO getLyrics(Long songId);
 
-    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long uploaderId,
+    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long userId,
             String title, String artist, String album, String lyrics);
 
     void editUploadSong(EditSongDTO dto, Long userId, Long songID);
