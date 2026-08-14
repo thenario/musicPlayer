@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.Data;
 
 @Data
@@ -29,6 +30,7 @@ public class UpdateCurrentQueueStateDTO {
     private Boolean isPlaying;
 
     @JsonProperty("playmode")
+    @Pattern(regexp = "sequential|repeat_all|repeat_one|shuffle", message = "播放模式不合法")
     private String playmode;
 
     @JsonProperty("updated_date")
