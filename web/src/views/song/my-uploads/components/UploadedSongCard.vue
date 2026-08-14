@@ -44,10 +44,13 @@
 <script setup lang="ts">
 import { Mic, Calendar, EditPen } from '@element-plus/icons-vue'
 import { getImageUrl, formatDate } from '@/utils/format'
+import type { ISong } from '@/types'
 
-defineProps<{ song: any }>()
+type UploadedSongCard = Pick<ISong, 'song_id' | 'song_title' | 'artist' | 'song_cover_url'> & { date_added: string | Date }
+
+defineProps<{ song: UploadedSongCard }>()
 const emit = defineEmits<{
-  (e: 'edit', song: any): void
+  (e: 'edit', song: UploadedSongCard): void
 }>()
 </script>
 
