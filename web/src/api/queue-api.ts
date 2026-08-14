@@ -1,160 +1,69 @@
-import type { IQueueState, IAxiosRes, IGetCurrentQueue, IGetMyQueues, IQueue } from '@/types'
+import type { IAxiosRes, IGetCurrentQueue, IGetMyQueues, IQueue, IQueueState } from '@/types'
 import request from './axios'
 
-//获取用户的播放队列
+type Id = number | string
+type QueueResponse = { queue: IQueue }
+type QueueItemAddition = { queue_id: Id; queue_item_position: number; queue_item_id: Id }
+type QueueDeletion = { was_active: boolean; new_queue_id: Id | null }
+
 const getMyQueues = async (): Promise<IGetMyQueues> => {
-  const res = await request.get<any, IAxiosRes<any>>('/queues', { silent: true })
-
-  return {
-    success: true,
-    message: res.message,
-    queues: res.data.queues,
-  }
+  const res = await request.get<never, IAxiosRes<{ queues: IQueue[] }>>('/queues', { silent: true })
+  return { success: true, message: res.message, queues: res.data.queues }
 }
 
-//依据id获取队列信息
-const getQueueById = async (
-  queueId: number | string,
-): Promise<{ success: boolean; message: string; queue: IQueue }> => {
-  const res = await request.get<any, IAxiosRes<any>>(`/queues/${queueId}`)
-
-  return {
-    success: true,
-    message: res.message,
-    queue: res.data.queue,
-  }
+const getQueueById = async (queueId: Id): Promise<{ success: boolean; message: string; queue: IQueue }> => {
+  const res = await request.get<never, IAxiosRes<QueueResponse>>(`/queues/${queueId}`)
+  return { success: true, message: res.message, queue: res.data.queue }
 }
 
-//获取用户当前的队列信息
 const getCurrentQueue = async (): Promise<IGetCurrentQueue> => {
-  const res = await request.get<any, IAxiosRes<any>>('/queues/current', { silent: true })
-
-  return {
-    success: true,
-    message: res.message,
-    queue: res.data.queue,
-    queue_state: res.data.queue_state,
-  }
+  const res = await request.get<never, IAxiosRes<{ queue: IQueue; queue_state: IQueueState }>>('/queues/current', { silent: true })
+  return { success: true, message: res.message, queue: res.data.queue, queue_state: res.data.queue_state }
 }
 
-//更换当前的队列
-const alterQueueToCurrent = async (queueId: number | string) => {
-  const res = await request.put<any, IAxiosRes<any>>('/queues/player/current-queue', {
-    queue_id: queueId,
-  })
-
-  return {
-    success: true,
-    message: res.message,
-  }
+const alterQueueToCurrent = async (queueId: Id) => {
+  const res = await request.put<{ queue_id: Id }, IAxiosRes<null>>('/queues/player/current-queue', { queue_id: queueId })
+  return { success: true, message: res.message }
 }
 
-//删除队列
-const deleteQueue = async (queueId: number | string) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}`)
-
-  return {
-    success: true,
-    message: res.message,
-    data: res.data,
-  }
+const deleteQueue = async (queueId: Id) => {
+  const res = await request.delete<never, IAxiosRes<QueueDeletion>>(`/queues/${queueId}`)
+  return { success: true, message: res.message, data: res.data }
 }
 
-//添加歌曲到队列
-const addSongToQueue = async (song_id: number | string, queue_id: number | string, mode: boolean) => {
-  const res = await request.post<any, IAxiosRes<any>>(`/queues/${queue_id || 0}/songs`, {
-    song_id,
-    mode, //true下一首播放，false直接播放
-  })
-
-  return {
-    success: res.success,
-    message: res.message,
-    data: res.data,
-  }
+const addSongToQueue = async (songId: Id, queueId: Id, mode: boolean) => {
+  const res = await request.post<{ song_id: Id; mode: boolean }, IAxiosRes<QueueItemAddition>>(`/queues/${queueId || 0}/songs`, { song_id: songId, mode })
+  return { success: res.success, message: res.message, data: res.data }
 }
 
-//从队列移除歌曲
-const removeSongFromQueue = async (queueId: number | string, itemId: number | string) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs/${itemId}`)
-
-  return {
-    success: true,
-    message: res.message,
-  }
+const removeSongFromQueue = async (queueId: Id, itemId: Id) => {
+  const res = await request.delete<never, IAxiosRes<null>>(`/queues/${queueId}/songs/${itemId}`)
+  return { success: true, message: res.message }
 }
 
-//设置播放模式
-const setPlayMode = async (queueId: number | string, play_mode: string) => {
-  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queueId}/play-mode`, {
-    play_mode: play_mode,
-  })
-
-  return {
-    success: true,
-    message: res.message,
-  }
+const setPlayMode = async (queueId: Id, playMode: string) => {
+  const res = await request.patch<{ play_mode: string }, IAxiosRes<null>>(`/queues/${queueId}/play-mode`, { play_mode: playMode })
+  return { success: true, message: res.message }
 }
 
-//重排队列
-const reorderQueue = async (song_ids: (number | string)[], queue_id: number | string) => {
-  const res = await request.patch<any, IAxiosRes<any>>(`/queues/${queue_id}/reorder`, {
-    song_ids,
-  })
-
-  return {
-    success: true,
-    message: res.message,
-  }
+const reorderQueue = async (songIds: Id[], queueId: Id) => {
+  const res = await request.patch<{ song_ids: Id[] }, IAxiosRes<null>>(`/queues/${queueId}/reorder`, { song_ids: songIds })
+  return { success: true, message: res.message }
 }
 
-//从歌单创建队列，类似于播放全部
-const createQueueFromPlaylist = async (playlist_id: number | string) => {
-  const res = await request.post<any, IAxiosRes<any>>('/queues', {
-    source: 'playlist',
-    playlist_id,
-  })
-
-  return {
-    success: true,
-    message: res.message,
-    queue_id: res.data.queue_id,
-    song_count: res.data.song_count,
-  }
+const createQueueFromPlaylist = async (playlistId: Id) => {
+  const res = await request.post<{ source: 'playlist'; playlist_id: Id }, IAxiosRes<{ queue_id: Id; song_count: number }>>('/queues', { source: 'playlist', playlist_id: playlistId })
+  return { success: true, message: res.message, ...res.data }
 }
 
-//更新播放状态
 const updateCurrentQueueState = async (stateData: IQueueState) => {
-  const res = await request.patch<any, IAxiosRes<any>>('/queues/current/state', {
-    stateData,
-  })
-
-  return {
-    success: true,
-    message: res.message,
-  }
-}
-//清空队列
-const clearQueue = async (queueId: number | string) => {
-  const res = await request.delete<any, IAxiosRes<any>>(`/queues/${queueId}/songs`)
-
-  return {
-    success: true,
-    message: res.message,
-  }
+  const res = await request.patch<{ stateData: IQueueState }, IAxiosRes<null>>('/queues/current/state', { stateData })
+  return { success: true, message: res.message }
 }
 
-export const queueApi = {
-  getCurrentQueue,
-  getMyQueues,
-  getQueueById,
-  deleteQueue,
-  createQueueFromPlaylist,
-  addSongToQueue,
-  updateCurrentQueueState,
-  reorderQueue,
-  setPlayMode,
-  alterQueueToCurrent,
-  removeSongFromQueue,
-  clearQueue,
+const clearQueue = async (queueId: Id) => {
+  const res = await request.delete<never, IAxiosRes<null>>(`/queues/${queueId}/songs`)
+  return { success: true, message: res.message }
 }
+
+export const queueApi = { getCurrentQueue, getMyQueues, getQueueById, deleteQueue, createQueueFromPlaylist, addSongToQueue, updateCurrentQueueState, reorderQueue, setPlayMode, alterQueueToCurrent, removeSongFromQueue, clearQueue }
