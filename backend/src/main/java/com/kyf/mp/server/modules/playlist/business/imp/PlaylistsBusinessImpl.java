@@ -162,7 +162,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         } catch (Exception e) {
             if (newSavedFile != null && newSavedFile.exists())
                 newSavedFile.delete();
-            throw new BusinessException(500, "编辑失败: " + e.getMessage());
+            throw new BusinessException(500, "编辑失败");
         }
     }
 
@@ -273,7 +273,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
                 throw new BusinessException(409, "歌单更新冲突，请重试");
             if (message != null && message.contains("Duplicate entry"))
                 throw new BusinessException(409, "歌曲已在歌单中");
-            throw new BusinessException(500, "添加失败: " + e.getMessage());
+            throw new BusinessException(500, "添加失败");
         }
 
         this.update().setSql("song_count = song_count + 1").eq("playlist_id", playlistId).update();

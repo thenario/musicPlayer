@@ -165,7 +165,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             throw e;
         } catch (Exception e) {
             log.error("删除队列异常: ", e);
-            throw new BusinessException(500, "服务器错误: " + e.getMessage());
+            throw new BusinessException(500, "删除队列失败");
         }
     }
 
