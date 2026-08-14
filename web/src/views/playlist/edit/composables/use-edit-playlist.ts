@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import type { UploadFile } from 'element-plus'
 import { playlistApi } from '@/api/playlist-api'
 import { getImageUrl } from '@/utils/format'
 import { PLAYLIST_COVER_TYPES } from '../const'
@@ -18,13 +19,13 @@ export function useEditPlaylist(playlistId: string) {
         form.value.description = res.playlist.description || ''
         previewImage.value = getImageUrl(res.playlist.playlist_cover_url)
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.error(err)
+      console.error(err instanceof Error ? err.message : err)
     }
   }
 
-  const handleFileChange = (uploadFile: any) => {
+  const handleFileChange = (uploadFile: UploadFile) => {
     const file = uploadFile.raw
     if (!file) return
     if (!PLAYLIST_COVER_TYPES.includes(file.type)) {
@@ -48,9 +49,9 @@ export function useEditPlaylist(playlistId: string) {
       await playlistApi.editPlaylistDetails(formData)
       ElMessage.success('更新成功')
       return true
-    } catch (err: any) {
+    } catch (err: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.error('更新失败:', err)
+      console.error('更新失败:', err instanceof Error ? err.message : err)
       return false
     } finally {
       submitting.value = false
