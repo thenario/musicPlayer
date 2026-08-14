@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.server.common.BusinessException;
+import com.kyf.mp.server.common.file.UploadFileValidator;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.user.business.UsersBusiness;
 import com.kyf.mp.server.modules.user.dto.EditUserDTO;
@@ -47,8 +48,8 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
 
         MultipartFile file = editData.getUser_cover();
         if (file != null && !file.isEmpty()) {
-            String suffix = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
-            String newFileName = userId + "_" + System.currentTimeMillis() + suffix;
+            String extension = UploadFileValidator.validateImage(file);
+            String newFileName = userId + "_" + System.currentTimeMillis() + "." + extension;
 
             File directory = new File(userCoverPath);
             if (directory.exists()) {
