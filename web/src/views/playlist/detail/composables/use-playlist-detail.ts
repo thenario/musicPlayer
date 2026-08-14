@@ -88,9 +88,9 @@ export function usePlaylistDetail() {
       await playlistApi.addSongToPlaylist(playlist.value.playlist_id, songId)
       ElMessage.success("添加成功")
       await loadPlaylist()
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.log(error)
+      console.log(error instanceof Error ? error.message : error)
     }
   }
 
