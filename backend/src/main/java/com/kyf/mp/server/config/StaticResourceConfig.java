@@ -37,6 +37,7 @@ public class StaticResourceConfig implements WebMvcConfigurer {
 
     /** 磁盘路径 -> Spring 的 file: URL（兼容 Windows/Linux）。 */
     private String toFileUrl(String path) {
-        return Path.of(path).toUri().toString();
+        String fileUrl = Path.of(path).toUri().toString();
+        return fileUrl.endsWith("/") ? fileUrl : fileUrl + "/";
     }
 }
