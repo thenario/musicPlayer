@@ -45,6 +45,8 @@ public class SongScannerTask {
     private String songUrlPrefix;
     @Value("${file.static.song-cover-url}")
     private String songCoverUrlPrefix;
+    @Value("${song.scanner.uploader-id}")
+    private Long scannerUploaderId;
 
     @Autowired
     private SongsMapper songsMapper;
@@ -52,6 +54,10 @@ public class SongScannerTask {
     @Async // 异步执行，不影响服务器启动速度
     @EventListener(ApplicationReadyEvent.class)
     public void runTask() {
+        if (scannerUploaderId == null || scannerUploaderId <= 0) {
+            log.error("歌曲扫描未执行：song.scanner.uploader-id 必须配置为有效用户 ID");
+            return;
+        }
         log.info("🚀 启动极速双向同步任务...");
         long start = System.currentTimeMillis();
 
@@ -129,7 +135,7 @@ public class SongScannerTask {
             // 快速指纹：文件名+大小的哈希，代替全量MD5，速度极快
             song.setFileMd5(java.util.Objects.hash(file.getName(), file.length()) + "");
 
-            song.setUploaderId(1L);
+            song.setUploaderId(scannerUploaderId);
             song.setUploaderName("SystemScanner");
 
             String title = (tag != null) ? tag.getFirst(FieldKey.TITLE) : "";
