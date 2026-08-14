@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
 import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
 import org.springframework.beans.factory.annotation.Value;
@@ -112,8 +113,8 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
         File savedCoverFile = null;
 
         try {
-            String audioExt = StringUtils.getFilenameExtension(audioFile.getOriginalFilename());
-            String coverExt = StringUtils.getFilenameExtension(coverFile.getOriginalFilename());
+            String audioExt = UploadFileValidator.validateAudio(audioFile);
+            String coverExt = UploadFileValidator.validateImage(coverFile);
 
             String finalTitle = StringUtils.hasText(title) ? title : "Unknown Title";
             String finalArtist = StringUtils.hasText(artist) ? artist : "Unknown Artist";
@@ -176,6 +177,9 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
             baseMapper.insert(song);
 
+        } catch (CannotReadException e) {
+            cleanupFiles(savedAudioFile, savedCoverFile);
+            throw new BusinessException(400, "音频文件内容无效");
         } catch (BusinessException e) {
             cleanupFiles(savedAudioFile, savedCoverFile);
             throw e;
