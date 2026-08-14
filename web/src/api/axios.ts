@@ -2,6 +2,12 @@ import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig 
 import { router } from '@/router'
 import { tokenStorage, userStorage } from '@/utils/storage'
 
+interface BackendPayload {
+  code: number
+  message?: string
+  data?: unknown
+}
+
 // 允许请求按需静默（silent: true 时不集中弹错误，由调用方自行处理）
 declare module 'axios' {
   interface AxiosRequestConfig {
@@ -94,7 +100,7 @@ request.interceptors.response.use(
       data: res.data || null,
       message: res.message || '请求成功',
       code: 200,
-    }
+    } as unknown as AxiosResponse
   },
   (error: unknown) => {
     //如果是cancel被中断的指令，交由调用方的 catch/finally 收尾
