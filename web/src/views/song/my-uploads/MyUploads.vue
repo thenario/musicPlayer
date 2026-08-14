@@ -56,7 +56,7 @@
 defineOptions({ name: 'MyUploadsPage' })
 import { useRouter } from 'vue-router';
 import { onMounted } from 'vue';
-import { useSongStore } from '@/stores/song';
+import { useSongStore, type EditableUploadSong } from '@/stores/song';
 import { AppPagination } from '@/common';
 import UploadedSongCard from './components/UploadedSongCard.vue';
 import { useMyUploads } from './composables/use-my-uploads';
@@ -67,7 +67,7 @@ const songStore = useSongStore();
 
 const { songs, loading, pagination, changePage, load } = useMyUploads();
 
-const goToSongEdit = (song: any) => {
+const goToSongEdit = (song: EditableUploadSong) => {
     songStore.setEditingSong(song);
     router.push(`/user-uploads/${song.song_id || song.id}/edit`);
 };
