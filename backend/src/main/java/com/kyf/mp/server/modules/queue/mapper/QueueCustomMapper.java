@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
 import com.kyf.mp.server.modules.queue.vo.ReturnQueue;
 
-import io.lettuce.core.dynamic.annotation.Param;
 
 @Mapper
 public interface QueueCustomMapper {
@@ -19,7 +19,7 @@ public interface QueueCustomMapper {
 
     List<ReturnQueue> selectMyQueues(@Param("userId") Long userId);
 
-    ReturnQueue selectQueueById(@Param("queueId") Long queueId);
+    ReturnQueue selectQueueById(@Param("queueId") Long queueId, @Param("userId") Long userId);
 
     int copySongsFromPlaylistToQueue(@Param("queueId") Long queueId, @Param("playlistId") Long playlistId);
 

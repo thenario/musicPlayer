@@ -25,7 +25,7 @@ public interface QueuesService {
 
     MyQueues getMyQueues(Long userId);
 
-    SingleQueue getQueueById(Long queueId);
+    SingleQueue getQueueById(Long userId, Long queueId);
 
     DeleteQueueVO deleteQueue(Long userId, Long queueId);
 

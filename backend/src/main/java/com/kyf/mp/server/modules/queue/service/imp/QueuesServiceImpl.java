@@ -43,8 +43,8 @@ public class QueuesServiceImpl implements QueuesService {
     }
 
     @Override
-    public SingleQueue getQueueById(Long queueId) {
-        return queuesBusiness.getQueueById(queueId);
+    public SingleQueue getQueueById(Long userId, Long queueId) {
+        return queuesBusiness.getQueueById(userId, queueId);
     }
 
     @Override

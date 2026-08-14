@@ -84,8 +84,9 @@ public class QueuesController {
 
     @GetMapping("/{queueId}")
     public ResultModel<SingleQueue> getQueueById(
+            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Long userId,
             @PathVariable @NotNull(message = "无效的队列ID") @Min(value = 1, message = "无效的队列ID") Long queueId) {
-        return ResultModel.success(queueService.getQueueById(queueId));
+        return ResultModel.success(queueService.getQueueById(userId, queueId));
     }
 
     @DeleteMapping("/{queueId}")

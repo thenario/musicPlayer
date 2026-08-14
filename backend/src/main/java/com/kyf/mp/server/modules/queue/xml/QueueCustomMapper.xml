@@ -77,7 +77,7 @@
         qi.queue_item_position, qi.queue_id as qi_queue_id, qi.added_date, s.song_id, s.song_title,
         s.song_cover_url, s.song_url, s.artist, s.album FROM queues q LEFT JOIN queue_items qi ON
         q.queue_id = qi.queue_id LEFT JOIN songs s ON qi.song_id = s.song_id WHERE q.queue_id =
-        #{queueId} ORDER BY qi.queue_item_position ASC </select>
+        #{queueId} AND q.creator_id = #{userId} ORDER BY qi.queue_item_position ASC </select>
 
     <insert id="copySongsFromPlaylistToQueue"> INSERT INTO queue_items (queue_id, song_id,
         queue_item_position) SELECT #{queueId}, song_id, song_playlist_position FROM

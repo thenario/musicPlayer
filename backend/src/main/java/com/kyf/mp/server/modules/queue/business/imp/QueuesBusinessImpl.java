@@ -91,8 +91,8 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     }
 
     @Override
-    public SingleQueue getQueueById(Long queueId) {
-        ReturnQueue queueDetail = queueCustomMapper.selectQueueById(queueId);
+    public SingleQueue getQueueById(Long userId, Long queueId) {
+        ReturnQueue queueDetail = queueCustomMapper.selectQueueById(queueId, userId);
 
         if (queueDetail == null) {
             throw new BusinessException(404, "队列不存在");
