@@ -221,7 +221,10 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             }
 
             Playlists playlist = playlistsMapper.selectById(playlistId);
-            String queueName = (playlist != null) ? playlist.getPlaylistName() : "新播放队列";
+            if (playlist == null) {
+                throw new BusinessException(404, "歌单不存在");
+            }
+            String queueName = playlist.getPlaylistName();
 
             Queues newQueue = new Queues();
             newQueue.setQueueName(queueName);
@@ -252,9 +255,11 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
             return vo;
 
+        } catch (BusinessException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("从歌单创建队列失败: ", e);
-            throw new BusinessException(500, "创建队列失败: " + e.getMessage());
+            log.error("从歌单创建队列失败", e);
+            throw new BusinessException(500, "创建队列失败");
         }
     }
 
