@@ -415,6 +415,13 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     @Transactional(rollbackFor = Exception.class)
     public void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO dto) {
 
+        Queues queue = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
+                .eq(Queues::getQueueId, dto.getCurrentQueueId())
+                .eq(Queues::getCreatorId, userId));
+        if (queue == null) {
+            throw new BusinessException(404, "队列不存在或无权操作");
+        }
+
         Integer finalPosition = dto.getCurrentPosition();
 
         if (finalPosition == null && dto.getCurrentSongId() != null) {
