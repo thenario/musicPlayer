@@ -367,39 +367,40 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void removeSongFromQueue(Long userId, Long queueItemId) {
+    public void removeSongFromQueue(Long userId, Long queueId, Long queueItemId) {
         Map<String, Object> itemInfo = queueCustomMapper.selectItemDetailForDelete(queueItemId, userId);
 
         if (itemInfo == null || itemInfo.isEmpty()) {
             throw new BusinessException(404, "未找到该歌曲或无权操作");
         }
 
-        Long queueId = (Long) itemInfo.get("queue_id");
+        Long itemQueueId = (Long) itemInfo.get("queue_id");
+        if (!queueId.equals(itemQueueId)) {
+            throw new BusinessException(404, "队列中未找到该歌曲");
+        }
         Integer removedPos = (Integer) itemInfo.get("queue_item_position");
         Long removedSongId = (Long) itemInfo.get("song_id");
 
         queueItemsMapper.deleteById(queueItemId);
-        queueCustomMapper.shiftPositionsDown(queueId, removedPos);
+        queueCustomMapper.shiftPositionsDown(itemQueueId, removedPos);
 
         PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
                 .eq(PlayState::getUserId, userId)
-                .eq(PlayState::getCurrentQueueId, queueId));
+                .eq(PlayState::getCurrentQueueId, itemQueueId));
 
         if (playState != null && removedSongId.equals(playState.getCurrentSongId())) {
             QueueItems nextItem = queueItemsMapper.selectOne(new LambdaQueryWrapper<QueueItems>()
-                    .eq(QueueItems::getQueueId, queueId)
+                    .eq(QueueItems::getQueueId, itemQueueId)
                     .eq(QueueItems::getQueueItemPosition, removedPos)
                     .last("LIMIT 1"));
 
             Long nextSongId = (nextItem != null) ? nextItem.getSongId() : null;
-
             playState.setCurrentSongId(nextSongId);
             playState.setCurrentProgress(0);
             playStateMapper.updateById(playState);
         }
-        queueCustomMapper.decrementSongCount(queueId);
+        queueCustomMapper.decrementSongCount(itemQueueId);
     }
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO dto) {

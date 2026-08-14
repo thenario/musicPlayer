@@ -68,8 +68,8 @@ public class QueuesServiceImpl implements QueuesService {
     }
 
     @Override
-    public void removeSongFromQueue(Long userId, Long queueItemId) {
-        queuesBusiness.removeSongFromQueue(userId, queueItemId);
+    public void removeSongFromQueue(Long userId, Long queueId, Long queueItemId) {
+        queuesBusiness.removeSongFromQueue(userId, queueId, queueItemId);
     }
 
     @Override

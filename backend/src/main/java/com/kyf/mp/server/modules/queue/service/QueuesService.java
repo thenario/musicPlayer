@@ -35,7 +35,7 @@ public interface QueuesService {
 
     AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto);
 
-    void removeSongFromQueue(Long userId, Long queueItemId);
+    void removeSongFromQueue(Long userId, Long queueId, Long queueItemId);
 
     void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO wrapper);
 
