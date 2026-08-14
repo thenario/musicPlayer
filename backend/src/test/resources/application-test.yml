@@ -7,3 +7,6 @@ spring:
 
 jwt:
   secret: test-secret-for-jwt-signing-must-be-at-least-32-bytes
+song:
+  scanner:
+    enabled: false
