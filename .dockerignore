@@ -1,0 +1,12 @@
+.git
+.vscode
+**/node_modules
+web/dist
+web/.vite
+backend/target
+mysql/data
+static
+.env
+.env.*
+!.env.example
+nginx/html
