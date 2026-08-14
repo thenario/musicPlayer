@@ -31,7 +31,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   // ================= 播放状态同步到后端 =================
   const syncPlayStateToBackend = async () => {
-    if (!currentSong.value) return
+    if (!currentSong.value || !currentQueueId.value) return { success: true }
     try {
       if (currentSong.value) {
         const now = new Date()
@@ -40,7 +40,7 @@ export const usePlayerStore = defineStore('player', () => {
           current_position: currentIndex.value,
           current_progress: currentTime.value,
           is_playing: isPlaying.value,
-          current_queue_id: currentQueueId.value ?? 0,
+          current_queue_id: currentQueueId.value,
           playmode: playMode.value,
           updated_date: now,
         })
