@@ -1,4 +1,4 @@
-export interface IAxiosRes<T = any> {
+export interface IAxiosRes<T = unknown> {
   success: boolean
   data: T
   message: string
@@ -190,7 +190,7 @@ export interface IAlterQueueTocurrent {
 export interface IDeleteQueue {
   message: string
   success: boolean
-  data?: any
+  data?: unknown
 }
 export interface IClearQueue {
   message: string
@@ -204,7 +204,7 @@ export interface IAddSongToQueue {
   song_position: number
   action: string
   queue_item: IQueueItem
-  data?: any
+  data?: unknown
 }
 export interface IRemoveSongFromQueue {
   message: string
