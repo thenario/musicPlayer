@@ -116,7 +116,7 @@ public class QueuesController {
     @DeleteMapping("/{queueId}/songs/{queueItemId}")
     public ResultModel<Void> removeSongFromQueue(
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Long userId,
-            @PathVariable Long queueId,
+            @PathVariable @NotNull(message = "缺少有效的队列ID") @Min(value = 1, message = "缺少有效的队列ID") Long queueId,
             @PathVariable @NotNull(message = "缺少有效的队列项ID") @Min(value = 1, message = "缺少有效的队列项ID") Long queueItemId) {
         queueService.removeSongFromQueue(userId, queueId, queueItemId);
         return ResultModel.success(null);
