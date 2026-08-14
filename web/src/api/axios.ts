@@ -104,7 +104,7 @@ request.interceptors.response.use(
     //如果是cancel被中断的指令，进入代码块
     if (axios.isCancel(error)) {
       //返回一个空promise，外层的函数不会有任何反应
-      return new Promise(() => {})
+      return Promise.reject(error)
     }
 
     let message = '网络连接异常' //默认的内容
