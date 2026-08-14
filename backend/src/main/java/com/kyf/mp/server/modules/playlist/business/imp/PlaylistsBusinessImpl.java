@@ -18,7 +18,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.file.UploadFileValidator;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
@@ -193,9 +192,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
 
-        List<SongsPlaylistsRelation> relations = songsPlaylistsRelationMapper.selectList(
-                new LambdaQueryWrapper<SongsPlaylistsRelation>()
-                        .eq(SongsPlaylistsRelation::getPlaylistId, playlistId));
+        List<SongsPlaylistsRelation> relations = songsPlaylistsRelationMapper.findByPlaylistId(playlistId);
 
         List<PlaylistSongVO> songVOList = new ArrayList<>();
         if (!relations.isEmpty()) {
@@ -218,7 +215,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
         boolean isLiked = false;
         if (userId != null) {
-                        isLiked = likeRelationMapper.countByUserAndPlaylist(userId, playlistId) > 0;
+            isLiked = likeRelationMapper.countByUserAndPlaylist(userId, playlistId) > 0;
         }
 
         PlaylistDetailVO vo = new PlaylistDetailVO();
@@ -250,8 +247,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             }
             return;
         }
-
-                int deleted = likeRelationMapper.deleteByUserAndPlaylist(userId, playlistId);
+        int deleted = likeRelationMapper.deleteByUserAndPlaylist(userId, playlistId);
         if (deleted > 0) {
             this.update().setSql("like_count = GREATEST(like_count - 1, 0)")
                     .eq("playlist_id", playlistId).update();
@@ -288,22 +284,13 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     @Transactional(rollbackFor = Exception.class)
     public void removeSongFromPlaylist(Long playlistId, Long songId, Long userId) {
         assertPlaylistOwner(playlistId, userId);
-        SongsPlaylistsRelation target = songsPlaylistsRelationMapper.selectOne(
-                new LambdaQueryWrapper<SongsPlaylistsRelation>()
-                        .eq(SongsPlaylistsRelation::getPlaylistId, playlistId)
-                        .eq(SongsPlaylistsRelation::getSongId, songId));
+        SongsPlaylistsRelation target = songsPlaylistsRelationMapper.findByPlaylistAndSong(playlistId, songId);
 
         if (target == null)
             throw new BusinessException(404, "歌曲不在该歌单中");
 
-        songsPlaylistsRelationMapper.delete(new LambdaQueryWrapper<SongsPlaylistsRelation>()
-                .eq(SongsPlaylistsRelation::getPlaylistId, playlistId).eq(SongsPlaylistsRelation::getSongId, songId));
-
-        UpdateWrapper<SongsPlaylistsRelation> updatePosWrapper = new UpdateWrapper<>();
-        updatePosWrapper.setSql("song_playlist_position = song_playlist_position - 1")
-                .eq("playlist_id", playlistId)
-                .gt("song_playlist_position", target.getSongPlaylistPosition());
-        songsPlaylistsRelationMapper.update(null, updatePosWrapper);
+        songsPlaylistsRelationMapper.deleteByPlaylistAndSong(playlistId, songId);
+        songsPlaylistsRelationMapper.decrementPositionsAfter(playlistId, target.getSongPlaylistPosition());
 
         this.update().setSql("song_count = GREATEST(song_count - 1, 0)").eq("playlist_id", playlistId).update();
     }
