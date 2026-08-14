@@ -255,6 +255,9 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     @Transactional(rollbackFor = Exception.class)
     public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId) {
         assertPlaylistOwner(playlistId, userId);
+        if (songsMapper.selectById(songId) == null) {
+            throw new BusinessException(404, "歌曲不存在");
+        }
         int nextPosition = songsPlaylistsRelationMapper.getMaxPosition(playlistId) + 1;
 
         SongsPlaylistsRelation relation = new SongsPlaylistsRelation();
