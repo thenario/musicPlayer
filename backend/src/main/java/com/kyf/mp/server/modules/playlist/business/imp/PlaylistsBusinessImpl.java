@@ -243,23 +243,20 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             throw new BusinessException(404, "歌单不存在");
         }
 
+        if (isLike) {
+            UsersLikeplaylistsRelation relation = new UsersLikeplaylistsRelation();
+            relation.setUserId(userId);
+            relation.setPlaylistId(playlistId);
+            if (likeRelationMapper.insertIgnore(relation) > 0) {
+                this.update().setSql("like_count = like_count + 1").eq("playlist_id", playlistId).update();
+            }
+            return;
+        }
+
         LambdaQueryWrapper<UsersLikeplaylistsRelation> relationQuery =
                 new LambdaQueryWrapper<UsersLikeplaylistsRelation>()
                         .eq(UsersLikeplaylistsRelation::getUserId, userId)
                         .eq(UsersLikeplaylistsRelation::getPlaylistId, playlistId);
-
-        if (isLike) {
-            if (likeRelationMapper.selectCount(relationQuery) > 0) {
-                return;
-            }
-            UsersLikeplaylistsRelation relation = new UsersLikeplaylistsRelation();
-            relation.setUserId(userId);
-            relation.setPlaylistId(playlistId);
-            likeRelationMapper.insert(relation);
-            this.update().setSql("like_count = like_count + 1").eq("playlist_id", playlistId).update();
-            return;
-        }
-
         int deleted = likeRelationMapper.delete(relationQuery);
         if (deleted > 0) {
             this.update().setSql("like_count = GREATEST(like_count - 1, 0)")
