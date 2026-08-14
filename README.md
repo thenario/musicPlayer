@@ -1,6 +1,6 @@
 # 音乐播放器（vue_musicplayer）
 
-基于 **Vue 3 + Spring Boot** 的全栈音乐播放器。支持歌曲上传/管理、歌单、播放队列、歌词、播放模式（顺序/单曲/随机）、用户系统（注册/登录/个人资料/登出），后端使用 JWT + 内存黑名单实现安全的登出失效。
+基于 **Vue 3 + Spring Boot** 的全栈音乐播放器。支持歌曲上传/管理、歌单、播放队列、歌词、播放模式（顺序/单曲/随机）、用户系统（注册/登录/个人资料/登出），后端使用 JWT + Redis 黑名单实现安全且可持久化的登出失效。
 
 > 最后一次大规模重构：**2026-08-09**。完整重构历程见文末 [重构历程](#重构历程)。
 
@@ -11,8 +11,8 @@
 | 端 | 技术 |
 |---|---|
 | 前端 `web/` | Vue 3 · Vite · TypeScript · Pinia · Element Plus · Tailwind CSS · pnpm |
-| 后端 `backend/` | Java 21 · Spring Boot · MyBatis-Plus · JWT（登出黑名单） · Maven |
-| 基础设施 | MySQL 8 · Nginx · Docker Compose |
+| 后端 `backend/` | Java 21 · Spring Boot · MyBatis-Plus · JWT（Redis 登出黑名单） · Maven |
+| 基础设施 | MySQL 8 · Redis 7 · Nginx · Docker Compose |
 
 ## 目录结构
 
