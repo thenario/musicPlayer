@@ -6,29 +6,33 @@ import io.jsonwebtoken.JwtException;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.HexFormat;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class TokenBlacklistService {
 
-    private final ConcurrentHashMap<String, Long> revoked = new ConcurrentHashMap<>();
+    private static final String KEY_PREFIX = "auth:revoked-token:";
+
     private final long defaultTtlMillis;
     private final JwtUtils jwtUtils;
+    private final StringRedisTemplate redisTemplate;
 
-    public TokenBlacklistService(JwtUtils jwtUtils, @Value("${jwt.expire}") long defaultTtlMillis) {
+    public TokenBlacklistService(JwtUtils jwtUtils, StringRedisTemplate redisTemplate,
+            @Value("${jwt.expire}") long defaultTtlMillis) {
         this.jwtUtils = jwtUtils;
+        this.redisTemplate = redisTemplate;
         this.defaultTtlMillis = defaultTtlMillis;
     }
 
-    // 吊销一个token,解析出exp后仅存其SHA-256哈希->过期时刻
+    /** Revokes a token until its expiry, using a hash rather than the raw token as the Redis key. */
     public void revoke(String token) {
         if (token == null || token.isBlank()) {
             return;
@@ -36,44 +40,26 @@ public class TokenBlacklistService {
         long expireAt;
         try {
             Claims claims = jwtUtils.parseToken(token);
-            Instant exp = Optional.ofNullable(claims.getExpiration())
-                    .map(d -> d.toInstant()) // 库返回的 Date 立刻转 Instant
+            Instant expiration = Optional.ofNullable(claims.getExpiration())
+                    .map(date -> date.toInstant())
                     .orElse(null);
-            expireAt = (exp != null) ? exp.toEpochMilli() : System.currentTimeMillis() + defaultTtlMillis;
+            expireAt = expiration != null ? expiration.toEpochMilli() : System.currentTimeMillis() + defaultTtlMillis;
         } catch (JwtException | IllegalArgumentException e) {
-            // 解析不了或已过期的token本就无法通过认证，无需入黑名单
             log.debug("revoke: token already invalid, nothing to revoke: {}", e.getMessage());
             return;
         }
-        revoked.put(hash(token), expireAt);
+
+        long ttlMillis = Math.max(1L, expireAt - System.currentTimeMillis());
+        redisTemplate.opsForValue().set(key(token), "1", Duration.ofMillis(ttlMillis));
     }
 
-    // 该token是否处于吊销状态
+    /** Returns whether a token is revoked. Redis removes the marker automatically once its TTL expires. */
     public boolean isRevoked(String token) {
-        if (token == null) {
-            return false;
-        }
-        String key = hash(token);
-        Long expireAt = revoked.get(key);
-        if (expireAt == null) {
-            return false;
-        }
-        if (expireAt <= System.currentTimeMillis()) {
-            revoked.remove(key, expireAt); // 防御性惰性清理，避免误删同 key 更新后的条目
-            return false;
-        }
-        return true;
+        return token != null && !token.isBlank() && Boolean.TRUE.equals(redisTemplate.hasKey(key(token)));
     }
 
-    // 定期清理已过期条目，防止黑名单随登出次数无限增长
-    @Scheduled(fixedDelay = 3_600_000)
-    public void purgeExpired() {
-        long now = System.currentTimeMillis();
-        revoked.forEach((key, expireAt) -> {
-            if (expireAt <= now) {
-                revoked.computeIfPresent(key, (k, v) -> v <= now ? null : v);
-            }
-        });
+    private static String key(String token) {
+        return KEY_PREFIX + hash(token);
     }
 
     private static String hash(String token) {
