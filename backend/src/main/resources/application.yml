@@ -1,0 +1,45 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: server
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 12MB
+  output:
+    ansi:
+      enabled: always
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+logging:
+  level:
+    root: info
+    "com.kyf.mp.server": debug
+  pattern:
+    console: ">> [MY-MUSIC-APP] %d{HH:mm:ss} %clr(%5p) %clr(---){faint} %clr(%logger{36}){cyan} %clr(:){faint} %clr(%m){green}%n"
+
+jwt:
+  secret: ${JWT_SECRET}
+  expire: ${JWT_EXPIRE:86400000}
+
+file:
+  upload:
+    user-cover-path: ${USER_COVER_UPLOAD_PATH:/app/static/user_covers/}
+  static:
+    user-cover-url: ${USER_COVER_STATIC_URL:/static/user_covers/}
+
+mybatis-plus:
+  mapper-locations: classpath*:com/kyf/mp/server/modules/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true

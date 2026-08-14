@@ -1,0 +1,73 @@
+services:
+  #services里的这个名字对应着局部域名
+  db:
+    #镜像名称
+    image: mysql:8.0
+    #容器名称
+    container_name: music-db
+    #总是重启
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      MYSQL_DATABASE: "musicPlayer"
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306" #映射到宿主机，供本地裸跑后端连接（docker 内部仍走 db 服务名）
+    volumes:
+      #容器内部的数据持久化到宿主机
+      - ./mysql/data:/var/lib/mysql
+      #建表
+      - ./mysql/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: [
+          "CMD", #表示这是一条调用系统内核的指令，不启动额外shell
+          "mysqladmin", #专门用来检查mysql服务器配置
+          "ping", #pingmysql看看是否能正常相应
+          "-h", #表示主机地址
+          "localhost", #代表本地数据库
+          "-u", #表示user
+          "root", #以root登录
+          "-p${MYSQL_ROOT_PASSWORD}", #密码
+        ]
+      interval: 10s #间隔时间
+      timeout: 5s #最大尝试时间
+      retries: 5 #允许的重试次数，超过仍然为成功就标记成非健康
+
+  backend-server:
+    build:
+      #使用指定目录下的dockerfile构建镜像
+      context: ./backend
+    #容器名称
+    container_name: music-app
+    #容器终止运行后总是重启
+    restart: always
+    depends_on:
+      db:
+        condition: service_healthy #健康检查，运行db下的healthcheck
+    environment:
+      #连接数据库，协议（类似于https），后面是服务名加端口，再后面是数据库名+时区+编码设置，？连接参数，用&连接参数
+      SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8
+      MYSQL_USER: root
+      MYSQL_PASSWORD: "${MYSQL_ROOT_PASSWORD}"
+      JWT_SECRET: "${JWT_SECRET}"
+      TZ: Asia/Shanghai #时区
+    volumes:
+      - ./static:/app/static #挂载，存歌曲，封面的路径
+
+  nginx:
+    build:
+      context: ./nginx #这里表示用该目录下的dockerfile进行打包，而不是使用网站里的镜像
+    container_name: music-nginx #容器名称，在log时指定容器
+    restart: always #容器停止之后无条件重新启动
+    ports:
+      - "8080:80" #宿主机端口：容器端口， - 这个表示此处的参数可以是一个列表
+    depends_on:
+      - backend-server #表示这个容器启动之后它才会启动
+    environment: #环境变量
+      TZ: Asia/Shanghai #时区
+    volumes:
+      #地址映射，将宿主机的目录映射到虚拟环境
+      #前端构建产物挂载到 nginx 站点根目录
+      - ./nginx/html:/usr/share/nginx/html
+      #上传的静态资源（歌曲/封面）由 nginx 直接读取，性能更好；后端 StaticResourceConfig 仅作兜底
+      - ./static:/usr/share/nginx/static:ro

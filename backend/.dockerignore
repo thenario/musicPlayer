@@ -1,0 +1,6 @@
+target/classes
+target/maven-status
+src/
+.git
+.idea
+*.iml
