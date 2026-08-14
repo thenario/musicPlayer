@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.server.common.BusinessException;
+import com.kyf.mp.server.common.file.UploadFileValidator;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.song.business.SongsBusiness;
 import com.kyf.mp.server.modules.song.dto.EditSongDTO;
@@ -225,7 +226,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
         MultipartFile newCover = dto.getSong_cover();
         if (newCover != null && !newCover.isEmpty()) {
-            String ext = StringUtils.getFilenameExtension(newCover.getOriginalFilename());
+            String ext = UploadFileValidator.validateImage(newCover);
             String newFileName = "cover-" + UUID.randomUUID().toString().substring(0, 8) + "." + ext;
             File destFile = new File(songCoverPath, newFileName);
 
