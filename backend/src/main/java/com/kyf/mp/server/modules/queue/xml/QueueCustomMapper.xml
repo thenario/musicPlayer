@@ -106,6 +106,9 @@
             open="(" separator="," close=")"> #{id} </foreach>
     </update>
 
+    <update id="moveAllItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position =
+        queue_item_position + 1000000 WHERE queue_id = #{queueId} </update>
+
     <update id="syncPlayStatePosition"> UPDATE play_state ps JOIN queue_items qi ON
         ps.current_song_id = qi.song_id AND ps.current_queue_id = qi.queue_id SET
         ps.current_position = qi.queue_item_position WHERE ps.user_id = #{userId} AND

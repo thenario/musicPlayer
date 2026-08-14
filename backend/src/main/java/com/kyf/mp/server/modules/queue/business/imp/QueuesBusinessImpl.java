@@ -290,14 +290,14 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         int currentPos = (playState != null) ? playState.getCurrentPosition() : 0;
         boolean hasState = (playState != null);
 
-        int insertPos = mode ? currentPos + 1 : currentPos;
+        int insertPos = Math.max(1, mode ? currentPos + 1 : currentPos);
 
         int deleted = queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>()
                 .eq(QueueItems::getQueueId, finalQueueId)
                 .eq(QueueItems::getSongId, songId));
         boolean wasExisted = deleted > 0;
 
-        queueCustomMapper.shiftItemPositions(finalQueueId, insertPos);
+        queueCustomMapper.moveItemPositionsToTemporary(finalQueueId, insertPos);
 
         QueueItems newItem = new QueueItems();
         newItem.setQueueId(finalQueueId);
@@ -305,6 +305,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         newItem.setQueueItemPosition(insertPos);
         newItem.setAddedDate(LocalDateTime.now());
         queueItemsMapper.insert(newItem);
+        queueCustomMapper.restoreShiftedItemPositions(finalQueueId, insertPos);
 
         if (!mode || !hasState || context.isNewQueue()) {
             if (playState == null) {
@@ -566,6 +567,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             throw new BusinessException(400, "重排歌曲列表必须与队列内容一致");
         }
 
+        queueCustomMapper.moveAllItemPositionsToTemporary(queueId);
         queueCustomMapper.batchUpdatePositions(queueId, songIds);
 
         queueCustomMapper.syncPlayStatePosition(userId, queueId);

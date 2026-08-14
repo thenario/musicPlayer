@@ -23,7 +23,9 @@ public interface QueueCustomMapper {
 
     int copySongsFromPlaylistToQueue(@Param("queueId") Long queueId, @Param("playlistId") Long playlistId);
 
-    void shiftItemPositions(@Param("queueId") Long queueId, @Param("pos") int pos);
+    void moveItemPositionsToTemporary(@Param("queueId") Long queueId, @Param("pos") int pos);
+
+    void restoreShiftedItemPositions(@Param("queueId") Long queueId, @Param("pos") int pos);
 
     void incrementSongCount(@Param("queueId") Long queueId);
 
@@ -34,6 +36,8 @@ public interface QueueCustomMapper {
     Map<String, Object> selectItemDetailForDelete(@Param("itemId") Long itemId, @Param("userId") Long userId);
 
     void batchUpdatePositions(@Param("queueId") Long queueId, @Param("songIds") List<Long> songIds);
+
+    void moveAllItemPositionsToTemporary(@Param("queueId") Long queueId);
 
     void syncPlayStatePosition(@Param("userId") Long userId, @Param("queueId") Long queueId);
 }
