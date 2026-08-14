@@ -307,7 +307,7 @@ export const usePlayerStore = defineStore('player', () => {
       console.log(errorMessage(err))
       return {
         success: false,
-        message: err.message,
+        message: errorMessage(err),
       }
     }
   }
