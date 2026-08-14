@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import type { AxiosProgressEvent } from 'axios'
 import { songApi } from '@/api/song-api'
 import { AUDIO_EXTENSIONS } from '../const'
 
@@ -74,7 +75,7 @@ export function useSongUpload() {
       formData.append('album', form.value.album)
       formData.append('lyrics', form.value.lyrics)
 
-      await songApi.uploadSong(formData, (progressEvent: any) => {
+      await songApi.uploadSong(formData, (progressEvent: AxiosProgressEvent) => {
         if (progressEvent.total) {
           uploadProgress.value = Math.round((progressEvent.loaded * 100) / progressEvent.total)
         }
@@ -82,9 +83,9 @@ export function useSongUpload() {
 
       ElMessage.success('歌曲上传成功！')
       reset()
-    } catch (error: any) {
+    } catch (error: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.error('Upload Error:', error)
+      console.error('Upload Error:', error instanceof Error ? error.message : error)
     } finally {
       uploading.value = false
     }
