@@ -85,9 +85,7 @@ import { useSongUpload } from './composables/use-song-upload'
 const {
   audioInput,
   coverInput,
-  audioFile,
-  coverFile,
-  coverPreview,
+  audioFile,  coverPreview,
   isDragging,
   uploading,
   uploadProgress,
