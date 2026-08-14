@@ -19,8 +19,9 @@ export function useSeekBar() {
     isDragging.value = true
   }
 
-  const handleSeekChange = (e: any) => {
-    const val = Number(e.target.value)
+  const handleSeekChange = (event: Event) => {
+    const target = event.target as HTMLInputElement
+    const val = Number(target.value)
     playerStore.seek(val)
     isDragging.value = false
   }
