@@ -218,9 +218,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
         boolean isLiked = false;
         if (userId != null) {
-            isLiked = likeRelationMapper.selectCount(new LambdaQueryWrapper<UsersLikeplaylistsRelation>()
-                    .eq(UsersLikeplaylistsRelation::getUserId, userId)
-                    .eq(UsersLikeplaylistsRelation::getPlaylistId, playlistId)) > 0;
+                        isLiked = likeRelationMapper.countByUserAndPlaylist(userId, playlistId) > 0;
         }
 
         PlaylistDetailVO vo = new PlaylistDetailVO();
@@ -253,11 +251,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             return;
         }
 
-        LambdaQueryWrapper<UsersLikeplaylistsRelation> relationQuery =
-                new LambdaQueryWrapper<UsersLikeplaylistsRelation>()
-                        .eq(UsersLikeplaylistsRelation::getUserId, userId)
-                        .eq(UsersLikeplaylistsRelation::getPlaylistId, playlistId);
-        int deleted = likeRelationMapper.delete(relationQuery);
+                int deleted = likeRelationMapper.deleteByUserAndPlaylist(userId, playlistId);
         if (deleted > 0) {
             this.update().setSql("like_count = GREATEST(like_count - 1, 0)")
                     .eq("playlist_id", playlistId).update();
