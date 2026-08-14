@@ -176,10 +176,13 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
 
             baseMapper.insert(song);
 
+        } catch (BusinessException e) {
+            cleanupFiles(savedAudioFile, savedCoverFile);
+            throw e;
         } catch (Exception e) {
             cleanupFiles(savedAudioFile, savedCoverFile);
-            log.error("上传歌曲失败: ", e);
-            throw new BusinessException(500, "上传失败: " + e.getMessage());
+            log.error("上传歌曲失败", e);
+            throw new BusinessException(500, "上传失败");
         }
     }
 
