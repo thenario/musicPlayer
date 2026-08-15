@@ -15,7 +15,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
+import com.kyf.mp.server.modules.playlist.entity.SongsPlaylistsRelation;
 import com.kyf.mp.server.modules.playlist.mapper.PlaylistsMapper;
+import com.kyf.mp.server.modules.playlist.mapper.SongsPlaylistsRelationMapper;
 import com.kyf.mp.server.modules.queue.business.QueuesBusiness;
 import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
 import com.kyf.mp.server.modules.queue.dto.UpdateCurrentQueueStateDTO;
@@ -53,6 +55,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     private final QueueItemsMapper queueItemsMapper;
     private final QueuesMapper queuesMapper;
     private final PlaylistsMapper playlistsMapper;
+    private final SongsPlaylistsRelationMapper songsPlaylistsRelationMapper;
     private final SongsMapper songsMapper;
 
     @Override
@@ -250,7 +253,15 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             queuesMapper.insert(newQueue);
             Long newQueueId = newQueue.getQueueId();
 
-            int insertedSongs = queueCustomMapper.copySongsFromPlaylistToQueue(newQueueId, playlistId);
+            List<SongsPlaylistsRelation> relations = songsPlaylistsRelationMapper.findByPlaylistId(playlistId);
+            for (SongsPlaylistsRelation relation : relations) {
+                QueueItems queueItem = new QueueItems();
+                queueItem.setQueueId(newQueueId);
+                queueItem.setSongId(relation.getSongId());
+                queueItem.setQueueItemPosition(relation.getSongPlaylistPosition());
+                queueItemsMapper.insert(queueItem);
+            }
+            int insertedSongs = relations.size();
 
             newQueue.setSongCount(insertedSongs);
             queuesMapper.updateById(newQueue);

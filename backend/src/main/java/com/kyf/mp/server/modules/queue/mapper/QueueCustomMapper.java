@@ -21,9 +21,7 @@ public interface QueueCustomMapper {
 
     ReturnQueue selectQueueById(@Param("queueId") Long queueId, @Param("userId") Long userId);
 
-    int copySongsFromPlaylistToQueue(@Param("queueId") Long queueId, @Param("playlistId") Long playlistId);
-
-    void moveItemPositionsToTemporary(@Param("queueId") Long queueId, @Param("pos") int pos);
+void moveItemPositionsToTemporary(@Param("queueId") Long queueId, @Param("pos") int pos);
 
     void restoreShiftedItemPositions(@Param("queueId") Long queueId, @Param("pos") int pos);
 

@@ -79,10 +79,7 @@
         q.queue_id = qi.queue_id LEFT JOIN songs s ON qi.song_id = s.song_id WHERE q.queue_id =
         #{queueId} AND q.creator_id = #{userId} ORDER BY qi.queue_item_position ASC </select>
 
-    <insert id="copySongsFromPlaylistToQueue"> INSERT INTO queue_items (queue_item_id, queue_id, song_id, queue_item_position) SELECT UUID_SHORT(), #{queueId}, song_id, song_playlist_position FROM
-        songs_playlists_relation WHERE playlist_id = #{playlistId} </insert>
-
-    <update id="moveItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position = queue_item_position + 1000000 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} </update>
+<update id="moveItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position = queue_item_position + 1000000 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} </update>
 
     <update id="restoreShiftedItemPositions"> UPDATE queue_items SET queue_item_position = queue_item_position - 999999 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} + 1000000 </update>
 
