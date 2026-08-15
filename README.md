@@ -35,7 +35,7 @@ vue_musicplayer/
 │       ├── common/      # 统一异常、JWT 过滤器、Token 黑名单
 │       ├── config/      # 安全配置、静态资源映射（/static/** 兜底）
 │       └── modules/     # 按业务分包（Song / Playlist / Queue / User）
-├── mysql/               # MySQL 初始化 SQL（init.sql）与数据卷
+├── mysql/               # MySQL 数据卷
 ├── nginx/               # Nginx 反向代理（只跟踪 Dockerfile + conf）
 ├── static/              # 用户上传资源（歌曲/封面，不入库，由 nginx 直接读取）
 └── compose.yml   # MySQL + 后端 + Nginx 全栈编排
@@ -110,7 +110,7 @@ docker compose up -d --build
 ### 数据库迁移
 - 表结构由 Flyway 管理；初始结构为 `backend/src/main/resources/db/migration/V1__initial_schema.sql`。
 - 已有数据库首次启动会自动 baseline 到 V1，不会重复建表。后续结构变更必须新增 `V2__说明.sql`、`V3__说明.sql` 等迁移文件，禁止修改已执行的版本文件。
-- `mysql/init/init.sql` 仅用于 Docker 的全新数据卷初始化，保留它以兼容首次部署；生产中的增量变更以 Flyway 迁移为准。
+- Docker 仅通过 `MYSQL_DATABASE` 创建空数据库；所有表结构和增量变更均由 Flyway 管理。
 - `cd backend && ./mvnw test` 会通过 Testcontainers 在临时 MySQL 8 实例上验证全部迁移；需要本机 Docker 运行中。
 
 ### 开发工具

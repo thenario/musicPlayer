@@ -16,8 +16,6 @@ services:
     volumes:
       #容器内部的数据持久化到宿主机
       - ./mysql/data:/var/lib/mysql
-      #建表
-      - ./mysql/init:/docker-entrypoint-initdb.d
     healthcheck:
       test: [
           "CMD", #表示这是一条调用系统内核的指令，不启动额外shell
