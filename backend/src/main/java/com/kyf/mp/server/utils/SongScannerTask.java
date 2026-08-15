@@ -76,7 +76,7 @@ public class SongScannerTask {
             File[] files = dir.listFiles((d, name) -> {
                 String ext = name.toLowerCase();
                 return ext.endsWith(".mp3") || ext.endsWith(".flac") || ext.endsWith(".wav") || ext.endsWith(".m4a");
-            });
+            });`r`n            if (files == null) {`r`n                log.warn("歌曲扫描未执行：目录不存在或不可读取，path={}", songPath);`r`n                return;`r`n            }
 
             Set<String> localUrls = new HashSet<>();
             if (files != null) {
