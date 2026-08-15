@@ -12,6 +12,8 @@ import com.kyf.mp.server.common.ResultModel;
 import com.kyf.mp.server.common.auth.JwtAuthenticationFilter;
 import com.kyf.mp.server.common.auth.TokenBlacklistService;
 import com.kyf.mp.server.modules.user.dto.EditUserDTO;
+import com.kyf.mp.server.modules.user.dto.LoginRequest;
+import com.kyf.mp.server.modules.user.dto.RegisterRequest;
 import com.kyf.mp.server.modules.user.vo.EditVO;
 import com.kyf.mp.server.modules.user.vo.LoginVO;
 import com.kyf.mp.server.modules.user.entity.Users;
@@ -43,12 +45,16 @@ public class UsersController {
     private final TokenBlacklistService tokenBlacklistService;
 
     @PostMapping("/login")
-    public ResultModel<LoginVO> login(@RequestBody @Valid Users user) {
-        return ResultModel.success(userService.login(user.getUserName(), user.getPassword()));
+    public ResultModel<LoginVO> login(@RequestBody @Valid LoginRequest request) {
+        return ResultModel.success(userService.login(request.getUserName(), request.getPassword()));
     }
 
     @PostMapping("/register")
-    public ResultModel<String> register(@RequestBody @Valid Users user) {
+    public ResultModel<Void> register(@RequestBody @Valid RegisterRequest request) {
+        Users user = new Users();
+        user.setUserName(request.getUserName());
+        user.setUserEmail(request.getUserEmail());
+        user.setPassword(request.getPassword());
         userService.register(user);
         return ResultModel.success(null);
     }
