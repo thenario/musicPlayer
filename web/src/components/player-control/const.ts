@@ -1,5 +1,5 @@
 // 播放模式常量
-export const PLAY_MODES = ['repeat_all', 'repeat_one', 'shuffle'] as const
+export const PLAY_MODES = ['sequential', 'repeat_all', 'repeat_one', 'shuffle'] as const
 
 export const PLAY_MODE_TITLES: Record<string, string> = {
   repeat_all: '列表循环',
