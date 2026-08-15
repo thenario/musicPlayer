@@ -24,17 +24,15 @@ export interface ISong {
   artist: string
   album: string
   duration: number
-  file_name: string
   file_format: string
-  file_size: number
+  file_size: string | null
   bitrate: number
-  play_count: number
-  date_added: Date
-  last_played: Date
+  date_added: string
   uploader_id: number | string
   uploader_name: string
-  song_cover_url: string
-  lyrics: string
+  song_cover_url: string | null
+  lyrics?: string
+  t_lyrics?: string
 }
 
 export interface IPagination {

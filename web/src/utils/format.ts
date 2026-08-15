@@ -19,7 +19,7 @@ export function formatDate(value?: string | number | Date | null): string {
 }
 
 /** 拼装静态资源完整地址：已是 http 开头则原样返回，否则拼接 VITE_API_URL。 */
-export function getImageUrl(url?: string): string {
+export function getImageUrl(url?: string | null): string {
   if (!url) return ''
   if (url.startsWith('http')) return url
   const base = import.meta.env.VITE_API_URL ?? ''
