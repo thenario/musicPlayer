@@ -1,0 +1,15 @@
+# Frontend
+web/node_modules/
+web/dist/
+web/.vite/
+
+# Backend
+backend/target/
+
+# Local configuration and IDE files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+*.iml
