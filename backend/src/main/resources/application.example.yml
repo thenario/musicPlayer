@@ -86,3 +86,5 @@ auth:
     max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
     # 限流窗口（秒）。Redis 不可用时会降级放行并记录告警。
     window-seconds: ${LOGIN_WINDOW_SECONDS:900}
+queue:
+  max-per-user: ${QUEUE_MAX_PER_USER:5}

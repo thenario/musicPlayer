@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +58,9 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     private final PlaylistsMapper playlistsMapper;
     private final SongsPlaylistsRelationMapper songsPlaylistsRelationMapper;
     private final SongsMapper songsMapper;
+
+    @Value("${queue.max-per-user:5}")
+    private int maxQueuesPerUser;
 
     @Override
     public CurrentQueue getCurrentQueue(Long userId) {
@@ -228,7 +232,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                     .eq(Queues::getCreatorId, userId)
                     .orderByAsc(Queues::getCreatedDate));
 
-            if (existingQueues != null && existingQueues.size() >= 5) {
+            if (existingQueues != null && existingQueues.size() >= maxQueuesPerUser) {
                 Queues removableQueue = existingQueues.stream()
                         .filter(queue -> playState == null || !Objects.equals(queue.getQueueId(), playState.getCurrentQueueId()))
                         .findFirst()
@@ -373,7 +377,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         }
 
         Long count = queuesMapper.selectCount(new LambdaQueryWrapper<Queues>().eq(Queues::getCreatorId, userId));
-        if (count >= 5) {
+        if (count >= maxQueuesPerUser) {
             Queues oldest = queuesMapper.selectOne(new LambdaQueryWrapper<Queues>()
                     .eq(Queues::getCreatorId, userId)
                     .orderByAsc(Queues::getCreatedDate)
