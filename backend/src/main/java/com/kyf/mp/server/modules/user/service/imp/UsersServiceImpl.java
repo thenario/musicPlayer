@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -45,12 +46,8 @@ public class UsersServiceImpl implements UsersService {
         // 简单查询：直接用 business 的基础 CRUD
         Users user = usersBusiness.lambdaQuery().eq(Users::getUserName, username).one();
 
-        if (user == null) {
-            throw new BusinessException(404, "账号不存在");
-        }
-
-        if (!matchesPassword(password, user)) {
-            throw new BusinessException(401, "密码错误");
+        if (user == null || !matchesPassword(password, user)) {
+            throw new BusinessException(401, "用户名或密码错误");
         }
 
         UserVO cleanUser = new UserVO();
@@ -96,9 +93,13 @@ public class UsersServiceImpl implements UsersService {
         String hashed = passwordEncoder.encode(user.getPassword());
         user.setPassword(hashed);
 
-        boolean saved = usersBusiness.save(user);
-        if (!saved) {
-            throw new BusinessException(500, "注册失败，数据库写入异常");
+        try {
+            boolean saved = usersBusiness.save(user);
+            if (!saved) {
+                throw new BusinessException(500, "注册失败，数据库写入异常");
+            }
+        } catch (DuplicateKeyException e) {
+            throw new BusinessException(409, "该用户名或邮箱已被注册");
         }
     }
 
