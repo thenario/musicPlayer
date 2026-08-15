@@ -122,7 +122,7 @@ export const usePlayerStore = defineStore('player', () => {
       currentSong.value = song
       isPlaying.value = true
       if (audioElement.value) {
-        audioElement.value.src = currentSong.value.song_url
+        audioElement.value.src = getImageUrl(currentSong.value.song_url)
         audioElement.value
           .play()
           .then(() => {
@@ -265,7 +265,7 @@ export const usePlayerStore = defineStore('player', () => {
   const prepareAudioSource = (songId: number | string, savedProgress: number) => {
     const el = audioElement.value!
 
-    el.src = currentSong.value!.song_url
+    el.src = getImageUrl(currentSong.value!.song_url)
 
     el.addEventListener(
       'loadedmetadata',
