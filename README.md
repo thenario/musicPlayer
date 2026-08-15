@@ -125,73 +125,75 @@ docker compose up -d --build
 
 ## 重构历程
 
-### 2026-02-28 · 项目诞生
-- `d8e8b24` 最初版：Vue3 + Flask + SQLite
-- `d916c1c` 用户模块（Pinia + userApi + SHA-256 加密）
+> Note: commit hashes were intentionally omitted because repository history was rewritten during the security cleanup.
+
+### 2026-02-28 · Project origin
+-  最初版：Vue3 + Flask + SQLite
+-  用户模块（Pinia + userApi + SHA-256 加密）
 
 ### 2026-03 · 前端功能迭代
-- `6f6d900` 前端迁移到 TypeScript
-- `b22400a` 重做 axios 拦截器错误处理
-- `2bc035a` / `c5537de` 调整项目结构
-- `0b98597` 用户认证 + 歌曲管理
-- `a35c775` 队列/歌单逻辑 + 播放状态持久化
-- `c7c4bc2` 标准化数据库列名 + 编写 DDL
-- `24f3655` 注册 / 登录 / 登出
-- `499f800` 歌曲搜索与展示
-- `898d14f` 歌曲上传
-- `31d3d4a` 后端 Flask → Node（Express）
-- `d3a1efe` 解耦播放控制 + 优化 Element Plus 导入
-- `f4a41ff` 用 el-menu 优化播放栏
-- `d29df67` 优化播放进度条（含缓冲进度）
-- `8cc57b5` / `5891bd5` 歌曲呼吸感、歌单信息编辑
-- `4fa6683` / `b80ae03` / `ee7d3fe` 歌词上传、后端取词、滚动歌词
-- `8f59485` 配置 nginx 代理
+-  前端迁移到 TypeScript
+-  重做 axios 拦截器错误处理
+-  调整项目结构
+-  用户认证 + 歌曲管理
+-  队列/歌单逻辑 + 播放状态持久化
+-  标准化数据库列名 + 编写 DDL
+-  注册 / 登录 / 登出
+-  歌曲搜索与展示
+-  歌曲上传
+-  后端 Flask → Node（Express）
+-  解耦播放控制 + 优化 Element Plus 导入
+-  用 el-menu 优化播放栏
+-  优化播放进度条（含缓冲进度）
+-  歌曲呼吸感、歌单信息编辑
+-  歌词上传、后端取词、滚动歌词
+-  配置 nginx 代理
 
 ### 2026-04 · 后端迁移 Spring Boot + 模块化
-- `e6cbda0` 重构为 Spring Boot，完成 user / song 模块
-- `49127dd` 全局错误处理器 + 歌单模块
-- `677d030` 按模块重构（mapper / service / controller 分层）
-- `a8c192d` 歌曲编辑 + 个人资料模块
-- `91e39e7` 从 Git 追踪移除环境变量文件
+-  重构为 Spring Boot，完成 user / song 模块
+-  全局错误处理器 + 歌单模块
+-  按模块重构（mapper / service / controller 分层）
+-  歌曲编辑 + 个人资料模块
+-  从 Git 追踪移除环境变量文件
 
 ### 2026-04-21 · Docker 部署
-- `a3032ac` 实现 docker 部署（MySQL + 后端 + Nginx）
+-  实现 docker 部署（MySQL + 后端 + Nginx）
 
 ### 2026-05-20
-- `27ae97c` 加注释并小幅优化冗余逻辑
+-  加注释并小幅优化冗余逻辑
 
 ### 2026-07-18
-- `9d3e811` 更新修改建议
+-  更新修改建议
 
 ### 2026-08-09 · 大规模工业化重构（23 个提交）
 
 **后端安全加固**
-- `1771f76` 升级 JWT 认证依赖
-- `dd35a70` 改进全局异常响应
-- `76290bf` 统一安全错误响应
-- `4e20ba2` 加固 JWT 认证过滤器
-- `90e16f1` 实现安全登出 + JWT 内存黑名单失效
+-  升级 JWT 认证依赖
+-  改进全局异常响应
+-  统一安全错误响应
+-  加固 JWT 认证过滤器
+-  实现安全登出 + JWT 内存黑名单失效
 
 **前端架构对齐工业化**
-- `6b29629` 提交待处理的本地改动
-- `da59267` 错误处理集中化：axios 拦截器统一弹错，组件只弹成功提示（silent 标志）
-- `b77a5de` 分层架构：新增 `common/` 组件与 composables 层
-- `74dceb5` 拆解 playlist / user 页面模块
-- `c6ef480` 每个页面独立成模块文件夹（index.vue + const.ts + components/ + composables/）
-- `7427ee2` 统一命名规范
-- `32e998b` 播放器组件拆分为子模块 + 恢复 auto-import
-- `889a3fb` 后台请求走 silent，消除未处理的 Promise 拒绝
-- `884d276` player store（约 800 行）拆分为音频引擎 / 歌词 / 队列变更三个 composable
-- `1ee7e24` playlist 全面类型化 + 抽取 usePlaylistDetail + 合并 utils
-- `e83a4c5` player 队列同步类型化 + 复用 getImageUrl
+-  提交待处理的本地改动
+-  错误处理集中化：axios 拦截器统一弹错，组件只弹成功提示（silent 标志）
+-  分层架构：新增 `common/` 组件与 composables 层
+-  拆解 playlist / user 页面模块
+-  每个页面独立成模块文件夹（index.vue + const.ts + components/ + composables/）
+-  统一命名规范
+-  播放器组件拆分为子模块 + 恢复 auto-import
+-  后台请求走 silent，消除未处理的 Promise 拒绝
+-  player store（约 800 行）拆分为音频引擎 / 歌词 / 队列变更三个 composable
+-  playlist 全面类型化 + 抽取 usePlaylistDetail + 合并 utils
+-  player 队列同步类型化 + 复用 getImageUrl
 
 **基础设施与工程化**
-- `5597174` 修复未入库文件（application.yml、docker-compose、nginx Dockerfile 曾被 gitignore 误伤）+ 重写 .gitignore
-- `1646e8a` 前端配置精简（移除死测试脚手架与死依赖）、npm → pnpm、修复 dev/prod 后端访问与 Vite 代理
-- `325b370` 只保留 Java 后端（删除 Flask / Node 旧后端），目录重构（`client`→`web`、`javaserver`→`backend` 扁平化、`nginx-1.26.3`→`nginx`），静态资源移至根 `static/`，后端增加 `/static/**` 兜底映射
-- `5daca3d` 重写 README（完整重构历程 + 运行说明），nginx `/static` 改回 alias 直接读 static/ 卷（性能更好），Spring 静态路由仅作兜底
-- `8d27873` 删除无主的根 package-lock.json（对应 package.json 早已删除）
-- `b56d1e7` README 补充注意事项（后端需先 `./mvnw package`、改 nginx 配置需重建镜像、8080 端口冲突、静态资源不入库等）
+-  修复未入库文件（application.yml、docker-compose、nginx Dockerfile 曾被 gitignore 误伤）+ 重写 .gitignore
+-  前端配置精简（移除死测试脚手架与死依赖）、npm → pnpm、修复 dev/prod 后端访问与 Vite 代理
+-  只保留 Java 后端（删除 Flask / Node 旧后端），目录重构（`client`→`web`、`javaserver`→`backend` 扁平化、`nginx-1.26.3`→`nginx`），静态资源移至根 `static/`，后端增加 `/static/**` 兜底映射
+-  重写 README（完整重构历程 + 运行说明），nginx `/static` 改回 alias 直接读 static/ 卷（性能更好），Spring 静态路由仅作兜底
+-  删除无主的根 package-lock.json（对应 package.json 早已删除）
+-  README 补充注意事项（后端需先 `./mvnw package`、改 nginx 配置需重建镜像、8080 端口冲突、静态资源不入库等）
 
 **样式规范**
-- `eb42ca8` 前端样式重构：模板 Tailwind 原子类 → 语义化 BEM 类名，样式收进 `<style scoped>`（顶部 `@reference` + `@apply` 迁移原原子类），`hover`/`focus`/`group-hover` 等变体改写为纯 CSS 选择器，动态 `:class` 原子条件改为 `is-active` 等语义类。涉及 31 个 `.vue` 文件
+-  前端样式重构：模板 Tailwind 原子类 → 语义化 BEM 类名，样式收进 `<style scoped>`（顶部 `@reference` + `@apply` 迁移原原子类），`hover`/`focus`/`group-hover` 等变体改写为纯 CSS 选择器，动态 `:class` 原子条件改为 `is-active` 等语义类。涉及 31 个 `.vue` 文件
