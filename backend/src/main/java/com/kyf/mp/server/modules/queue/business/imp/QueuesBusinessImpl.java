@@ -232,7 +232,10 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             Playlists playlist = playlistsMapper.selectById(playlistId);
             if (playlist == null) {
                 throw new BusinessException(404, "歌单不存在");
-            }`r`n            if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic())) {`r`n                throw new BusinessException(403, "无权访问此私密歌单");`r`n            }
+            }
+            if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic())) {
+                throw new BusinessException(403, "无权访问此私密歌单");
+            }
             String queueName = playlist.getPlaylistName();
 
             Queues newQueue = new Queues();
