@@ -21,9 +21,13 @@ import org.springframework.context.event.EventListener;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -90,7 +94,7 @@ public class SongScannerTask {
             }
 
             // 2. 一次性读取数据库中所有歌曲（只需要 ID 和 URL 即可）
-            List<Songs> dbSongs = songsMapper.selectList(new QueryWrapper<Songs>().select("song_id", "song_url"));
+            List<Songs> dbSongs = songsMapper.selectList(new QueryWrapper<Songs>().select("song_id", "song_url").eq("uploader_id", scannerUploaderId));
 
             Set<String> dbUrls = dbSongs.stream()
                     .map(Songs::getSongUrl)
@@ -147,10 +151,10 @@ public class SongScannerTask {
 
             Songs song = new Songs();
             // 快速指纹：文件名+大小的哈希，代替全量MD5，速度极快
-            song.setFileMd5(java.util.Objects.hash(file.getName(), file.length()) + "");
+            song.setFileMd5(calculateMd5(file));
 
             song.setUploaderId(scannerUploaderId);
-            song.setUploaderName("SystemScanner");
+            song.setUploaderName(scannerUploader.getUserName());
 
             String title = (tag != null) ? tag.getFirst(FieldKey.TITLE) : "";
             song.setSongTitle(StringUtils.hasText(title) ? title : file.getName());
@@ -172,6 +176,12 @@ public class SongScannerTask {
         } catch (Exception e) {
             log.error("解析失败 {}: {}", file.getName(), e.getMessage());
             return false;
+        }
+    }
+
+    private String calculateMd5(File file) throws IOException {
+        try (InputStream inputStream = new FileInputStream(file)) {
+            return DigestUtils.md5DigestAsHex(inputStream);
         }
     }
 
