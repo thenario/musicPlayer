@@ -4,7 +4,9 @@ import java.io.File;
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.server.common.BusinessException;
@@ -42,7 +44,13 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
         File savedCoverFile = null;
 
         if (editData.getUser_name() != null && !editData.getUser_name().trim().isEmpty()) {
-            newUser.setUserName(editData.getUser_name());
+            String requestedName = editData.getUser_name().trim();
+            if (!requestedName.equals(oldUser.getUserName())
+                    && baseMapper.selectCount(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<Users>()
+                            .eq(Users::getUserName, requestedName)) > 0) {
+                throw new BusinessException(409, "用户名已被使用");
+            }
+            newUser.setUserName(requestedName);
             isChanged = true;
         }
 
@@ -70,6 +78,9 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
         if (isChanged) {
             try {
                 baseMapper.updateById(newUser);
+            } catch (DuplicateKeyException e) {
+                deleteFile(savedCoverFile);
+                throw new BusinessException(409, "用户名已被使用");
             } catch (RuntimeException e) {
                 deleteFile(savedCoverFile);
                 throw e;
