@@ -27,7 +27,7 @@
                 <div class="page__list-grid">
                     <UploadedSongCard
                         v-for="song in songs"
-                        :key="song.song_url"
+                        :key="song.song_id"
                         :song="song"
                         @edit="goToSongEdit"
                     />

@@ -52,7 +52,7 @@ const addSongToPlaylist = async (playlistId: PlaylistId, songId: PlaylistId) => 
 }
 
 const removeSongFromPlaylist = async (playlistId: PlaylistId, songId: PlaylistId) => {
-  const res = await request.delete<never, IAxiosRes<null>>(`playlists/${playlistId}/songs/${songId}`)
+  const res = await request.delete<never, IAxiosRes<null>>(`/playlists/${playlistId}/songs/${songId}`)
   return { success: true, message: res.message }
 }
 
