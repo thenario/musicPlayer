@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue'
+import { onBeforeUnmount, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { songApi } from '@/api/song-api'
 
@@ -9,6 +9,13 @@ export function useEditUpload(songId: number | string) {
   const lyricsLoading = ref(false)
   const songCoverFile = ref<File>()
   const previewUrl = ref<string>('')
+
+  const revokePreviewUrl = () => {
+    if (previewUrl.value) {
+      URL.revokeObjectURL(previewUrl.value)
+      previewUrl.value = ''
+    }
+  }
 
   const formData = reactive({
     song_name: '',
@@ -41,6 +48,7 @@ export function useEditUpload(songId: number | string) {
       ElMessage.warning('图片不能超过 2MB')
       return
     }
+    revokePreviewUrl()
     songCoverFile.value = file
     previewUrl.value = URL.createObjectURL(file)
   }
@@ -71,6 +79,8 @@ export function useEditUpload(songId: number | string) {
       submitting.value = false
     }
   }
+
+  onBeforeUnmount(revokePreviewUrl)
 
   return {
     formRef,
