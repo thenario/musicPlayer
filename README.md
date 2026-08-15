@@ -127,8 +127,6 @@ docker compose up -d --build
 - `VITE_API_URL` 留空 = 相对路径，依赖 nginx / Vite 代理；如果前端裸跑（无代理），图片与接口会 404。
 - 生产环境把 `web/dist` 构建产物放到 `nginx/html/`，由 Nginx 托管 SPA。
 
-### 已知问题
-- `web/public/` 缺少 `/default-cover.png`（[PlaylistCard.vue](web/src/views/playlist/playlists/components/PlaylistCard.vue) 引用了它做封面兜底），当前会 404。需要补一个默认封面图。
 
 ## 重构历程
 
