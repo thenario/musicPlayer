@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import type { AxiosProgressEvent } from 'axios'
 import { songApi } from '@/api/song-api'
 import { AUDIO_EXTENSIONS } from '../const'
@@ -20,6 +20,13 @@ export function useSongUpload() {
     album: '',
     lyrics: '',
   })
+
+  const revokeCoverPreview = () => {
+    if (coverPreview.value) {
+      URL.revokeObjectURL(coverPreview.value)
+      coverPreview.value = ''
+    }
+  }
 
   const validateAndSetAudio = (file: File) => {
     const isAudio = AUDIO_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
@@ -53,6 +60,7 @@ export function useSongUpload() {
   const handleCoverSelect = (e: Event) => {
     const files = (e.target as HTMLInputElement).files
     if (files && files[0]) {
+      revokeCoverPreview()
       coverFile.value = files[0]
       coverPreview.value = URL.createObjectURL(files[0])
     }
@@ -94,12 +102,14 @@ export function useSongUpload() {
   const reset = () => {
     audioFile.value = null
     coverFile.value = null
-    coverPreview.value = ''
+    revokeCoverPreview()
     uploadProgress.value = 0
     form.value = { title: '', artist: '', album: '', lyrics: '' }
     if (audioInput.value) audioInput.value.value = ''
     if (coverInput.value) coverInput.value.value = ''
   }
+
+  onBeforeUnmount(revokeCoverPreview)
 
   return {
     audioInput,
