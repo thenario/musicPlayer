@@ -230,6 +230,10 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
             updateEntity.setLyrics(dto.getLyrics());
             needUpdate = true;
         }
+        if (dto.getT_lyrics() != null) {
+            updateEntity.setTLyrics(dto.getT_lyrics());
+            needUpdate = true;
+        }
 
         MultipartFile newCover = dto.getSong_cover();
         if (newCover != null && !newCover.isEmpty()) {
