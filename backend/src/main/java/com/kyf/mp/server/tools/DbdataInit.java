@@ -1,36 +1,33 @@
 package com.kyf.mp.server.tools;
 
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.context.ApplicationContext;
-
-import com.kyf.mp.server.ServerApplication;
-import com.kyf.mp.server.modules.song.business.AlbumsBusiness;
-import com.kyf.mp.server.modules.song.business.SongsBusiness;
-
-
 public class DbdataInit {
-    public static void main(String[] args){
-        ApplicationContext context = loadEnvironment();
-        SongsBusiness songsBusiness = context.getBean(SongsBusiness.class);
-        AlbumsBusiness albumsBusiness = context.getBean(AlbumsBusiness.class);
-        Path songsPath = Path.of("Z:\\vue3_projects\\vue_musicplayer\\static\\songs");
-        Path coversPath = Path.of("Z:\\vue3_projects\\vue_musicplayer\\static\\song_covers");
-        try(Stream<Path> stream = Files.list(songsPath)){
-            // 拿到元数据，构造song，生成id，存进数据库，提取出封面，存进文件夹
-        } catch(IOException e){
-            e.printStackTrace();
+
+    public static void main(String[] args) {
+        if (args.length != 2) {
+            throw new IllegalArgumentException("Usage: DbdataInit <songs-directory> <song-covers-directory>");
+        }
+
+        Path songsPath = requireDirectory(args[0], "songs directory");
+        Path coversPath = requireDirectory(args[1], "song covers directory");
+        try (Stream<Path> songs = Files.list(songsPath); Stream<Path> covers = Files.list(coversPath)) {
+            long songCount = songs.filter(Files::isRegularFile).count();
+            long coverCount = covers.filter(Files::isRegularFile).count();
+            System.out.printf("Found %d song files and %d cover files.%n", songCount, coverCount);
+        } catch (IOException exception) {
+            throw new IllegalStateException("Failed to scan media directories", exception);
         }
     }
 
-    public static ApplicationContext loadEnvironment(){
-        return SpringApplication.run(ServerApplication.class,new String[0]);
+    static Path requireDirectory(String value, String description) {
+        Path path = Path.of(value).toAbsolutePath().normalize();
+        if (!Files.isDirectory(path)) {
+            throw new IllegalArgumentException(description + " is not a directory: " + path);
+        }
+        return path;
     }
-
-
 }
