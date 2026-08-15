@@ -219,16 +219,20 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         }
 
         try {
+            PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
+                    .eq(PlayState::getUserId, userId));
             List<Queues> existingQueues = queuesMapper.selectList(new LambdaQueryWrapper<Queues>()
                     .eq(Queues::getCreatorId, userId)
                     .orderByAsc(Queues::getCreatedDate));
 
             if (existingQueues != null && existingQueues.size() >= 5) {
-                Long oldestId = existingQueues.get(0).getQueueId();
-                queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>().eq(QueueItems::getQueueId, oldestId));
-                queuesMapper.deleteById(oldestId);
+                Queues removableQueue = existingQueues.stream()
+                        .filter(queue -> playState == null || !Objects.equals(queue.getQueueId(), playState.getCurrentQueueId()))
+                        .findFirst()
+                        .orElseThrow(() -> new BusinessException(409, "当前播放队列不可自动删除"));
+                queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>().eq(QueueItems::getQueueId, removableQueue.getQueueId()));
+                queuesMapper.deleteById(removableQueue.getQueueId());
             }
-
             Playlists playlist = playlistsMapper.selectById(playlistId);
             if (playlist == null) {
                 throw new BusinessException(404, "歌单不存在");
@@ -250,9 +254,6 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
             newQueue.setSongCount(insertedSongs);
             queuesMapper.updateById(newQueue);
-
-            PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
-                    .eq(PlayState::getUserId, userId));
 
             if (playState != null) {
                 playState.setCurrentQueueId(newQueueId);
