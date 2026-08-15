@@ -7,12 +7,14 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
@@ -21,6 +23,7 @@ import com.kyf.mp.server.modules.playlist.mapper.PlaylistsMapper;
 import com.kyf.mp.server.modules.playlist.mapper.SongsPlaylistsRelationMapper;
 import com.kyf.mp.server.modules.queue.entity.PlayState;
 import com.kyf.mp.server.modules.queue.entity.QueueItems;
+import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.queue.entity.Queues;
 import com.kyf.mp.server.modules.queue.mapper.PlayStateMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueueCustomMapper;
@@ -48,6 +51,11 @@ class QueuesBusinessImplTest {
     private SongsPlaylistsRelationMapper songsPlaylistsRelationMapper;
     @InjectMocks
     private QueuesBusinessImpl queuesBusiness;
+
+    @BeforeEach
+    void configureBusinessDefaults() {
+        ReflectionTestUtils.setField(queuesBusiness, "maxQueuesPerUser", 5);
+    }
 
     @Test
     void copiesPlaylistItemsThroughQueueItemMapper() {
@@ -80,6 +88,36 @@ class QueuesBusinessImplTest {
         assertThat(result.getSongCount()).isEqualTo(2);
     }
 
+    @Test
+    void reinsertedSongClosesItsOldPositionBeforeInsertion() {
+        Queues queue = new Queues();
+        queue.setQueueId(123L);
+        PlayState playState = new PlayState();
+        playState.setCurrentPosition(3);
+        QueueItems existingItem = new QueueItems();
+        existingItem.setQueueItemId(456L);
+        existingItem.setQueueItemPosition(1);
+
+        when(songsMapper.selectById(11L)).thenReturn(new Songs());
+        when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(queue);
+        when(playStateMapper.selectOne(any(Wrapper.class))).thenReturn(playState);
+        when(queueItemsMapper.selectOne(any(Wrapper.class))).thenReturn(existingItem);
+        when(queueItemsMapper.insert(any(QueueItems.class))).thenAnswer(invocation -> {
+            invocation.getArgument(0, QueueItems.class).setQueueItemId(789L);
+            return 1;
+        });
+
+        com.kyf.mp.server.modules.queue.dto.AddSongToQueue request = new com.kyf.mp.server.modules.queue.dto.AddSongToQueue();
+        request.setSongId(11L);
+        request.setMode(true);
+        queuesBusiness.addSongToQueue(7L, 123L, request);
+
+        verify(queueItemsMapper).deleteById(456L);
+        verify(queueCustomMapper).shiftPositionsDown(123L, 1);
+        verify(queueCustomMapper).moveItemPositionsToTemporary(123L, 3);
+        verify(queueCustomMapper).restoreShiftedItemPositions(123L, 3);
+        verify(queueCustomMapper, org.mockito.Mockito.never()).incrementSongCount(123L);
+    }
     private SongsPlaylistsRelation relation(Long songId, int position) {
         SongsPlaylistsRelation relation = new SongsPlaylistsRelation();
         relation.setSongId(songId);
