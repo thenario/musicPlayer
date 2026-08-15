@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import org.springframework.context.MessageSourceResolvable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -32,6 +33,12 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(ResultModel.error(e.getMessage(), status.value()));
     }
 
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<ResultModel<Void>> handleAccessDenied(AccessDeniedException exception) {
+        log.warn("访问被拒绝: {}", exception.getMessage());
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ResultModel.error("没有访问权限", HttpStatus.FORBIDDEN.value()));
+    }
     // ==================== 参数校验异常（Bean Validation 注解） ====================
 
     // @RequestBody @Valid 校验失败（MethodArgumentNotValidException 是其子类）
