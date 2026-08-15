@@ -195,15 +195,23 @@ export const usePlayerStore = defineStore('player', () => {
   }
 
   const setPlayMode = async (mode: string) => {
+    const previousMode = playMode.value
+    const previousQueue = [...currentQueue.value]
+    const previousIndex = currentIndex.value
     playMode.value = mode
-    if (mode === 'shuffle') {
-      await queueMutations.shuffleQueue()
-    }
+
     try {
+      if (mode === 'shuffle') {
+        const shuffled = await queueMutations.shuffleQueue()
+        if (shuffled && !shuffled.success) throw new Error('队列随机排序失败')
+      }
       await queueApi.setPlayMode(currentQueueId.value ?? -1, mode)
       return { success: true }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      playMode.value = previousMode
+      currentQueue.value = previousQueue
+      currentIndex.value = previousIndex
+      console.error(errorMessage(err))
       return { success: false }
     }
   }
