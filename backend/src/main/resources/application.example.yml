@@ -1,0 +1,80 @@
+# =====================================================================
+#  后端配置示例（application.example.yml）
+#  复制为 application.yml 使用，或仅参照此文件设置环境变量。
+#  所有敏感值均已改为环境变量占位符 ${VAR:default}：
+#  不设环境变量时使用默认值，设置后覆盖默认值（Spring Boot 宽松绑定，
+#  如 SPRING_DATASOURCE_PASSWORD 对应 spring.datasource.password）。
+# =====================================================================
+
+server:
+  # 服务端口。本地直连后端时前端 /api 代理指向该端口
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: server
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 10MB
+      max-request-size: 12MB
+  output:
+    ansi:
+      enabled: always
+
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+
+  flyway:
+    # 已有数据库自动登记为 V1；后续仅新增 V{版本}__{说明}.sql，勿修改已执行版本。
+    baseline-on-migrate: true
+    baseline-version: 1
+    locations: classpath:db/migration
+
+  datasource:
+    # 数据库连接（Docker 内使用服务名 db；本地开发改为 127.0.0.1）
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8}
+    username: ${MYSQL_USER:root}
+    password: ${MYSQL_PASSWORD}   # 必填：仅通过环境变量提供
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+logging:
+  level:
+    root: info
+    "com.kyf.mp.server": debug
+  pattern:
+    console: ">> [MY-MUSIC-APP] %d{HH:mm:ss} %clr(%5p) %clr(---){faint} %clr(%logger{36}){cyan} %clr(:){faint} %clr(%m){green}%n"
+
+jwt:
+  secret: ${JWT_SECRET}   # 必填：至少 32 字节，仅通过环境变量提供
+  expire: ${JWT_EXPIRE:86400000}     # 毫秒；86400000 = 1 天
+
+file:
+  # 上传文件的落盘路径（容器内路径；宿主机对应 static/，由 Docker 卷挂载）
+  upload:
+    song-path: ${SONG_UPLOAD_PATH:/app/static/songs/}
+    song-cover-path: ${SONG_COVER_UPLOAD_PATH:/app/static/song_covers/}
+    playlist-cover-path: ${PLAYLIST_COVER_UPLOAD_PATH:/app/static/playlist_covers/}
+    user-cover-path: ${USER_COVER_UPLOAD_PATH:/app/static/user_covers/}
+  # 对外暴露的静态资源 URL 前缀（与 nginx location /static/ 对应）
+  static:
+    song-url: ${SONG_STATIC_URL:/static/songs/}
+    song-cover-url: ${SONG_COVER_STATIC_URL:/static/song_covers/}
+    playlist-cover-url: ${PLAYLIST_COVER_STATIC_URL:/static/playlist_covers/}
+    user-cover-url: ${USER_COVER_STATIC_URL:/static/user_covers/}
+
+cors:
+  # 逗号分隔；部署到独立前端域名时通过 CORS_ALLOWED_ORIGINS 覆盖。
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+
+mybatis-plus:
+  mapper-locations: classpath*:com/kyf/mp/server/modules/**/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+
+song:
+  # 启动时扫描磁盘歌曲并写入数据库；有明确初始化需求时再设为 true。
+  scanner:
+    enabled: ${SONG_SCANNER_ENABLED:false}
+    uploader-id: ${SONG_SCANNER_UPLOADER_ID:0}
+    remove-missing: ${SONG_SCANNER_REMOVE_MISSING:false}
