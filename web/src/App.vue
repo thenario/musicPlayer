@@ -29,7 +29,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onBeforeUnmount, onMounted } from 'vue'
 import { usePlayerStore } from './stores/player'
 import NavBar from '@/components/nav-bar/NavBar.vue'
 import PlayerBar from '@/components/player-bar/PlayerBar.vue'

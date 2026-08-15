@@ -83,6 +83,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   // ================= 播放控制 =================
   const setAudioElement = (element: HTMLAudioElement) => audio.setAudioElement(element)
+  const disposeAudio = () => audio.dispose()
 
   const onAudioEnded = () => {
     if (playMode.value === 'repeat_one') {
@@ -450,6 +451,7 @@ export const usePlayerStore = defineStore('player', () => {
     hasPrevious,
 
     setAudioElement,
+    disposeAudio,
     playSong,
     playAtIndex,
     togglePlay,
