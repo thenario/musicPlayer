@@ -23,7 +23,7 @@ public class PlayState implements Serializable {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(value = "user_id", type = IdType.ASSIGN_ID)
+    @TableId(value = "user_id", type = IdType.INPUT)
     private Long userId;
 
     private Long currentQueueId;

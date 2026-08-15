@@ -468,6 +468,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         ps.setCurrentPosition(pos);
 
         ps.setCurrentProgress(dto.getCurrentProgress() != null ? dto.getCurrentProgress() : 0);
+        ps.setPlaymode(dto.getPlaymode() != null ? dto.getPlaymode() : "sequential");
 
         ps.setUpdatedDate(LocalDateTime.now());
     }
