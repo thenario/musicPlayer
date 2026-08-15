@@ -47,7 +47,7 @@ export const usePlayerStore = defineStore('player', () => {
       }
       return { success: true }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       return { success: false }
     }
   }
@@ -137,7 +137,7 @@ export const usePlayerStore = defineStore('player', () => {
       syncPlayStateToBackend()
       return { success: true }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       return { success: false }
     }
   }
@@ -313,7 +313,7 @@ export const usePlayerStore = defineStore('player', () => {
         queue: res.queue,
       }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       return {
         success: false,
         message: errorMessage(err),
@@ -342,7 +342,7 @@ export const usePlayerStore = defineStore('player', () => {
       await fetchUserQueues()
       pauseSong()
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       throw err
     }
   }
@@ -365,7 +365,7 @@ export const usePlayerStore = defineStore('player', () => {
       if (!resF.success) return { success: false }
       return { success: true }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       return { success: false }
     }
   }
@@ -383,7 +383,7 @@ export const usePlayerStore = defineStore('player', () => {
         return { success: true }
       }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       return { success: false }
     }
   }
@@ -403,7 +403,7 @@ export const usePlayerStore = defineStore('player', () => {
       }
       return { success: true }
     } catch (err: unknown) {
-      console.log(errorMessage(err))
+      console.error(errorMessage(err))
       return { success: false }
     }
   }

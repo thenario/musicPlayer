@@ -33,7 +33,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
         await queueApi.reorderQueue(songIds, ctx.currentQueueId.value)
         return { success: true }
       } catch (err: unknown) {
-        console.log(err instanceof Error ? err.message : err)
+        console.error(err instanceof Error ? err.message : err)
         return { success: false }
       }
     }
@@ -94,7 +94,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       await queueApi.removeSongFromQueue(ctx.currentQueueId.value, id)
       return { success: true }
     } catch (err: unknown) {
-      console.log(err instanceof Error ? err.message : err)
+      console.error(err instanceof Error ? err.message : err)
       return { success: false }
     }
   }
@@ -137,7 +137,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       finalizeQueueItem(tempId, res.data, oldIdx === -1)
       return { targetIndex, success: true }
     } catch (err: unknown) {
-      console.log(err instanceof Error ? err.message : err)
+      console.error(err instanceof Error ? err.message : err)
       rollbackQueue(tempId)
       return { targetIndex: -1, success: false }
     }

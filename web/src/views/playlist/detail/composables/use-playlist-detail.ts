@@ -65,7 +65,7 @@ export function usePlaylistDetail() {
       }
     } catch (err) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.log(err)
+      console.error(err)
     }
   }
 
@@ -90,7 +90,7 @@ export function usePlaylistDetail() {
       await loadPlaylist()
     } catch (error: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.log(error instanceof Error ? error.message : error)
+      console.error(error instanceof Error ? error.message : error)
     }
   }
 

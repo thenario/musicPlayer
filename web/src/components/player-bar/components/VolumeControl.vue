@@ -12,7 +12,7 @@
         </svg>
       </button>
       <input type="range" v-model="volumeValue" max="100"
-        @input="(e: any) => setVolume(Number(e.target.value))" class="volume-range"
+        @input="handleVolumeInput" class="volume-range"
         :style="{ '--progress': volumeValue + '%' }" />
     </div>
   </div>
@@ -23,6 +23,11 @@ defineOptions({ name: 'VolumeControl' })
 import { useVolumeControl } from '../composables/use-volume-control'
 
 const { volumeValue, toggleMute, setVolume } = useVolumeControl()
+
+const handleVolumeInput = (event: Event) => {
+  const input = event.target
+  if (input instanceof HTMLInputElement) setVolume(Number(input.value))
+}
 </script>
 
 <style scoped>

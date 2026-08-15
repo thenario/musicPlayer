@@ -76,7 +76,7 @@ export function useQueueDrawer() {
       activeTab.value = 'queue'
     } catch (err: unknown) {
       // 错误已由拦截器统一提示，这里只记录日志
-      console.log(err instanceof Error ? err.message : err)
+      console.error(err instanceof Error ? err.message : err)
     }
   }
 
