@@ -5,11 +5,6 @@ export interface IAxiosRes<T = unknown> {
   code: number
 }
 
-export interface IError {
-  success: boolean
-  message: string
-}
-
 export interface IUser {
   user_id: number | string
   user_email: string
@@ -84,43 +79,9 @@ export interface IQueueState {
   playmode: string
 }
 
-export interface ILogin {
-  message: string
-  success: boolean
-  user: IUser
-  token: string
-}
-
-export interface ILogout {
-  message: string
-  success: boolean
-}
-
-export interface IRegister {
-  message: string
-  success: boolean
-  user: IUser
-}
-
-export interface IGetSongs {
-  success: boolean
-  message: string
-  songs: ISong[]
-  pagination: IPagination
-}
-
 export interface IUploadSong {
   success: boolean
   message: string
-}
-
-export interface IGetStatics {
-  success: boolean
-  message: string
-  total_songs: number
-  total_users: number
-  online_users: number
-  popular_songs: ISong[]
 }
 
 /** 歌单中的歌曲：附带在歌单内的排序位置 */
@@ -138,42 +99,10 @@ export interface IGetPlaylistById {
   songs: PlaylistSong[]
   is_liked: boolean
 }
-export interface ICreatePlaylist {
-  message: string
-  success: boolean
-  playlist_id: number | string
-}
-export interface IDeletePlaylist {
-  message: string
-  success: boolean
-}
-export interface IAddSongToPlaylist {
-  message: string
-  success: boolean
-  song_position: number
-}
-export interface IRemoveSongFromPlaylist {
-  message: string
-  success: boolean
-}
-export interface ILikePlaylist {
-  message: string
-  success: boolean
-}
-export interface IUnlikePlaylist {
-  message: string
-  success: boolean
-}
 export interface IGetMyQueues {
   message: string
   success: boolean
   queues: IQueue[]
-}
-export interface IGetQueueById {
-  message: string
-  success: boolean
-  queue: IQueue
-  queue_items: IQueueItem[]
 }
 export interface IGetCurrentQueue {
   message: string
@@ -181,52 +110,6 @@ export interface IGetCurrentQueue {
   queue: IQueue
   queue_state: IQueueState
 }
-export interface IAlterQueueTocurrent {
-  message: string
-  success: boolean
-}
-export interface IDeleteQueue {
-  message: string
-  success: boolean
-  data?: unknown
-}
-export interface IClearQueue {
-  message: string
-  success: boolean
-}
-export interface IAddSongToQueue {
-  message: string
-  success: boolean
-  queue_id: number | string
-  song_id: number | string
-  song_position: number
-  action: string
-  queue_item: IQueueItem
-  data?: unknown
-}
-export interface IRemoveSongFromQueue {
-  message: string
-  success: boolean
-}
-export interface IReorderQueue {
-  message: string
-  success: boolean
-}
-export interface ICreatQueueFromPlaylist {
-  message: string
-  success: boolean
-  queue_id: number | string
-  song_count: number
-}
-export interface IUpdateCurrentQueueState {
-  message: string
-  success: boolean
-}
-export interface ISetPlayMode {
-  message: string
-  success: boolean
-}
-
 export interface LyricLine {
   time: number
   content: string
