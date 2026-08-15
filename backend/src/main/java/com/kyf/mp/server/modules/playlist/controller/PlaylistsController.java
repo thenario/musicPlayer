@@ -19,6 +19,7 @@ import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
 import com.kyf.mp.server.modules.playlist.service.PlaylistsService;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -52,7 +53,7 @@ public class PlaylistsController {
     @PatchMapping
     public ResultModel<PlaylistActionVO> editPlaylist(
             @RequestParam(value = "cover_image", required = false) MultipartFile file,
-            @RequestParam("playlist_id") @NotNull(message = "歌单ID不能为空") Long playlistId,
+            @RequestParam("playlist_id") @NotNull(message = "歌单ID不能为空") @Min(value = 1, message = "ID must be positive") Long playlistId,
             @RequestParam(value = "name", required = false) @NotBlank(message = "歌单名称不能为空") String name,
             @RequestParam(value = "description", required = false) String description,
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
@@ -62,7 +63,7 @@ public class PlaylistsController {
     // 3. 删除歌单
     @DeleteMapping("/{id}")
     public ResultModel<Void> deletePlaylist(
-            @PathVariable("id") @NotNull(message = "歌单ID不能为空") Long id,
+            @PathVariable("id") @NotNull(message = "歌单ID不能为空") @Min(value = 1, message = "ID must be positive") Long id,
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
         playlistsService.deletePlaylist(id, userId);
         return ResultModel.success(null);
@@ -78,7 +79,7 @@ public class PlaylistsController {
     // 5. 获取歌单详情（含歌曲）
     @GetMapping("/{id}")
     public ResultModel<PlaylistDetailVO> getPlaylistById(
-            @PathVariable("id") @NotNull(message = "歌单ID不能为空") Long id,
+            @PathVariable("id") @NotNull(message = "歌单ID不能为空") @Min(value = 1, message = "ID must be positive") Long id,
             @RequestAttribute("userId") Long userId) {
         return ResultModel.success(playlistsService.getPlaylistDetail(id, userId));
     }
@@ -86,7 +87,7 @@ public class PlaylistsController {
     // 6. 点赞/取消点赞
     @PostMapping("/{id}/likes")
     public ResultModel<Void> like(
-            @PathVariable("id") @NotNull(message = "参数不完整") Long id,
+            @PathVariable("id") @NotNull(message = "参数不完整") @Min(value = 1, message = "ID must be positive") Long id,
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Long userId) {
         playlistsService.toggleLike(id, userId, true);
         return ResultModel.success(null);
@@ -94,7 +95,7 @@ public class PlaylistsController {
 
     @DeleteMapping("/{id}/unlikes")
     public ResultModel<Void> unlike(
-            @PathVariable("id") @NotNull(message = "参数不完整") Long id,
+            @PathVariable("id") @NotNull(message = "参数不完整") @Min(value = 1, message = "ID must be positive") Long id,
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Long userId) {
         playlistsService.toggleLike(id, userId, false);
         return ResultModel.success(null);
@@ -103,16 +104,16 @@ public class PlaylistsController {
     // 7. 歌单添加/移除歌曲
     @PostMapping("/{playlist_id}/songs/{song_id}")
     public ResultModel<AddSongToPlaylistVO> addSong(
-            @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long playlistId,
-            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long songId,
+            @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long playlistId,
+            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long songId,
             @RequestAttribute("userId") Long userId) {
         return ResultModel.success(playlistsService.addSongToPlaylist(playlistId, songId, userId));
     }
 
     @DeleteMapping("/{playlist_id}/songs/{song_id}")
     public ResultModel<Void> removeSong(
-            @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long playlistId,
-            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") Long songId,
+            @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long playlistId,
+            @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long songId,
             @RequestAttribute("userId") Long userId) {
         playlistsService.removeSongFromPlaylist(playlistId, songId, userId);
         return ResultModel.success(null);
