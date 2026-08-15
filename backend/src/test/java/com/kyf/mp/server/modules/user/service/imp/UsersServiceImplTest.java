@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+import com.kyf.mp.server.common.auth.LoginRateLimiter;
 import com.kyf.mp.server.modules.user.business.UsersBusiness;
 import com.kyf.mp.server.modules.user.entity.Users;
 import com.kyf.mp.server.utils.JwtUtils;
@@ -26,13 +27,16 @@ class UsersServiceImplTest {
     @Mock
     private JwtUtils jwtUtils;
 
+    @Mock
+    private LoginRateLimiter loginRateLimiter;
+
     private BCryptPasswordEncoder passwordEncoder;
     private UsersServiceImpl usersService;
 
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder(4);
-        usersService = new UsersServiceImpl(usersBusiness, passwordEncoder, jwtUtils);
+        usersService = new UsersServiceImpl(usersBusiness, passwordEncoder, jwtUtils, loginRateLimiter);
     }
 
     @Test

@@ -11,6 +11,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.kyf.mp.server.common.BusinessException;
+import com.kyf.mp.server.common.auth.LoginRateLimiter;
 import com.kyf.mp.server.modules.user.business.UsersBusiness;
 import com.kyf.mp.server.modules.user.dto.EditUserDTO;
 import com.kyf.mp.server.modules.user.entity.Users;
@@ -39,10 +40,12 @@ public class UsersServiceImpl implements UsersService {
     private final UsersBusiness usersBusiness;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
+    private final LoginRateLimiter loginRateLimiter;
 
     @Override
     public LoginVO login(String username, String password) {
         log.info("===> 收到登录请求: username={}", username);
+        loginRateLimiter.check(username);
         // 简单查询：直接用 business 的基础 CRUD
         Users user = usersBusiness.lambdaQuery().eq(Users::getUserName, username).one();
 
