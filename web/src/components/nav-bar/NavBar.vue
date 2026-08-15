@@ -13,7 +13,7 @@
         <el-sub-menu index="user-submenu" class="user-sub">
           <template #title>
             <div class="navbar-user">
-              <el-avatar :size="32" class="navbar-avatar" :src="userStore.user?.user_cover">
+              <el-avatar :size="32" class="navbar-avatar" :src="userStore.userCoverUrl">
                 {{ userStore.user?.user_name?.charAt(0) || 'U' }}
               </el-avatar>
               <span class="username">{{ userStore.user?.user_name || "用户" }}</span>

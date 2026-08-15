@@ -14,7 +14,7 @@ export interface IUser {
   user_id: number | string
   user_email: string
   user_name: string
-  user_cover?: string
+  user_cover_url?: string
 }
 
 export interface ISong {
