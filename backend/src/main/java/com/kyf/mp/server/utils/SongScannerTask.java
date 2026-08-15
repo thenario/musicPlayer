@@ -50,6 +50,8 @@ public class SongScannerTask {
     private String songCoverUrlPrefix;
     @Value("${song.scanner.uploader-id}")
     private Long scannerUploaderId;
+    @Value("${song.scanner.remove-missing:false}")
+    private boolean removeMissingSongs;
     private final SongsMapper songsMapper;
     private final UsersMapper usersMapper;
 
@@ -108,10 +110,11 @@ public class SongScannerTask {
             }
 
             // 5. 执行清理（删除死链）
-            if (!idsToDelete.isEmpty()) {
+            if (removeMissingSongs && !idsToDelete.isEmpty()) {
                 log.info("🗑️ 检测到本地文件已删除，正在清理数据库死链，共 {} 条...", idsToDelete.size());
-                // 使用 MyBatis-Plus 的批量删除，速度极快
                 songsMapper.deleteBatchIds(idsToDelete);
+            } else if (!idsToDelete.isEmpty()) {
+                log.warn("扫描到 {} 条缺失本地文件的歌曲记录；删除功能未启用，已跳过", idsToDelete.size());
             }
 
             // 6. 执行新增
@@ -124,7 +127,7 @@ public class SongScannerTask {
 
             long end = System.currentTimeMillis();
             log.info("✅ 双向同步完成！耗时: {}ms，新增: {} 首，清理死链: {} 条",
-                    (end - start), addedCount, idsToDelete.size());
+                    (end - start), addedCount, removeMissingSongs ? idsToDelete.size() : 0);
 
         } catch (Exception e) {
             log.error("双向同步任务发生崩溃: ", e);
