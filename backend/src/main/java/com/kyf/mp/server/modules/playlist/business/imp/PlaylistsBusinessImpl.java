@@ -199,7 +199,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             List<Long> songIds = relations.stream().map(SongsPlaylistsRelation::getSongId)
                     .collect(Collectors.toList());
             List<Songs> songEntities = songsMapper
-                    .selectList(new LambdaQueryWrapper<Songs>().in(Songs::getSongId, songIds));
+                    .selectList(new LambdaQueryWrapper<Songs>().select(Songs::getSongId, Songs::getSongTitle, Songs::getArtist, Songs::getAlbum, Songs::getDuration, Songs::getBitrate, Songs::getSongCoverUrl, Songs::getSongUrl, Songs::getFileFormat, Songs::getFileSize).in(Songs::getSongId, songIds));
             Map<Long, Songs> songMap = songEntities.stream().collect(Collectors.toMap(Songs::getSongId, s -> s));
 
             for (SongsPlaylistsRelation rel : relations) {

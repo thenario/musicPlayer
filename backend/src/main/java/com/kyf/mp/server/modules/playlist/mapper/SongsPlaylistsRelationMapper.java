@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Update;
 public interface SongsPlaylistsRelationMapper {
 
     @Select("SELECT playlist_id, song_id, song_playlist_position FROM songs_playlists_relation "
-            + "WHERE playlist_id = #{playlistId}")
+            + "WHERE playlist_id = #{playlistId} ORDER BY song_playlist_position ASC")
     List<SongsPlaylistsRelation> findByPlaylistId(@Param("playlistId") Long playlistId);
 
     @Select("SELECT playlist_id, song_id, song_playlist_position FROM songs_playlists_relation "
@@ -20,7 +20,7 @@ public interface SongsPlaylistsRelationMapper {
     SongsPlaylistsRelation findByPlaylistAndSong(@Param("playlistId") Long playlistId, @Param("songId") Long songId);
 
     @Select("SELECT IFNULL(MAX(song_playlist_position), 0) FROM songs_playlists_relation "
-            + "WHERE playlist_id = #{playlistId}")
+            + "WHERE playlist_id = #{playlistId} ORDER BY song_playlist_position ASC")
     Integer getMaxPosition(@Param("playlistId") Long playlistId);
 
     @Insert("INSERT INTO songs_playlists_relation (playlist_id, song_id, song_playlist_position) "
