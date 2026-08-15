@@ -312,10 +312,17 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
         int insertPos = Math.max(1, mode ? currentPos + 1 : currentPos);
 
-        int deleted = queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>()
+        QueueItems existingItem = queueItemsMapper.selectOne(new LambdaQueryWrapper<QueueItems>()
                 .eq(QueueItems::getQueueId, finalQueueId)
                 .eq(QueueItems::getSongId, songId));
-        boolean wasExisted = deleted > 0;
+        boolean wasExisted = existingItem != null;
+        if (wasExisted) {
+            queueItemsMapper.deleteById(existingItem.getQueueItemId());
+            queueCustomMapper.shiftPositionsDown(finalQueueId, existingItem.getQueueItemPosition());
+            if (existingItem.getQueueItemPosition() < insertPos) {
+                insertPos--;
+            }
+        }
 
         queueCustomMapper.moveItemPositionsToTemporary(finalQueueId, insertPos);
 
