@@ -47,7 +47,7 @@ vue_musicplayer/
 
 ```bash
 # 1. 起基础设施（MySQL + 后端 + nginx 走 docker，nginx 暴露在宿主机 8080）
-#    首次启动或改过 Dockerfile/nginx.conf 后加 --build；后端需先有 target/*.jar（见注意事项）
+#    首次启动或改过 Dockerfile/nginx.conf 后加 --build；镜像会自行构建前端与后端。
 docker compose up -d --build
 
 # 2. 前端 dev server（vite，端口 5173）
@@ -73,7 +73,7 @@ pnpm dev
 docker compose up -d --build
 ```
 
-- 前端构建产物放入 `nginx/html/`（Nginx 服务 SPA 站点根目录）
+- nginx 镜像在构建阶段自动执行前端构建，并内置产物；无需手工复制 `web/dist`。
 - 访问 `http://<host>:8080`
 
 ## 环境变量
@@ -97,12 +97,7 @@ docker compose up -d --build
 - 前端用 **pnpm**（`packageManager` 已锁定 `pnpm@11.17.0`），**不要用 npm** 安装依赖。esbuild 的构建脚本已在 `pnpm-workspace.yaml`（`allowBuilds`）里放行。
 
 ### 后端部署
-- 后端 Dockerfile 是 `COPY target/*.jar`，**docker 构建前必须先本地打包**：
-  ```bash
-  cd backend && ./mvnw package   # 产出 backend/target/*.jar
-  docker compose up -d --build
-  ```
-  否则镜像里没有 jar，容器起不来。
+- 后端 Dockerfile 使用多阶段构建：Docker 会在构建阶段执行 Maven 打包，无需在宿主机预先生成 `target/*.jar`。
 - 后端不提供数据库密码或 JWT 密钥默认值；裸跑时复制 `backend/.env.example` 为 `backend/.env` 并填写，Docker 部署时在根 `.env` 中填写 `MYSQL_ROOT_PASSWORD` 和 `JWT_SECRET`。
 
 ### 端口
@@ -125,7 +120,7 @@ docker compose up -d --build
 ### 前端开发
 - dev 下 Vite 把 `/api`、`/static` 代理到 `127.0.0.1:8080`（docker nginx）。**docker 没启动时接口会 502**。
 - `VITE_API_URL` 留空 = 相对路径，依赖 nginx / Vite 代理；如果前端裸跑（无代理），图片与接口会 404。
-- 生产环境把 `web/dist` 构建产物放到 `nginx/html/`，由 Nginx 托管 SPA。
+- 生产镜像会自动构建并托管前端 SPA，部署仅需 `docker compose up -d --build`。
 
 
 ## 重构历程
