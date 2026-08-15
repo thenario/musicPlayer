@@ -1,6 +1,6 @@
 import axios, { AxiosError, type AxiosResponse, type InternalAxiosRequestConfig } from 'axios'
 import { router } from '@/router'
-import { tokenStorage, userStorage } from '@/utils/storage'
+import { tokenStorage } from '@/utils/storage'
 
 interface BackendPayload {
   code: number
