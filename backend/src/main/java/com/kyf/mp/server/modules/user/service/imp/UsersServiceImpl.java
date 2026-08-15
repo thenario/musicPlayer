@@ -62,7 +62,7 @@ public class UsersServiceImpl implements UsersService {
         vo.setUser(cleanUser);
         vo.setToken(token);
 
-        log.info("===> 业务逻辑执行完毕，准备返回: {}", vo);
+        log.info("登录成功: userId={}, username={}", user.getUserId(), user.getUserName());
         return vo;
     }
 
