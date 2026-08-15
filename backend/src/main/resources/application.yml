@@ -60,6 +60,7 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 song:
+  page-size: ${SONG_PAGE_SIZE:15}
   scanner:
     enabled: ${SONG_SCANNER_ENABLED:false}
     uploader-id: ${SONG_SCANNER_UPLOADER_ID:0}

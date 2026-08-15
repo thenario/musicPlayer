@@ -73,6 +73,7 @@ mybatis-plus:
     map-underscore-to-camel-case: true
 
 song:
+  page-size: ${SONG_PAGE_SIZE:15}
   # 启动时扫描磁盘歌曲并写入数据库；有明确初始化需求时再设为 true。
   scanner:
     enabled: ${SONG_SCANNER_ENABLED:false}

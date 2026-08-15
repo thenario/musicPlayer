@@ -56,10 +56,13 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
     @Value("${file.static.song-cover-url}")
     private String songCoverUrl;
 
+    @Value("${song.page-size:15}")
+    private int songPageSize;
+
     @Override
     public GetSongsVO getSongsPage(Integer page, String keyword) {
         int current = (page == null || page < 1) ? 1 : page;
-        int pageLimit = 15;
+        int pageLimit = songPageSize;
 
         Page<Songs> pageConfig = new Page<>(current, pageLimit);
 
