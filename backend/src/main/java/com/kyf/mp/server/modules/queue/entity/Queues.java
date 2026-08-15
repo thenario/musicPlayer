@@ -35,6 +35,4 @@ public class Queues implements Serializable {
     private LocalDateTime createdDate;
 
     private LocalDateTime updatedDate;
-
-    private LocalDateTime createdAt;
 }
