@@ -30,7 +30,7 @@ spring:
 logging:
   level:
     root: info
-    "com.kyf.mp.server": debug
+    "com.kyf.mp.server": ${APP_LOG_LEVEL:info}
   pattern:
     console: ">> [MY-MUSIC-APP] %d{HH:mm:ss} %clr(%5p) %clr(---){faint} %clr(%logger{36}){cyan} %clr(:){faint} %clr(%m){green}%n"
 
