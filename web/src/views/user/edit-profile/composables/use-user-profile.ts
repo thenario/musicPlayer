@@ -1,4 +1,4 @@
-import { reactive, ref } from 'vue'
+import { onBeforeUnmount, reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { FormInstance, FormRules } from 'element-plus'
 import { useUserStore } from '@/stores/user'
@@ -14,6 +14,13 @@ export function useUserProfile() {
   const prevCoverUrl = ref<string>(userCoverUrl.value || '')
   const preUserName = ref<string>(user.value?.user_name || '')
   const submitting = ref(false)
+
+  const revokePreviewUrl = () => {
+    if (prevCoverUrl.value.startsWith('blob:')) {
+      URL.revokeObjectURL(prevCoverUrl.value)
+      prevCoverUrl.value = ''
+    }
+  }
 
   const editForm = reactive({
     user_name: preUserName.value,
@@ -33,6 +40,7 @@ export function useUserProfile() {
       ElMessage.warning('图片大小不能超过 2MB')
       return
     }
+    revokePreviewUrl()
     coverFile.value = file
     prevCoverUrl.value = URL.createObjectURL(file)
   }
@@ -57,6 +65,8 @@ export function useUserProfile() {
       if (user.value) {
         user.value.user_name = res.user_name
         userCoverUrl.value = res.user_cover_url
+        revokePreviewUrl()
+        prevCoverUrl.value = res.user_cover_url
       }
       return true
     } catch (err) {
@@ -66,6 +76,8 @@ export function useUserProfile() {
       submitting.value = false
     }
   }
+
+  onBeforeUnmount(revokePreviewUrl)
 
   return { formRef, prevCoverUrl, editForm, rules, submitting, handleFileChange, submit }
 }
