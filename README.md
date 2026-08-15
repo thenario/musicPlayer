@@ -103,7 +103,7 @@ docker compose up -d --build
   docker compose up -d --build
   ```
   否则镜像里没有 jar，容器起不来。
-- `application.yml` 里的数据库密码、JWT 密钥是**开发默认值**，生产环境必须用环境变量覆盖（`MYSQL_PASSWORD`、`JWT_SECRET`，见 `application.example.yml`），不要把默认密钥带上生产。
+- 后端不提供数据库密码或 JWT 密钥默认值；裸跑时复制 `backend/.env.example` 为 `backend/.env` 并填写，Docker 部署时在根 `.env` 中填写 `MYSQL_ROOT_PASSWORD` 和 `JWT_SECRET`。
 
 ### 端口
 - docker 的 nginx 占用宿主机 **8080**；裸跑后端（Spring Boot 默认也是 8080）会**端口冲突**。裸跑调试时改 `SERVER_PORT` 环境变量，或停掉 nginx 容器。
@@ -116,6 +116,11 @@ docker compose up -d --build
 - 表结构由 Flyway 管理；初始结构为 `backend/src/main/resources/db/migration/V1__initial_schema.sql`。
 - 已有数据库首次启动会自动 baseline 到 V1，不会重复建表。后续结构变更必须新增 `V2__说明.sql`、`V3__说明.sql` 等迁移文件，禁止修改已执行的版本文件。
 - `mysql/init/init.sql` 仅用于 Docker 的全新数据卷初始化，保留它以兼容首次部署；生产中的增量变更以 Flyway 迁移为准。
+- `cd backend && ./mvnw test` 会通过 Testcontainers 在临时 MySQL 8 实例上验证全部迁移；需要本机 Docker 运行中。
+
+### 开发工具
+- `CodeGenerator` 需要环境变量 `GENERATOR_DB_URL`、`GENERATOR_DB_USERNAME` 和 `GENERATOR_DB_PASSWORD`；可选 `GENERATOR_OUTPUT_DIR`，默认 `src/main/java`。凭据不再写入源码。
+- `DbdataInit <songs-directory> <song-covers-directory>` 目前仅校验并扫描媒体目录，供后续实现本地文件元数据导入使用；它不会启动服务或写入数据库。
 
 ### 前端开发
 - dev 下 Vite 把 `/api`、`/static` 代理到 `127.0.0.1:8080`（docker nginx）。**docker 没启动时接口会 502**。
