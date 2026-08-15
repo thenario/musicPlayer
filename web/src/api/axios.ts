@@ -39,17 +39,14 @@ const pendingMap = new Map<string, AbortController>() //absortcontroller是一�
 
 //根据配置的具体内容生成哈希key
 const getRequestKey = (config: InternalAxiosRequestConfig) => {
-  return [
-    config.method,
-    config.url,
-    JSON.stringify(config.params),
-    JSON.stringify(config.data),
-  ].join('&')
+  // Multipart uploads may share a URL but carry different files; never deduplicate them.
+  if (config.data instanceof FormData) return undefined
+  return [config.method, config.url, JSON.stringify(config.params), JSON.stringify(config.data)].join('&')
 }
 
 const removePendingRequest = (config: InternalAxiosRequestConfig) => {
   const key = getRequestKey(config)
-  if (pendingMap.has(key)) {
+  if (key && pendingMap.has(key)) {
     const controller = pendingMap.get(key)
     controller?.abort()
     pendingMap.delete(key)
@@ -67,7 +64,8 @@ request.interceptors.request.use(
     removePendingRequest(config) //发送请求时先中断之前的请求
     const controller = new AbortController() //创建控制器
     config.signal = controller.signal //将控制器和请求绑定
-    pendingMap.set(getRequestKey(config), controller) //把新的指令加入字典
+    const key = getRequestKey(config)
+    if (key) pendingMap.set(key, controller) //把新的指令加入字典
     //在请求头加上token
     const token = tokenStorage.get() //获取本地存储的token
     if (token) {

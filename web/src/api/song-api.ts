@@ -23,6 +23,7 @@ const uploadSong = async (
   const res = await request.post<never, IAxiosRes<null>>('/songs', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
     onUploadProgress: onProgress,
+    timeout: 300_000,
   })
   return { success: true, message: res.message }
 }
