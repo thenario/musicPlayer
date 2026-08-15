@@ -68,4 +68,16 @@ public class SongsServiceImpl implements SongsService {
     public void editUploadSong(EditSongDTO dto, Long userId, Long songID) {
         songsBusiness.editUploadSong(dto, userId, songID);
     }
-}
+
+    @Override
+    public UploadsVO getUploadSong(Long userId, Long songId) {
+        Songs song = songsBusiness.getOne(new LambdaQueryWrapper<Songs>()
+                .eq(Songs::getSongId, songId)
+                .eq(Songs::getUploaderId, userId));
+        if (song == null) {
+            throw new com.kyf.mp.server.common.BusinessException(404, "上传歌曲不存在");
+        }
+        UploadsVO vo = new UploadsVO();
+        BeanUtils.copyProperties(song, vo);
+        return vo;
+    }}

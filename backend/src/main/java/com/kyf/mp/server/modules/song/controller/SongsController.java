@@ -75,6 +75,11 @@ public class SongsController {
         return ResultModel.success(songsService.getUploadSongs(userId, page, size));
     }
 
+    @GetMapping("/my-uploads/{song_id}")
+    public ResultModel<UploadsVO> getUploadSong(@RequestAttribute("userId") Long userId,
+            @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Long songId) {
+        return ResultModel.success(songsService.getUploadSong(userId, songId));
+    }
     @PatchMapping("/my-uploads/{song_id}")
     public ResultModel<Void> editUploadSong(EditSongDTO dto, @RequestAttribute("userId") Long userId,
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") Long songId) {
