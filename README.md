@@ -38,7 +38,7 @@ vue_musicplayer/
 ├── mysql/               # MySQL 初始化 SQL（init.sql）与数据卷
 ├── nginx/               # Nginx 反向代理（只跟踪 Dockerfile + conf）
 ├── static/              # 用户上传资源（歌曲/封面，不入库，由 nginx 直接读取）
-└── Docker-compose.yml   # MySQL + 后端 + Nginx 全栈编排
+└── compose.yml   # MySQL + 后端 + Nginx 全栈编排
 ```
 
 ## 快速开始
