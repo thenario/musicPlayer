@@ -45,6 +45,8 @@ onMounted(() => {
     playerStore.setAudioElement(audioElement.value)
   }
 })
+
+onBeforeUnmount(() => playerStore.disposeAudio())
 </script>
 
 <style>
