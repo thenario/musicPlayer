@@ -1,7 +1,7 @@
 <template>
   <router-link :to="`/playlists/${playlist.playlist_id}`" class="playlist-card">
     <div class="playlist-card__cover">
-      <img :src="playlist.playlist_cover_url || '/default-cover.png'" alt="歌单封面"
+      <img :src="playlist.playlist_cover_url || '/default-cover.svg'" alt="歌单封面"
         class="playlist-card__img">
     </div>
     <p class="playlist-card__name">{{ playlist.playlist_name }}</p>
