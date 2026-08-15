@@ -116,7 +116,7 @@ public class UsersServiceImpl implements UsersService {
         }
 
         Map<String, String> resultMap = new HashMap<>();
-        resultMap.put("userCoverUrl", userCover);
+        resultMap.put("user_cover_url", userCover);
 
         return resultMap;
     }
