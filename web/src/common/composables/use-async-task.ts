@@ -1,15 +1,16 @@
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
-/** 异步任务的 loading 包装器：run 期间 loading 为 true，finally 里复位。 */
+/** Async task wrapper whose loading state remains true while any request is active. */
 export function useAsyncTask() {
-  const loading = ref(false)
+  const pendingCount = ref(0)
+  const loading = computed(() => pendingCount.value > 0)
 
   async function run<T>(task: () => Promise<T>): Promise<T> {
-    loading.value = true
+    pendingCount.value += 1
     try {
       return await task()
     } finally {
-      loading.value = false
+      pendingCount.value -= 1
     }
   }
 

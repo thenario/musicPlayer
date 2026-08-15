@@ -4,21 +4,27 @@ import { songApi } from '@/api/song-api'
 import { usePagination, useAsyncTask } from '@/common'
 import { SONG_PAGE_SIZE } from '../const'
 
-/** 歌曲库列表：搜索 + 分页 + 加载状态。 */
+/** Song library list: search, pagination, and stale-response protection. */
 export function useSongList(defaultPageSize = SONG_PAGE_SIZE) {
   const songs = ref<ISong[]>([])
   const searchKeyword = ref('')
   const pagination = usePagination(defaultPageSize)
   const task = useAsyncTask()
+  let latestRequest = 0
 
   const load = async () => {
+    const requestId = ++latestRequest
+    const page = pagination.state.current
+    const keyword = searchKeyword.value
+
     await task.run(async () => {
       try {
-        const res = await songApi.getSongs(pagination.state.current, searchKeyword.value)
+        const res = await songApi.getSongs(page, keyword)
+        if (requestId !== latestRequest) return
         songs.value = res.songs || []
         pagination.setTotal(res.pagination?.total_items || songs.value.length)
       } catch (err) {
-        console.error(err)
+        if (requestId === latestRequest) console.error(err)
       }
     })
   }
@@ -28,7 +34,7 @@ export function useSongList(defaultPageSize = SONG_PAGE_SIZE) {
     load()
   }
 
-  /** 搜索/重置时回到第一页。 */
+  /** Search/reset returns to the first page. */
   const search = () => {
     pagination.change(1)
     load()

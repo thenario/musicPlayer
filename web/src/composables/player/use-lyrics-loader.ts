@@ -3,33 +3,34 @@ import type { LyricLine } from '@/types'
 import { songApi } from '@/api/song-api'
 import { parseLyrics } from '@/utils/lrc-parser'
 
-/**
- * 歌词加载：监听当前歌曲 id 变化，拉取并解析歌词。
- * 失败时提供占位歌词（错误提示由拦截器静默处理，见 songApi.getLyrics 的 silent）。
- */
+/** Loads lyrics for the current song without allowing an old request to overwrite a newer song. */
 export function createLyricsLoader(getCurrentSongId: () => number | string | undefined) {
   const lyrics = ref<LyricLine[]>()
   const isLoadingLyrics = ref(false)
+  let latestRequest = 0
 
   watch(getCurrentSongId, async (id) => {
+    const requestId = ++latestRequest
     if (!id) {
       lyrics.value = []
+      isLoadingLyrics.value = false
       return
     }
+
     try {
       isLoadingLyrics.value = true
       const res = await songApi.getLyrics(id)
-
-      if (res.success) {
-        lyrics.value = parseLyrics(res.lyrics || '', res.t_lyrics || '')
-      } else {
-        lyrics.value = [{ time: 0, content: '未找到歌词' }]
-      }
+      if (requestId !== latestRequest) return
+      lyrics.value = res.success
+        ? parseLyrics(res.lyrics || '', res.t_lyrics || '')
+        : [{ time: 0, content: '未找到歌词' }]
     } catch (error) {
-      console.error('获取歌词发生硬错误:', error)
-      lyrics.value = [{ time: 0, content: '歌词加载失败' }]
+      if (requestId === latestRequest) {
+        console.error('获取歌词发生硬错误:', error)
+        lyrics.value = [{ time: 0, content: '歌词加载失败' }]
+      }
     } finally {
-      isLoadingLyrics.value = false
+      if (requestId === latestRequest) isLoadingLyrics.value = false
     }
   })
 
