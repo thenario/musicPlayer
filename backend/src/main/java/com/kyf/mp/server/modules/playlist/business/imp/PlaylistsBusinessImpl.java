@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -270,12 +271,9 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
 
         try {
             songsPlaylistsRelationMapper.insert(relation);
-        } catch (Exception e) {
-            String message = e.getMessage();
-            if (message != null && message.contains("uq_playlist_song_position"))
-                throw new BusinessException(409, "歌单更新冲突，请重试");
-            if (message != null && message.contains("Duplicate entry"))
-                throw new BusinessException(409, "歌曲已在歌单中");
+        } catch (DuplicateKeyException exception) {
+            throw new BusinessException(409, "歌曲已在歌单中或歌单更新冲突，请重试");
+        } catch (Exception exception) {
             throw new BusinessException(500, "添加失败");
         }
 
