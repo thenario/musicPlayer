@@ -45,7 +45,7 @@ const getUserUploadSong = async (songId: SongId) => {
   return { success: res.success, song: res.data, message: res.message }
 }
 const editUserUploadSongs = async (formdata: FormData, songId: SongId) => {
-  const res = await request.patch<never, IAxiosRes<null>>(`/songs/my-uploads/${songId}`, formdata)
+  const res = await request.patch<never, IAxiosRes<null>>(`/songs/my-uploads/${songId}`, formdata, { timeout: 300_000 })
   return { success: res.success, message: res.message }
 }
 
