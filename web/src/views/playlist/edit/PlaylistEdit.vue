@@ -62,7 +62,7 @@
                 <div class="playlist-edit__sticky">
                     <div class="playlist-edit__preview-card">
                         <div class="playlist-edit__preview-card-media">
-                            <img :src="previewImage || '/default-cover.png'" alt="封面图片"
+                            <img :src="previewImage || '/default-cover.svg'" alt="封面图片"
                                 class="playlist-edit__preview-card-img" />
                             <div class="playlist-edit__preview-card-overlay">
                             </div>
