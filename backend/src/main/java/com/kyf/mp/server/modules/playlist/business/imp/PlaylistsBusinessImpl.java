@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -188,6 +189,8 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
+        if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic()))
+            throw new BusinessException(403, "无权访问此私密歌单");
 
         List<SongsPlaylistsRelation> relations = songsPlaylistsRelationMapper.findByPlaylistId(playlistId);
 

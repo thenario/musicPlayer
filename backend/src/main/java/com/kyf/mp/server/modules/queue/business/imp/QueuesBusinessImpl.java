@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -231,7 +232,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             Playlists playlist = playlistsMapper.selectById(playlistId);
             if (playlist == null) {
                 throw new BusinessException(404, "歌单不存在");
-            }
+            }`r`n            if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic())) {`r`n                throw new BusinessException(403, "无权访问此私密歌单");`r`n            }
             String queueName = playlist.getPlaylistName();
 
             Queues newQueue = new Queues();
