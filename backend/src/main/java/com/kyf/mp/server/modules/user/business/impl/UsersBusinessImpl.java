@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.user.business.imp;
+package com.kyf.mp.server.modules.user.business.impl;
 
 import java.io.File;
 import java.io.IOException;

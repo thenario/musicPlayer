@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.playlist.business.imp;
+package com.kyf.mp.server.modules.playlist.business.impl;
 
 import java.io.File;
 import java.io.IOException;

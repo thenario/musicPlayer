@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.user.service.imp;
+package com.kyf.mp.server.modules.user.service.impl;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;

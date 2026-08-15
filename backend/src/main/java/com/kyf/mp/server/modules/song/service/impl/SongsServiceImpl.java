@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.song.service.imp;
+package com.kyf.mp.server.modules.song.service.impl;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;

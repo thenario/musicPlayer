@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.queue.service.imp;
+package com.kyf.mp.server.modules.queue.service.impl;
 
 import java.util.List;
 

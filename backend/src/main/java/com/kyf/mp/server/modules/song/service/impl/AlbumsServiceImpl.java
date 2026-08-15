@@ -1,8 +1,8 @@
-package com.kyf.mp.server.modules.queue.service.imp;
+package com.kyf.mp.server.modules.song.service.impl;
 
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.server.modules.queue.service.PlayHistoryService;
+import com.kyf.mp.server.modules.song.service.AlbumsService;
 
 /**
  * <p>
@@ -13,5 +13,5 @@ import com.kyf.mp.server.modules.queue.service.PlayHistoryService;
  * @since 2026-08-12
  */
 @Service
-public class PlayHistoryServiceImpl implements PlayHistoryService {
+public class AlbumsServiceImpl implements AlbumsService {
 }

@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.playlist.service.imp;
+package com.kyf.mp.server.modules.playlist.service.impl;
 
 import java.util.List;
 import java.util.stream.Collectors;

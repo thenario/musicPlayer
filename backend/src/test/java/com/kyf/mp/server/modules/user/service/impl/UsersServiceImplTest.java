@@ -1,4 +1,4 @@
-package com.kyf.mp.server.modules.user.service.imp;
+package com.kyf.mp.server.modules.user.service.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
