@@ -39,8 +39,8 @@ const pendingMap = new Map<string, AbortController>() //absortcontroller是一�
 
 //根据配置的具体内容生成哈希key
 const getRequestKey = (config: InternalAxiosRequestConfig) => {
-  // Multipart uploads may share a URL but carry different files; never deduplicate them.
-  if (config.data instanceof FormData) return undefined
+  // Reads may be consumed concurrently by independent views; never cancel them as duplicates.
+  if (config.method?.toLowerCase() === "get" || config.data instanceof FormData) return undefined
   return [config.method, config.url, JSON.stringify(config.params), JSON.stringify(config.data)].join('&')
 }
 
