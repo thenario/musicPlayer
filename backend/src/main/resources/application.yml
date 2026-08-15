@@ -64,3 +64,8 @@ song:
     enabled: ${SONG_SCANNER_ENABLED:false}
     uploader-id: ${SONG_SCANNER_UPLOADER_ID:0}
     remove-missing: ${SONG_SCANNER_REMOVE_MISSING:false}
+
+auth:
+  login:
+    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+    window-seconds: ${LOGIN_WINDOW_SECONDS:900}

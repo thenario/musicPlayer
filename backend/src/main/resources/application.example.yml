@@ -78,3 +78,10 @@ song:
     enabled: ${SONG_SCANNER_ENABLED:false}
     uploader-id: ${SONG_SCANNER_UPLOADER_ID:0}
     remove-missing: ${SONG_SCANNER_REMOVE_MISSING:false}
+
+auth:
+  login:
+    # 单个账号在窗口内允许的登录尝试次数；超限返回 429。
+    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+    # 限流窗口（秒）。Redis 不可用时会降级放行并记录告警。
+    window-seconds: ${LOGIN_WINDOW_SECONDS:900}
