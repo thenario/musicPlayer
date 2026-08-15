@@ -1,5 +1,7 @@
 package com.kyf.mp.server.modules.user.service.imp;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,7 +49,7 @@ public class UsersServiceImpl implements UsersService {
             throw new BusinessException(404, "账号不存在");
         }
 
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!matchesPassword(password, user)) {
             throw new BusinessException(401, "密码错误");
         }
 
@@ -62,6 +64,20 @@ public class UsersServiceImpl implements UsersService {
 
         log.info("===> 业务逻辑执行完毕，准备返回: {}", vo);
         return vo;
+    }
+
+    boolean matchesPassword(String password, Users user) {
+        String storedPassword = user.getPassword();
+        if (storedPassword.matches("^[a-fA-F0-9]{64}$")) {
+            boolean matches = MessageDigest.isEqual(password.getBytes(StandardCharsets.UTF_8),
+                    storedPassword.getBytes(StandardCharsets.UTF_8));
+            if (matches) {
+                user.setPassword(passwordEncoder.encode(password));
+                usersBusiness.updateById(user);
+            }
+            return matches;
+        }
+        return passwordEncoder.matches(password, storedPassword);
     }
 
     @Override
