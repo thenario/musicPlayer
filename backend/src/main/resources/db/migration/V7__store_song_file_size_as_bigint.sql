@@ -1,0 +1,1 @@
+ALTER TABLE songs MODIFY COLUMN file_size BIGINT NULL;

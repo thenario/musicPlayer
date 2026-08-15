@@ -32,7 +32,7 @@ public class Songs implements Serializable {
 
     private String album;
 
-    private String fileSize;
+    private Long fileSize;
 
     private Long uploaderId;
 

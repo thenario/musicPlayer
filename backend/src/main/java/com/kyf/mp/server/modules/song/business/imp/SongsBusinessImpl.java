@@ -166,7 +166,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
             song.setSongTitle(finalTitle);
             song.setArtist(finalArtist);
             song.setAlbum(finalAlbum);
-            song.setFileSize(String.valueOf(savedAudioFile.length()));
+            song.setFileSize(savedAudioFile.length());
             song.setDuration(duration);
             song.setBitrate((int) bitrate);
             song.setFileFormat(audioExt);

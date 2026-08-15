@@ -25,13 +25,13 @@ class FlywayMySqlMigrationTest {
                 .locations("classpath:db/migration")
                 .load();
 
-        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(6);
+        assertThat(flyway.migrate().migrationsExecuted).isEqualTo(7);
 
         try (Connection connection = MYSQL.createConnection("");
                 ResultSet history = connection.createStatement()
                         .executeQuery("SELECT MAX(version) FROM flyway_schema_history WHERE success = 1")) {
             assertThat(history.next()).isTrue();
-            assertThat(history.getString(1)).isEqualTo("6");
+            assertThat(history.getString(1)).isEqualTo("7");
         }
     }
 }

@@ -25,7 +25,7 @@ export interface ISong {
   album: string
   duration: number
   file_format: string
-  file_size: string | null
+  file_size: number | null
   bitrate: number
   date_added: string
   uploader_id: number | string

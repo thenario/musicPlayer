@@ -163,7 +163,7 @@ public class SongScannerTask {
 
             song.setDuration(header.getTrackLength());
             song.setBitrate((int) header.getBitRateAsNumber());
-            song.setFileSize(String.valueOf(file.length()));
+            song.setFileSize(file.length());
             song.setFileFormat(StringUtils.getFilenameExtension(file.getName()));
             song.setSongUrl(songUrlPrefix + file.getName());
             song.setDateAdded(LocalDateTime.now());
