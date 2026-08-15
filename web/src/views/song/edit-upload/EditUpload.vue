@@ -100,6 +100,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useSongStore } from '@/stores/song';
 import { Back, Camera, Mic } from '@element-plus/icons-vue';
 import { getImageUrl, sameId } from '@/utils/format';
+import { songApi } from '@/api/song-api';
 import { useEditUpload } from './composables/use-edit-upload';
 
 const route = useRoute();
@@ -128,6 +129,15 @@ onMounted(async () => {
     if (cached && sameId(cached.song_id, song_id)) {
         formData.song_name = cached.song_title || '';
         previewUrl.value = getCoverUrl(cached.song_cover_url || '');
+    } else {
+        try {
+            const { song } = await songApi.getUserUploadSong(song_id)
+            formData.song_name = song.song_title || ''
+            previewUrl.value = getCoverUrl(song.song_cover_url || '')
+        } catch {
+            router.replace('/user-uploads')
+            return
+        }
     }
 
     // 无论是否有缓存，都去获取歌词数据

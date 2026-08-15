@@ -40,9 +40,13 @@ const getUserUploadSongs = async (page: number, size: number) => {
   return { success: res.success, songs: res.data.records, message: res.message, total: res.data.total }
 }
 
+const getUserUploadSong = async (songId: SongId) => {
+  const res = await request.get<never, IAxiosRes<UploadedSong>>(`/songs/my-uploads/${songId}`)
+  return { success: res.success, song: res.data, message: res.message }
+}
 const editUserUploadSongs = async (formdata: FormData, songId: SongId) => {
   const res = await request.patch<never, IAxiosRes<null>>(`/songs/my-uploads/${songId}`, formdata)
   return { success: res.success, message: res.message }
 }
 
-export const songApi = { getSongs, uploadSong, getLyrics, getUserUploadSongs, editUserUploadSongs }
+export const songApi = { getSongs, uploadSong, getLyrics, getUserUploadSongs, getUserUploadSong, editUserUploadSongs }
