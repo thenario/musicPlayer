@@ -27,8 +27,6 @@ target/
 *.class
 HELP.md
 .mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
 
 # ===== 用户上传的媒体文件（不入库） =====
 static/
@@ -37,6 +35,7 @@ static/
 nginx/*
 !nginx/Dockerfile
 !nginx/conf/
+nginx/conf/*
 !nginx/conf/nginx.conf
 
 # ===== 数据库（Docker 数据卷） =====
