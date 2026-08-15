@@ -28,7 +28,11 @@ const alterQueueToCurrent = async (queueId: Id) => {
 
 const deleteQueue = async (queueId: Id) => {
   const res = await request.delete<never, IAxiosRes<QueueDeletion>>(`/queues/${queueId}`)
-  return { success: true, message: res.message, data: res.data }
+  return {
+    success: true,
+    message: res.message,
+    data: res.data ?? { was_active: false, new_queue_id: null },
+  }
 }
 
 const addSongToQueue = async (songId: Id, queueId: Id, mode: boolean) => {
