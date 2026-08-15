@@ -98,7 +98,7 @@ docker compose up -d --build
 
 ### 后端部署
 - 后端 Dockerfile 使用多阶段构建：Docker 会在构建阶段执行 Maven 打包，无需在宿主机预先生成 `target/*.jar`。
-- 后端不提供数据库密码或 JWT 密钥默认值；裸跑时复制 `backend/.env.example` 为 `backend/.env` 并填写，Docker 部署时在根 `.env` 中填写 `MYSQL_ROOT_PASSWORD` 和 `JWT_SECRET`。
+- 后端不提供数据库密码或 JWT 密钥默认值；裸跑时复制 `backend/.env.example` 为 `backend/.env` 并填写，Docker 部署时在根 `.env` 中填写 `MYSQL_ROOT_PASSWORD`、`MYSQL_APP_PASSWORD` 和 `JWT_SECRET`。
 
 ### 端口
 - docker 的 nginx 占用宿主机 **8080**；裸跑后端（Spring Boot 默认也是 8080）会**端口冲突**。裸跑调试时改 `SERVER_PORT` 环境变量，或停掉 nginx 容器。
@@ -197,3 +197,5 @@ docker compose up -d --build
 
 **样式规范**
 -  前端样式重构：模板 Tailwind 原子类 → 语义化 BEM 类名，样式收进 `<style scoped>`（顶部 `@reference` + `@apply` 迁移原原子类），`hover`/`focus`/`group-hover` 等变体改写为纯 CSS 选择器，动态 `:class` 原子条件改为 `is-active` 等语义类。涉及 31 个 `.vue` 文件
+
+> Docker Compose creates the `music_app` database user only when MySQL initializes an empty data directory. For an existing volume, provision that user manually or recreate the empty development volume before switching the backend credentials.

@@ -34,7 +34,7 @@ spring:
   datasource:
     # 数据库连接（Docker 内使用服务名 db；本地开发改为 127.0.0.1）
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8}
-    username: ${MYSQL_USER:root}
+    username: ${MYSQL_USER:music_app}
     password: ${MYSQL_PASSWORD}   # 必填：仅通过环境变量提供
     driver-class-name: com.mysql.cj.jdbc.Driver
 

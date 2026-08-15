@@ -10,6 +10,8 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in .env}"
       MYSQL_DATABASE: "musicPlayer"
+      MYSQL_USER: music_app
+      MYSQL_PASSWORD: "${MYSQL_APP_PASSWORD:?MYSQL_APP_PASSWORD must be set in .env}"
       TZ: Asia/Shanghai
     ports:
       - "127.0.0.1:3306:3306" #仅本机可访问，供本地裸跑后端连接（docker 内部仍走 db 服务名）
@@ -60,8 +62,8 @@ services:
     environment:
       #连接数据库，协议（类似于https），后面是服务名加端口，再后面是数据库名+时区+编码设置，？连接参数，用&连接参数
       SPRING_DATASOURCE_URL: jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8
-      MYSQL_USER: root
-      MYSQL_PASSWORD: "${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD must be set in .env}"
+      MYSQL_USER: music_app
+      MYSQL_PASSWORD: "${MYSQL_APP_PASSWORD:?MYSQL_APP_PASSWORD must be set in .env}"
       JWT_SECRET: "${JWT_SECRET:?JWT_SECRET must be set in .env}"
       SPRING_DATA_REDIS_HOST: redis
       SONG_SCANNER_ENABLED: "${SONG_SCANNER_ENABLED:-false}"
