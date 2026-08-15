@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { userApi, type RegisterRequest } from '@/api/user-api'
 import type { IUser } from '@/types'
-import { userStorage } from '@/utils/storage'
+import { tokenStorage, userStorage } from '@/utils/storage'
 
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
 
@@ -10,6 +10,14 @@ export const useUserStore = defineStore('user', () => {
   const user = ref<IUser | null>(userStorage.get())
   const isAuthenticated = ref(!!user.value)
   const userCoverUrl = ref<string>()
+
+  const clearSession = () => {
+    tokenStorage.remove()
+    userStorage.remove()
+    user.value = null
+    userCoverUrl.value = undefined
+    isAuthenticated.value = false
+  }
 
   const login = async (user_name: string, password: string) => {
     try {
@@ -19,7 +27,7 @@ export const useUserStore = defineStore('user', () => {
       fetchUserCoverUrl()
       return { success: true, message: res.message }
     } catch (err: unknown) {
-      console.log(err)
+      console.error(err)
       return { success: false, message: errorMessage(err) }
     }
   }
@@ -29,7 +37,7 @@ export const useUserStore = defineStore('user', () => {
       const res = await userApi.register(userData)
       return { success: true, message: res.message }
     } catch (err: unknown) {
-      console.log(err)
+      console.error(err)
       return { success: false, message: errorMessage(err) }
     }
   }
@@ -37,12 +45,12 @@ export const useUserStore = defineStore('user', () => {
   const logout = async () => {
     try {
       const res = await userApi.logout()
-      user.value = null
-      isAuthenticated.value = false
       return { success: true, message: res.message }
     } catch (err: unknown) {
-      console.log(err)
+      console.error(err)
       return { success: false, message: errorMessage(err) }
+    } finally {
+      clearSession()
     }
   }
 
@@ -51,9 +59,9 @@ export const useUserStore = defineStore('user', () => {
       const res = await userApi.getUserCover()
       userCoverUrl.value = res.user_cover_url
     } catch (err) {
-      console.log(err)
+      console.error(err)
     }
   }
 
-  return { user, isAuthenticated, userCoverUrl, login, register, logout }
+  return { user, isAuthenticated, userCoverUrl, login, register, logout, clearSession, fetchUserCoverUrl }
 })

@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
-import { userStorage } from '@/utils/storage'
+import { tokenStorage, userStorage } from '@/utils/storage'
 
 declare module 'vue-router' {
   interface RouteMeta {
@@ -91,10 +91,11 @@ export const router = createRouter({
   routes,
 })
 
-//路由保护检查登陆状态
+// 路由守卫只以 Token 是否存在为准，避免失效会话卡在访客页。
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  if (!userStore.isAuthenticated) {
+  const hasToken = !!tokenStorage.get()
+  if (hasToken && !userStore.isAuthenticated) {
     const savedUser = userStorage.get()
     if (savedUser) {
       userStore.isAuthenticated = true
@@ -102,16 +103,11 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  //如果跳转的页面需要登录且用户未认证，跳转至login
-  if (to.meta.requiresAuth && !userStore.isAuthenticated) {
-    next('/login')
-  }
-  //如果跳转的页面不需要登录且用户认证，跳转至主页
-  else if (to.meta.requiresGuest && userStore.isAuthenticated) {
+  if (to.meta.requiresAuth && !hasToken) {
+    next({ path: '/login', query: { redirect: to.fullPath } })
+  } else if (to.meta.requiresGuest && hasToken) {
     next('/')
-  }
-  //其他正常跳转
-  else {
+  } else {
     next()
   }
 })

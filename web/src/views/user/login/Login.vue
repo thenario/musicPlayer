@@ -55,13 +55,14 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'LoginPage' })
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 import AuthPageLayout from '@/views/user/components/AuthPageLayout.vue'
 import { useLogin } from './composables/use-login'
 
 const playStore = usePlayerStore()
 const router = useRouter()
+const route = useRoute()
 const { form, errors, loading, login } = useLogin()
 
 const handleLogin = async () => {
@@ -70,7 +71,8 @@ const handleLogin = async () => {
     ElMessage.success("登录成功，欢迎回来！")
     playStore.fetchUserQueues()
     playStore.fetchCurrentQueue()
-    router.push('/')
+    const redirect = route.query.redirect
+    router.push(typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/')
   }
 }
 </script>
