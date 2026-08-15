@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { onBeforeUnmount, ref } from 'vue'
 import type { UploadFile } from 'element-plus'
 import { playlistApi } from '@/api/playlist-api'
 import { getImageUrl } from '@/utils/format'
@@ -11,12 +11,20 @@ export function useEditPlaylist(playlistId: string) {
   const selectedFile = ref<File | null>(null)
   const submitting = ref(false)
 
+  const revokePreviewUrl = () => {
+    if (previewImage.value.startsWith('blob:')) {
+      URL.revokeObjectURL(previewImage.value)
+      previewImage.value = ''
+    }
+  }
+
   const load = async () => {
     try {
       const res = await playlistApi.getPlaylistById(playlistId)
       if (res.playlist) {
         form.value.name = res.playlist.playlist_name
         form.value.description = res.playlist.description || ''
+        revokePreviewUrl()
         previewImage.value = getImageUrl(res.playlist.playlist_cover_url)
       }
     } catch (err: unknown) {
@@ -32,6 +40,7 @@ export function useEditPlaylist(playlistId: string) {
       ElMessage.error('只能上传 JPG/PNG 格式!')
       return
     }
+    revokePreviewUrl()
     selectedFile.value = file
     previewImage.value = URL.createObjectURL(file)
   }
@@ -57,6 +66,8 @@ export function useEditPlaylist(playlistId: string) {
       submitting.value = false
     }
   }
+
+  onBeforeUnmount(revokePreviewUrl)
 
   return { form, previewImage, selectedFile, submitting, load, handleFileChange, submit }
 }
