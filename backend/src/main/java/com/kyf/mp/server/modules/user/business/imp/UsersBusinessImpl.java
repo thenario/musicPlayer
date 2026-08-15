@@ -32,6 +32,7 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
     private String userCoverPath;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public EditVO editUserProfile(EditUserDTO editData, Long userId) {
         Users oldUser = baseMapper.selectById(userId);
         if (oldUser == null) {
