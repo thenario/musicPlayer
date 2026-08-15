@@ -129,21 +129,18 @@ request.interceptors.response.use(
 
       //如果是登录过期，token过期
       if (status === 401) {
-        tokenStorage.remove() //移除旧的token
-        userStorage.remove() //移除旧的用户信息
-        message = backendData?.message || '登录已过期，请重新登录'
-        //跳转到登录页（已在登录页时只提示错误，不重复跳转）
-        if (router && router.currentRoute.value.path !== '/login') {
-          ElMessage.error('登录已失效，请重新登录')
-          router.push({
-            path: '/login',
-            query: { redirect: router.currentRoute.value.fullPath },
-          })
+        const hadToken = !!tokenStorage.get()
+        message = backendData?.message || (hadToken ? '登录已过期，请重新登录' : '请先登录')
+        if (hadToken) {
+          void import('@/stores/user').then(({ useUserStore }) => useUserStore().clearSession())
+          if (router && router.currentRoute.value.path !== '/login') {
+            ElMessage.error('登录已失效，请重新登录')
+            router.push({ path: '/login', query: { redirect: router.currentRoute.value.fullPath } })
+          }
         } else if (!error.config?.silent) {
           ElMessage.error(message)
         }
-      }
-      //非401错误：集中显示错误信息，再抛出错误待调用方处理
+      }      //非401错误：集中显示错误信息，再抛出错误待调用方处理
       else {
         const statusMap: Record<number, string> = {
           403: '拒绝访问',
