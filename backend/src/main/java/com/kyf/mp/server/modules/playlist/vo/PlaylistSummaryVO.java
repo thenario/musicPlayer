@@ -1,5 +1,7 @@
 package com.kyf.mp.server.modules.playlist.vo;
 
+import java.time.LocalDateTime;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 
 import lombok.Data;
@@ -13,6 +15,5 @@ public class PlaylistSummaryVO {
     private Integer songCount;
     private Integer playCount;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private String createdDate;
-
+    private LocalDateTime createdDate;
 }
