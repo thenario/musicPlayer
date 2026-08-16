@@ -12,15 +12,24 @@ import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 启动早期读取本地 .env 文件，将 key=value 注入 Spring Environment。
  *
- * <p>优先级：真实环境变量 &gt; .env 文件 &gt; application.yml 默认值。</p>
- * <p>因此：本地裸跑后端时用 backend/.env 提供密钥与数据库连接；
- * Docker 部署时由 compose 注入环境变量（容器内无 .env，走 os env）。</p>
+ * <p>
+ * 优先级：真实环境变量 &gt; .env 文件 &gt; application.yml 默认值。
+ * </p>
+ * <p>
+ * 因此：本地裸跑后端时用 backend/.env 提供密钥与数据库连接；
+ * Docker 部署时由 compose 注入环境变量（容器内无 .env，走 os env）。
+ * </p>
  *
- * <p>默认读取工作目录下的 .env，可用 -Ddotenv.path=xxx 覆盖路径。</p>
+ * <p>
+ * 默认读取工作目录下的 .env，可用 -Ddotenv.path=xxx 覆盖路径。
+ * </p>
  */
+@Slf4j
 public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     private static final String DOTENV_PATH = System.getProperty("dotenv.path", ".env");
@@ -48,7 +57,7 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor 
             }
         } catch (IOException e) {
             // 读取失败不阻断启动，交由后续占位符解析报错，便于定位缺失项
-            System.err.println("[dotenv] 读取 .env 失败: " + e.getMessage());
+            log.error("[dotenv] 读取 .env 失败: " + e.getMessage());
         }
         return map;
     }

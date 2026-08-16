@@ -1,7 +1,7 @@
 package com.kyf.mp.server.common.auth;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.catchThrowableOfType;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -52,10 +52,9 @@ class LoginRateLimiterTest {
     void rejectsAttemptsAboveConfiguredLimit() {
         when(valueOperations.increment(org.mockito.ArgumentMatchers.anyString())).thenReturn(6L);
 
-        BusinessException exception = catchThrowableOfType(
-                () -> rateLimiter.check("alice"), BusinessException.class);
-
-        assertThat(exception.getCode()).isEqualTo(429);
+        assertThatThrownBy(() -> rateLimiter.check("alice"))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        exception -> assertThat(exception.getCode()).isEqualTo(429));
     }
 
     @Test
