@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +44,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 歌单数据访问实现：复杂数据库操作。
+ * 歌单数据访问实现：复杂数据库操作。`r`n
  */
 @Service
 @Slf4j
@@ -61,6 +62,8 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     private final UsersPlaylistsRelationMapper userPlaylistMapper;
     private final UsersLikeplaylistsRelationMapper likeRelationMapper;
     private final SongsPlaylistsRelationMapper songsPlaylistsRelationMapper;
+
+    private static final String PLAYLIST_ID_COLUMN = "playlist_id";
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -118,54 +121,79 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             String description, Long userId) {
         File newSavedFile = null;
         try {
-            Playlists oldPlaylist = baseMapper.selectById(playlistId);
-            if (oldPlaylist == null)
-                throw new BusinessException(404, "歌单不存在");
-            if (!oldPlaylist.getCreatorId().equals(userId))
-                throw new BusinessException(403, "无权修改此歌单");
+            Playlists oldPlaylist = getEditablePlaylist(playlistId, userId);
+            CoverUpload coverUpload = saveNewCover(file);
+            newSavedFile = coverUpload == null ? null : coverUpload.file();
 
-            String newFileName = null;
-            String oldCoverUrl = oldPlaylist.getPlaylistCoverUrl();
-
-            if (file != null && !file.isEmpty()) {
-                String extension = UploadFileValidator.validateImage(file);
-                newFileName = UUID.randomUUID() + "-" + System.currentTimeMillis() + "." + extension;
-                newSavedFile = new File(playlistCoverPath, newFileName);
-                if (!newSavedFile.getParentFile().exists())
-                    Files.createDirectories(newSavedFile.getParentFile().toPath());
-                file.transferTo(newSavedFile);
-            }
-
-            Playlists updateEntity = new Playlists();
-            updateEntity.setPlaylistId(playlistId);
-            if (StringUtils.hasText(name))
-                updateEntity.setPlaylistName(name);
-            if (description != null)
-                updateEntity.setDescription(description);
-            if (newFileName != null)
-                updateEntity.setPlaylistCoverUrl(coverUrlPrefix + newFileName);
-
-            updateEntity.setUpdatedDate(LocalDateTime.now());
+            Playlists updateEntity = buildPlaylistUpdate(playlistId, name, description, coverUpload);
             baseMapper.updateById(updateEntity);
-
-            if (newFileName != null && StringUtils.hasText(oldCoverUrl)) {
-                cleanupPlaylistCover(oldCoverUrl);
-            }
-
-            PlaylistActionVO result = new PlaylistActionVO();
-            result.setPlaylistId(playlistId);
-            result.setCoverUrl(newFileName != null ? updateEntity.getPlaylistCoverUrl() : oldCoverUrl);
-            return result;
-
-        } catch (BusinessException be) {
-            if (newSavedFile != null && newSavedFile.exists())
-                newSavedFile.delete();
-            throw be;
-        } catch (Exception e) {
-            if (newSavedFile != null && newSavedFile.exists())
-                newSavedFile.delete();
+            cleanupReplacedCover(oldPlaylist.getPlaylistCoverUrl(), coverUpload);
+            return buildEditResult(playlistId, oldPlaylist, updateEntity, coverUpload);
+        } catch (BusinessException exception) {
+            cleanupNewPlaylistCover(newSavedFile);
+            throw exception;
+        } catch (Exception exception) {
+            cleanupNewPlaylistCover(newSavedFile);
             throw new BusinessException(500, "编辑失败");
         }
+    }
+
+    private Playlists getEditablePlaylist(Long playlistId, Long userId) {
+        Playlists playlist = baseMapper.selectById(playlistId);
+        if (playlist == null) {
+            throw new BusinessException(404, "歌单不存在");
+        }
+        if (!playlist.getCreatorId().equals(userId)) {
+            throw new BusinessException(403, "无权修改此歌单");
+        }
+        return playlist;
+    }
+
+    private CoverUpload saveNewCover(MultipartFile file) throws IOException {
+        if (file == null || file.isEmpty()) {
+            return null;
+        }
+        String extension = UploadFileValidator.validateImage(file);
+        String fileName = UUID.randomUUID() + "-" + System.currentTimeMillis() + "." + extension;
+        File savedFile = new File(playlistCoverPath, fileName);
+        Files.createDirectories(savedFile.getParentFile().toPath());
+        file.transferTo(savedFile);
+        return new CoverUpload(fileName, savedFile);
+    }
+
+    private Playlists buildPlaylistUpdate(Long playlistId, String name, String description,
+            CoverUpload coverUpload) {
+        Playlists updateEntity = new Playlists();
+        updateEntity.setPlaylistId(playlistId);
+        if (StringUtils.hasText(name)) {
+            updateEntity.setPlaylistName(name);
+        }
+        if (description != null) {
+            updateEntity.setDescription(description);
+        }
+        if (coverUpload != null) {
+            updateEntity.setPlaylistCoverUrl(coverUrlPrefix + coverUpload.fileName());
+        }
+        updateEntity.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
+        return updateEntity;
+    }
+
+    private void cleanupReplacedCover(String oldCoverUrl, CoverUpload coverUpload) {
+        if (coverUpload != null && StringUtils.hasText(oldCoverUrl)) {
+            cleanupPlaylistCover(oldCoverUrl);
+        }
+    }
+
+    private PlaylistActionVO buildEditResult(Long playlistId, Playlists oldPlaylist,
+            Playlists updateEntity, CoverUpload coverUpload) {
+        PlaylistActionVO result = new PlaylistActionVO();
+        result.setPlaylistId(playlistId);
+        result.setCoverUrl(coverUpload == null ? oldPlaylist.getPlaylistCoverUrl()
+                : updateEntity.getPlaylistCoverUrl());
+        return result;
+    }
+
+    private record CoverUpload(String fileName, File file) {
     }
 
     @Override
@@ -198,9 +226,14 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         List<PlaylistSongVO> songVOList = new ArrayList<>();
         if (!relations.isEmpty()) {
             List<Long> songIds = relations.stream().map(SongsPlaylistsRelation::getSongId)
-                    .collect(Collectors.toList());
+                    .toList();
             List<Songs> songEntities = songsMapper
-                    .selectList(new LambdaQueryWrapper<Songs>().select(Songs::getSongId, Songs::getSongTitle, Songs::getArtist, Songs::getAlbum, Songs::getDuration, Songs::getBitrate, Songs::getSongCoverUrl, Songs::getSongUrl, Songs::getFileFormat, Songs::getFileSize).in(Songs::getSongId, songIds));
+                    .selectList(
+                            new LambdaQueryWrapper<Songs>()
+                                    .select(Songs::getSongId, Songs::getSongTitle, Songs::getArtist, Songs::getAlbum,
+                                            Songs::getDuration, Songs::getBitrate, Songs::getSongCoverUrl,
+                                            Songs::getSongUrl, Songs::getFileFormat, Songs::getFileSize)
+                                    .in(Songs::getSongId, songIds));
             Map<Long, Songs> songMap = songEntities.stream().collect(Collectors.toMap(Songs::getSongId, s -> s));
 
             for (SongsPlaylistsRelation rel : relations) {
@@ -244,14 +277,14 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             relation.setUserId(userId);
             relation.setPlaylistId(playlistId);
             if (likeRelationMapper.insertIgnore(relation) > 0) {
-                this.update().setSql("like_count = like_count + 1").eq("playlist_id", playlistId).update();
+                this.update().setSql("like_count = like_count + 1").eq(PLAYLIST_ID_COLUMN, playlistId).update();
             }
             return;
         }
         int deleted = likeRelationMapper.deleteByUserAndPlaylist(userId, playlistId);
         if (deleted > 0) {
             this.update().setSql("like_count = GREATEST(like_count - 1, 0)")
-                    .eq("playlist_id", playlistId).update();
+                    .eq(PLAYLIST_ID_COLUMN, playlistId).update();
         }
     }
 
@@ -277,7 +310,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             throw new BusinessException(500, "添加失败");
         }
 
-        this.update().setSql("song_count = song_count + 1").eq("playlist_id", playlistId).update();
+        this.update().setSql("song_count = song_count + 1").eq(PLAYLIST_ID_COLUMN, playlistId).update();
 
         AddSongToPlaylistVO vo = new AddSongToPlaylistVO();
         vo.setPosition(nextPosition);
@@ -296,7 +329,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         songsPlaylistsRelationMapper.deleteByPlaylistAndSong(playlistId, songId);
         songsPlaylistsRelationMapper.decrementPositionsAfter(playlistId, target.getSongPlaylistPosition());
 
-        this.update().setSql("song_count = GREATEST(song_count - 1, 0)").eq("playlist_id", playlistId).update();
+        this.update().setSql("song_count = GREATEST(song_count - 1, 0)").eq(PLAYLIST_ID_COLUMN, playlistId).update();
     }
 
     private void assertPlaylistOwner(Long playlistId, Long userId) {
@@ -319,12 +352,12 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             log.error("清理创建失败的歌单封面文件失败", e);
         }
     }
+
     private void cleanupPlaylistCover(String coverUrl) {
         try {
             String fileName = coverUrl.substring(coverUrl.lastIndexOf("/") + 1);
             File file = new File(playlistCoverPath, fileName);
-            if (file.exists())
-                file.delete();
+            Files.deleteIfExists(file.toPath());
         } catch (Exception e) {
             log.warn("物理文件清理失败: {}", e.getMessage());
         }

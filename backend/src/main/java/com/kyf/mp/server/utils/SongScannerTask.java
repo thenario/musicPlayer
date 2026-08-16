@@ -173,13 +173,13 @@ public class SongScannerTask {
 
     private boolean insertNewSong(File file, Users scannerUploader) {
         try {
-            log.info("🎵 正在录入新歌�? {}", file.getName());
+            log.info("🎵 正在录入新歌 {}", file.getName());
             AudioFile f = AudioFileIO.read(file);
             Tag tag = f.getTag();
             AudioHeader header = f.getAudioHeader();
 
             Songs song = new Songs();
-            // 快速指纹：文件�?大小的哈希，代替全量MD5，速度极快
+            // 快速指纹：代替全量MD5，速度极快
             song.setFileMd5(calculateMd5(file));
 
             song.setUploaderId(scannerUploaderId);

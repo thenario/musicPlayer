@@ -3,8 +3,6 @@ package com.kyf.mp.server.modules.playlist.vo;
 import java.util.List;
 
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
-import com.kyf.mp.server.modules.song.entity.Songs;
-
 import lombok.Data;
 
 @Data
