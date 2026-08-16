@@ -7,11 +7,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Path;
 
-/**
- * 静态资源映射：把 /static/** 映射到本地上传目录，由后端自己提供歌曲/封面等文件。
- * 上传路径来自 application.yml 的 file.upload.*，容器内为 /app/static/*（宿主机 static/ 卷挂载）。
- * 生产环境 Nginx 将 /static/ 转发到本服务，开发环境由 Vite 的 /static 代理转发。
- */
 @Configuration
 public class StaticResourceConfig implements WebMvcConfigurer {
 

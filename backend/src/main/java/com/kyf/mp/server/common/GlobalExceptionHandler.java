@@ -47,7 +47,8 @@ public class GlobalExceptionHandler {
         return validationError(firstErrorMessage(e.getAllErrors()));
     }
 
-    // 方法参数校验失败（控制器 @Validated + @RequestParam/@PathVariable/@RequestAttribute 上的约束注解）
+    // 方法参数校验失败（控制器 @Validated + @RequestParam/@PathVariable/@RequestAttribute
+    // 上的约束注解）
     @ExceptionHandler(HandlerMethodValidationException.class)
     public ResponseEntity<ResultModel<Void>> handleMethodValidation(HandlerMethodValidationException e) {
         return validationError(firstErrorMessage(e.getAllErrors()));
@@ -63,8 +64,6 @@ public class GlobalExceptionHandler {
                 .orElse("参数校验失败");
         return validationError(message);
     }
-
-    // ==================== 请求解析与参数绑定异常（框架层） ====================
 
     // 缺少必填的 @RequestParam / multipart part
     @ExceptionHandler({ MissingServletRequestParameterException.class, MissingServletRequestPartException.class })
@@ -84,16 +83,12 @@ public class GlobalExceptionHandler {
         return validationError("请求参数类型不匹配");
     }
 
-    // ==================== 兜底异常 ====================
-
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ResultModel<Void>> handleException(Exception e) {
         log.error("未处理的系统异常", e);
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ResultModel.error("服务器繁忙，请稍后再试", HttpStatus.INTERNAL_SERVER_ERROR.value()));
     }
-
-    // ==================== 私有工具方法 ====================
 
     private ResponseEntity<ResultModel<Void>> validationError(String message) {
         log.warn("参数校验失败: {}", message);
@@ -109,8 +104,12 @@ public class GlobalExceptionHandler {
     }
 
     private HttpStatus resolveStatus(Integer code) {
-        if (code == null) return HttpStatus.INTERNAL_SERVER_ERROR;
-        try { return HttpStatus.valueOf(code); }
-        catch (IllegalArgumentException ignored) { return HttpStatus.BAD_REQUEST; }
+        if (code == null)
+            return HttpStatus.INTERNAL_SERVER_ERROR;
+        try {
+            return HttpStatus.valueOf(code);
+        } catch (IllegalArgumentException ignored) {
+            return HttpStatus.BAD_REQUEST;
+        }
     }
 }

@@ -62,95 +62,124 @@ public class SongScannerTask {
     @Async // 异步执行，不影响服务器启动速度
     @EventListener(ApplicationReadyEvent.class)
     public void runTask() {
-        if (scannerUploaderId == null || scannerUploaderId <= 0) {
-            log.error("歌曲扫描未执行：song.scanner.uploader-id 必须配置为有效用户 ID");
+        if (!isScannerConfigured()) {
             return;
         }
         Users scannerUploader = usersMapper.selectById(scannerUploaderId);
         if (scannerUploader == null) {
-            log.error("歌曲扫描未执行：配置的上传者不存在，userId={}", scannerUploaderId);
+            log.error("Song scanner uploader does not exist, userId={}", scannerUploaderId);
             return;
         }
-        log.info("🚀 启动极速双向同步任务...");
+        log.info("Starting song scan...");
         long start = System.currentTimeMillis();
 
         try {
-            // 1. 扫描本地文件夹，获取所有本地文件的 URL 集合
-            File dir = new File(songPath);
-            File[] files = dir.listFiles((d, name) -> {
-                String ext = name.toLowerCase();
-                return ext.endsWith(".mp3") || ext.endsWith(".flac") || ext.endsWith(".wav") || ext.endsWith(".m4a");
-            });
+            File[] files = scanSongFiles();
             if (files == null) {
-                log.warn("歌曲扫描未执行：目录不存在或不可读取，path={}", songPath);
                 return;
             }
 
-            Set<String> localUrls = new HashSet<>();
-            if (files != null) {
-                for (File f : files) {
-                    localUrls.add(songUrlPrefix + f.getName());
-                }
-            }
-
-            // 2. 一次性读取数据库中所有歌曲（只需要 ID 和 URL 即可）
-            List<Songs> dbSongs = songsMapper.selectList(new QueryWrapper<Songs>().select("song_id", "song_url").eq("uploader_id", scannerUploaderId));
-
-            Set<String> dbUrls = dbSongs.stream()
-                    .map(Songs::getSongUrl)
-                    .collect(Collectors.toSet());
-
-            // 3. 找出需要删除的记录：数据库里有，但是本地 URL 集合里没有
-            List<Long> idsToDelete = dbSongs.stream()
-                    .filter(s -> !localUrls.contains(s.getSongUrl()))
-                    .map(Songs::getSongId)
-                    .collect(Collectors.toList());
-
-            // 4. 找出需要新增的记录：本地有，但数据库 URL 集合里没有
-            List<File> filesToAdd = new ArrayList<>();
-            if (files != null) {
-                for (File file : files) {
-                    String currentUrl = songUrlPrefix + file.getName();
-                    if (!dbUrls.contains(currentUrl)) {
-                        filesToAdd.add(file);
-                    }
-                }
-            }
-
-            // 5. 执行清理（删除死链）
-            if (removeMissingSongs && !idsToDelete.isEmpty()) {
-                log.info("🗑️ 检测到本地文件已删除，正在清理数据库死链，共 {} 条...", idsToDelete.size());
-                songsMapper.deleteBatchIds(idsToDelete);
-            } else if (!idsToDelete.isEmpty()) {
-                log.warn("扫描到 {} 条缺失本地文件的歌曲记录；删除功能未启用，已跳过", idsToDelete.size());
-            }
-
-            // 6. 执行新增
-            int addedCount = 0;
-            for (File file : filesToAdd) {
-                if (insertNewSong(file, scannerUploader)) {
-                    addedCount++;
-                }
-            }
-
-            long end = System.currentTimeMillis();
-            log.info("✅ 双向同步完成！耗时: {}ms，新增: {} 首，清理死链: {} 条",
-                    (end - start), addedCount, removeMissingSongs ? idsToDelete.size() : 0);
-
+            ScanResult result = compareWithDatabase(files);
+            removeMissingSongs(result.idsToDelete());
+            int addedCount = addNewSongs(result.filesToAdd(), scannerUploader);
+            logCompletion(start, addedCount, result.idsToDelete().size());
         } catch (Exception e) {
-            log.error("双向同步任务发生崩溃: ", e);
+            log.error("Song scan task failed: ", e);
         }
+    }
+
+    private boolean isScannerConfigured() {
+        if (scannerUploaderId == null || scannerUploaderId <= 0) {
+            log.error("song.scanner.uploader-id must be a valid user ID");
+            return false;
+        }
+        return true;
+    }
+
+    private File[] scanSongFiles() {
+        File[] files = new File(songPath).listFiles((d, name) -> isSupportedSong(name));
+        if (files == null) {
+            log.warn("Song directory does not exist or is not readable, path={}", songPath);
+        }
+        return files;
+    }
+
+    private boolean isSupportedSong(String name) {
+        String extension = name.toLowerCase();
+        return extension.endsWith(".mp3") || extension.endsWith(".flac")
+                || extension.endsWith(".wav") || extension.endsWith(".m4a");
+    }
+
+    private ScanResult compareWithDatabase(File[] files) {
+        Set<String> localUrls = buildLocalUrls(files);
+        List<Songs> dbSongs = songsMapper.selectList(new QueryWrapper<Songs>()
+                .select("song_id", "song_url").eq("uploader_id", scannerUploaderId));
+        Set<String> dbUrls = dbSongs.stream().map(Songs::getSongUrl).collect(Collectors.toSet());
+        List<Long> idsToDelete = dbSongs.stream()
+                .filter(song -> !localUrls.contains(song.getSongUrl()))
+                .map(Songs::getSongId)
+                .collect(Collectors.toList());
+        return new ScanResult(idsToDelete, findNewFiles(files, dbUrls));
+    }
+
+    private Set<String> buildLocalUrls(File[] files) {
+        Set<String> localUrls = new HashSet<>();
+        for (File file : files) {
+            localUrls.add(songUrlPrefix + file.getName());
+        }
+        return localUrls;
+    }
+
+    private List<File> findNewFiles(File[] files, Set<String> dbUrls) {
+        List<File> filesToAdd = new ArrayList<>();
+        for (File file : files) {
+            if (!dbUrls.contains(songUrlPrefix + file.getName())) {
+                filesToAdd.add(file);
+            }
+        }
+        return filesToAdd;
+    }
+
+    private void removeMissingSongs(List<Long> idsToDelete) {
+        if (idsToDelete.isEmpty()) {
+            return;
+        }
+        if (removeMissingSongs) {
+            log.info("Removing {} missing song records", idsToDelete.size());
+            songsMapper.deleteBatchIds(idsToDelete);
+            return;
+        }
+        log.warn("Found {} missing song records; removal is disabled", idsToDelete.size());
+    }
+
+    private int addNewSongs(List<File> filesToAdd, Users scannerUploader) {
+        int addedCount = 0;
+        for (File file : filesToAdd) {
+            if (insertNewSong(file, scannerUploader)) {
+                addedCount++;
+            }
+        }
+        return addedCount;
+    }
+
+    private void logCompletion(long start, int addedCount, int removedCount) {
+        log.info("Song scan completed: {}ms, added: {}, removed: {}",
+                (System.currentTimeMillis() - start), addedCount,
+                removeMissingSongs ? removedCount : 0);
+    }
+
+    private record ScanResult(List<Long> idsToDelete, List<File> filesToAdd) {
     }
 
     private boolean insertNewSong(File file, Users scannerUploader) {
         try {
-            log.info("🎵 正在录入新歌曲: {}", file.getName());
+            log.info("🎵 正在录入新歌�? {}", file.getName());
             AudioFile f = AudioFileIO.read(file);
             Tag tag = f.getTag();
             AudioHeader header = f.getAudioHeader();
 
             Songs song = new Songs();
-            // 快速指纹：文件名+大小的哈希，代替全量MD5，速度极快
+            // 快速指纹：文件�?大小的哈希，代替全量MD5，速度极快
             song.setFileMd5(calculateMd5(file));
 
             song.setUploaderId(scannerUploaderId);
