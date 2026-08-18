@@ -12,9 +12,11 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    ElAside: typeof import('element-plus/es')['ElAside']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElCard: typeof import('element-plus/es')['ElCard']
+    ElContainer: typeof import('element-plus/es')['ElContainer']
     ElDialog: typeof import('element-plus/es')['ElDialog']
     ElDrawer: typeof import('element-plus/es')['ElDrawer']
     ElDropdown: typeof import('element-plus/es')['ElDropdown']
@@ -26,11 +28,13 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     ElImage: typeof import('element-plus/es')['ElImage']
     ElInput: typeof import('element-plus/es')['ElInput']
+    ElMain: typeof import('element-plus/es')['ElMain']
     ElMenu: typeof import('element-plus/es')['ElMenu']
     ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
     ElPagination: typeof import('element-plus/es')['ElPagination']
     ElProgress: typeof import('element-plus/es')['ElProgress']
     ElSegmented: typeof import('element-plus/es')['ElSegmented']
+    ElSidebar: typeof import('element-plus/es')['ElSidebar']
     ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
     ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
     ElTable: typeof import('element-plus/es')['ElTable']
@@ -60,9 +64,11 @@ declare module 'vue' {
 
 // For TSX support
 declare global {
+  const ElAside: typeof import('element-plus/es')['ElAside']
   const ElAvatar: typeof import('element-plus/es')['ElAvatar']
   const ElButton: typeof import('element-plus/es')['ElButton']
   const ElCard: typeof import('element-plus/es')['ElCard']
+  const ElContainer: typeof import('element-plus/es')['ElContainer']
   const ElDialog: typeof import('element-plus/es')['ElDialog']
   const ElDrawer: typeof import('element-plus/es')['ElDrawer']
   const ElDropdown: typeof import('element-plus/es')['ElDropdown']
@@ -74,11 +80,13 @@ declare global {
   const ElIcon: typeof import('element-plus/es')['ElIcon']
   const ElImage: typeof import('element-plus/es')['ElImage']
   const ElInput: typeof import('element-plus/es')['ElInput']
+  const ElMain: typeof import('element-plus/es')['ElMain']
   const ElMenu: typeof import('element-plus/es')['ElMenu']
   const ElMenuItem: typeof import('element-plus/es')['ElMenuItem']
   const ElPagination: typeof import('element-plus/es')['ElPagination']
   const ElProgress: typeof import('element-plus/es')['ElProgress']
   const ElSegmented: typeof import('element-plus/es')['ElSegmented']
+  const ElSidebar: typeof import('element-plus/es')['ElSidebar']
   const ElSkeleton: typeof import('element-plus/es')['ElSkeleton']
   const ElSubMenu: typeof import('element-plus/es')['ElSubMenu']
   const ElTable: typeof import('element-plus/es')['ElTable']

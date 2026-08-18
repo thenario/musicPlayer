@@ -13,76 +13,81 @@ declare module 'vue-router' {
 //创建一个数组保存路由
 const routes = [
   {
-    path: '/',
-    name: 'home',
-    component: () => import('@/views/home/Home.vue'),
-    meta: { title: '首页' },
-  },
-  {
     path: '/login',
     name: 'login',
     component: () => import('@/views/user/login/Login.vue'),
-    meta: { requiresGuest: true, title: '登录' },
+    meta: { title: '登录' },
   },
   {
     path: '/register',
-    name: 'register',
+    name: 'regiter',
     component: () => import('@/views/user/register/Register.vue'),
-    meta: { requiresGuest: true, title: '注册' },
   },
   {
-    path: '/user-profile',
-    name: 'user-profile',
-    component: () => import('@/views/user/profile/Profile.vue'),
-    meta: { requiresAuth: true, title: '个人中心' },
-  },
-  {
-    path: '/edit-user-profile',
-    name: 'edit-user-profile',
-    component: () => import('@/views/user/edit-profile/EditProfile.vue'),
-    meta: { requiresAuth: true, title: '编辑资料' },
-  },
-  {
-    path: '/user-uploads',
-    name: 'user-uploads',
-    component: () => import('@/views/song/my-uploads/MyUploads.vue'),
-    meta: { requiresAuth: true, title: '我的上传' },
-  },
-  {
-    path: '/user-uploads/:id/edit',
-    name: 'edit-user-upload',
-    component: () => import('@/views/song/edit-upload/EditUpload.vue'),
-    meta: { requiresAuth: true, title: '编辑上传歌曲' },
-  },
-  {
-    path: '/songs',
-    name: 'songs',
-    component: () => import('@/views/song/song-list/SongList.vue'),
-    meta: { title: '歌曲库' },
-  },
-  {
-    path: '/upload',
-    name: 'upload',
-    component: () => import('@/views/song/upload/SongUpload.vue'),
-    meta: { requiresAuth: true, title: '上传歌曲' },
-  },
-  {
-    path: '/playlists',
-    name: 'playlists',
-    component: () => import('@/views/playlist/playlists/Playlists.vue'),
-    meta: { title: '歌单' },
-  },
-  {
-    path: '/playlists/:id',
-    name: 'playlist-detail',
-    component: () => import('@/views/playlist/detail/PlaylistDetail.vue'),
-    meta: { title: '歌单详情' },
-  },
-  {
-    path: '/playlists/:id/edit',
-    name: 'edit-playlist',
-    component: () => import('@/views/playlist/edit/PlaylistEdit.vue'),
-    meta: { requiresAuth: true, title: '编辑歌单' },
+    path: '/',
+    component: () => import('@/common/components/DefaultLayout.vue'),
+    redirect: '/home',
+    children: [
+      {
+        path: "/home",
+        name: 'home',
+        component: () => import('@/views/home/Home.vue')
+      },
+      {
+        path: '/songs',
+        name: 'songs',
+        component: () => import('@/views/song/song-list/SongList.vue'),
+        meta: { title: '搜索结果' },
+      },
+      {
+        path: '/playlists',
+        name: 'playlists',
+        component: () => import('@/views/playlist/playlists/Playlists.vue'),
+        meta: { title: '歌单' },
+      },
+      {
+        path: '/playlists/:id',
+        name: 'playlist-detail',
+        component: () => import('@/views/playlist/detail/PlaylistDetail.vue'),
+        meta: { title: '歌单详情' },
+      },
+      {
+        path: '/playlists/:id/edit',
+        name: 'edit-playlist',
+        component: () => import('@/views/playlist/edit/PlaylistEdit.vue'),
+        meta: { requiresAuth: true, title: '编辑歌单' },
+      },
+      {
+        path: '/user-profile',
+        name: 'user-profile',
+        component: () => import('@/views/user/profile/Profile.vue'),
+        meta: { requiresAuth: true, title: '个人中心' },
+      },
+      {
+        path: '/edit-user-profile',
+        name: 'edit-user-profile',
+        component: () => import('@/views/user/edit-profile/EditProfile.vue'),
+        meta: { requiresAuth: true, title: '编辑资料' },
+      },
+      {
+        path: '/user-uploads',
+        name: 'user-uploads',
+        component: () => import('@/views/song/my-uploads/MyUploads.vue'),
+        meta: { requiresAuth: true, title: '我的上传' },
+      },
+      {
+        path: '/user-uploads/:id/edit',
+        name: 'edit-user-upload',
+        component: () => import('@/views/song/edit-upload/EditUpload.vue'),
+        meta: { requiresAuth: true, title: '编辑上传歌曲' },
+      },
+      {
+        path: '/upload',
+        name: 'upload',
+        component: () => import('@/views/song/upload/SongUpload.vue'),
+        meta: { requiresAuth: true, title: '上传歌曲' },
+      },
+    ],
   },
 ]
 
