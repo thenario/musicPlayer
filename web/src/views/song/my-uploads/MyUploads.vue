@@ -39,7 +39,6 @@
             </el-empty>
         </div>
 
-        <!-- 4. 分页组件：设为 shrink-0，固定在底部 -->
         <div class="page__pagination">
             <AppPagination
                 :current="pagination.state.current"
@@ -49,6 +48,7 @@
                 @page-change="changePage"
             />
         </div>
+
     </div>
 </template>
 

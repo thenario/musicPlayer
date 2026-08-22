@@ -1,6 +1,6 @@
 <template>
   <div class="page">
-    <!-- 1. 顶部搜索栏 -->
+    <!-- 顶部搜索栏 -->
     <div class="page__header">
       <h1 class="page__title">歌曲库</h1>
       <div class="page__search">
@@ -28,6 +28,7 @@
         @page-change="changePage"
       />
     </div>
+
   </div>
 </template>
 
@@ -68,29 +69,65 @@ onMounted(load)
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .page {
-  @apply h-full flex flex-col bg-gray-950 text-white p-6;
+  box-sizing: border-box;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  color: #20232d;
+  background: #f7f8fa;
 }
 
 .page__header {
-  @apply flex justify-between items-center mb-6 shrink-0;
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .page__title {
-  @apply text-3xl font-black tracking-tight;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .page__search {
-  @apply relative;
+  width: min(360px, 100%);
 }
 
 .page__table {
-  @apply flex-1 overflow-hidden;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid #e8eaef;
+  border-radius: 12px;
+  background: #ffffff;
 }
 
 .page__pagination {
-  @apply py-6 flex justify-center shrink-0;
+  display: flex;
+  flex-shrink: 0;
+  justify-content: center;
+  padding-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 16px;
+  }
+
+  .page__header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .page__search {
+    width: 100%;
+  }
 }
 </style>

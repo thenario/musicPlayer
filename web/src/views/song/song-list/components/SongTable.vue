@@ -1,7 +1,7 @@
 <template>
-  <el-table v-loading="loading" element-loading-background="rgba(0, 0, 0, 0.5)" :data="songs" style="width: 100%"
-    height="100%" row-class-name="song-row group" @row-dblclick="onRowDblClick" class="all-songs-table">
-    <el-table-column label="标题" min-width="250">
+  <el-table v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.72)" :data="songs" style="width: 100%"
+    height="100%" row-class-name="song-row" @row-dblclick="onRowDblClick" class="all-songs-table">
+    <el-table-column label="标题" min-width="32%" show-overflow-tooltip>
       <template #default="{ row }">
         <div class="song-table__title-cell">
           <div class="song-table__cover">
@@ -21,9 +21,9 @@
       </template>
     </el-table-column>
 
-    <el-table-column prop="album" label="专辑" min-width="150" class-name="text-gray-400" />
+    <el-table-column prop="album" label="专辑" min-width="20%" class-name="song-table__album" show-overflow-tooltip />
 
-    <el-table-column label="时长" width="100" align="right">
+    <el-table-column label="时长" min-width="20%" align="right">
       <template #default="{ row }">
         <span class="song-table__duration">{{ formatDuration(row.duration) }}</span>
       </template>
@@ -68,69 +68,121 @@ const onRowDblClick = (row: ISong) => emit('play-now', row)
 </script>
 
 <style scoped>
-@reference "../../../../assets/index.css";
+.all-songs-table {
+  --el-table-border-color: #eef0f4;
+  --el-table-header-bg-color: #fafbfc;
+  --el-table-header-text-color: #7b8190;
+  --el-table-row-hover-bg-color: #e4ebf7;
+  --el-table-text-color: #4f5563;
+}
+
+:deep(.all-songs-table .el-table__header-wrapper th.el-table__cell) {
+  height: 46px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+:deep(.all-songs-table .el-table__body-wrapper td.el-table__cell) {
+  height: 64px;
+  border-bottom-color: #f0f1f4;
+}
+
+:deep(.all-songs-table .song-table__album) {
+  color: #8b91a0;
+}
 
 .song-table__title-cell {
-  @apply flex items-center gap-3;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 12px;
 }
 
 .song-table__cover {
-  @apply w-10 h-10 rounded overflow-hidden shrink-0 bg-gray-800;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  flex-shrink: 0;
+  overflow: hidden;
+  place-items: center;
+  border: 1px solid #eceef3;
+  border-radius: 9px;
+  background: #f2f3f6;
 }
 
 .song-table__cover-img {
-  @apply w-full h-full object-cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .song-table__cover-icon {
-  @apply w-full h-full flex items-center justify-center text-gray-600;
+  color: #9aa0ad;
 }
 
 .song-table__title-wrap {
-  @apply truncate;
+  min-width: 0;
 }
 
 .song-table__title {
-  @apply font-medium truncate;
+  overflow: hidden;
+  color: #2d3340;
+  font-size: 14px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .song-table__title.is-active {
-  @apply text-green-500;
-}
-
-.song-table__title.is-idle {
-  @apply text-white;
+  color: #6256c5;
 }
 
 .song-table__artist {
-  @apply text-xs text-gray-500 truncate;
+  overflow: hidden;
+  margin-top: 3px;
+  color: #969cab;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .song-table__duration {
-  @apply text-gray-500 text-sm;
+  color: #969cab;
+  font-size: 13px;
 }
 
 .song-table__action-bar {
-  @apply flex justify-end items-center gap-3 opacity-0 transition-opacity pr-2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-right: 4px;
+  opacity: 0.35;
+  transition: opacity 160ms ease;
 }
 
 :deep(.song-row:hover .song-table__action-bar) {
-  @apply opacity-100;
+  opacity: 1;
 }
 
-.song-table__play-icon {
-  @apply text-blue-400;
+.action-icon {
+  cursor: pointer;
+  transition: transform 160ms ease, color 160ms ease;
+}
+
+.action-icon:hover {
+  transform: scale(1.08);
 }
 
 .song-table__play-icon:hover {
-  @apply text-blue-300;
+  color: #6256c5;
 }
 
 .song-table__next-icon {
-  @apply text-gray-400;
+  color: #9097a7;
 }
 
 .song-table__next-icon:hover {
-  @apply text-white;
+  color: #4f5563;
 }
 </style>
