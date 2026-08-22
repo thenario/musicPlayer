@@ -7,6 +7,7 @@ declare module 'vue-router' {
     requiresAuth?: boolean
     requiresGuest?: boolean
     title?: string
+    mode?: 'login' | 'register'
   }
 }
 
@@ -15,13 +16,14 @@ const routes = [
   {
     path: '/login',
     name: 'login',
-    component: () => import('@/views/user/login/Login.vue'),
-    meta: { title: '登录' },
+    component: () => import('@/views/user/auth/Auth.vue'),
+    meta: { title: '登录', mode: 'login' as const },
   },
   {
     path: '/register',
     name: 'regiter',
-    component: () => import('@/views/user/register/Register.vue'),
+    component: () => import('@/views/user/auth/Auth.vue'),
+    meta: { title: '注册', mode: 'register' as const }
   },
   {
     path: '/',
