@@ -1,11 +1,15 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { IQueue, IQueueItem, IQueueState, ISong } from '@/types'
+import type { IQueue, IQueueItem, ISong } from '@/types'
 import { queueApi } from '@/api/queue-api'
 import { getImageUrl, sameId } from '@/utils/format'
 import { createAudioEngine } from '@/composables/player/use-audio-engine'
+import { createAudioVisualizer } from '@/composables/player/use-audio-visualizer'
 import { createLyricsLoader } from '@/composables/player/use-lyrics-loader'
+import { createMediaSession } from '@/composables/player/use-media-session'
+import { createPlaybackSync } from '@/composables/player/use-playback-sync'
 import { createQueueMutations } from '@/composables/player/use-queue-mutations'
+import { createQueueService } from '@/composables/player/use-queue-service'
 
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
 
@@ -30,27 +34,23 @@ export const usePlayerStore = defineStore('player', () => {
   const isSongDetailVisible = ref<boolean>(false)
 
   // ================= 播放状态同步到后端 =================
-  const syncPlayStateToBackend = async () => {
-    if (!currentSong.value || !currentQueueId.value) return { success: true }
-    try {
-      if (currentSong.value) {
-        const now = new Date()
-        await queueApi.updateCurrentQueueState({
-          current_song_id: currentSong.value.song_id,
-          current_position: currentIndex.value,
-          current_progress: currentTime.value,
-          is_playing: isPlaying.value,
-          current_queue_id: currentQueueId.value,
-          playmode: playMode.value,
-          updated_date: now,
-        })
-      }
-      return { success: true }
-    } catch (err: unknown) {
-      console.error(errorMessage(err))
-      return { success: false }
-    }
-  }
+  const playbackSync = createPlaybackSync({
+    currentSong,
+    currentQueueId,
+    currentIndex,
+    currentTime,
+    isPlaying,
+    playMode,
+  })
+  const syncPlayStateToBackend = () => playbackSync.sync()
+
+  const mediaSession = createMediaSession({
+    currentSong,
+    onPlay: () => resumeSong(),
+    onPause: () => pauseSong(),
+    onPrevious: () => previousSong(),
+    onNext: () => nextSong(),
+  })
 
   // ================= 音频引擎（audio 元素 + 淡入淡出） =================
   const audio = createAudioEngine({
@@ -65,6 +65,7 @@ export const usePlayerStore = defineStore('player', () => {
     onEnded: () => onAudioEnded(),
     onPlay: () => updateMediaSession(),
   })
+  const visualizer = createAudioVisualizer()
 
   // ================= 歌词加载 =================
   const lyricsLoader = createLyricsLoader(() => currentSong.value?.song_id)
@@ -82,8 +83,14 @@ export const usePlayerStore = defineStore('player', () => {
   })
 
   // ================= 播放控制 =================
-  const setAudioElement = (element: HTMLAudioElement) => audio.setAudioElement(element)
-  const disposeAudio = () => audio.dispose()
+  const setAudioElement = (element: HTMLAudioElement) => {
+    audio.setAudioElement(element)
+    visualizer.setAudioElement(element)
+  }
+  const disposeAudio = () => {
+    visualizer.dispose()
+    audio.dispose()
+  }
 
   const onAudioEnded = () => {
     if (playMode.value === 'repeat_one') {
@@ -93,25 +100,7 @@ export const usePlayerStore = defineStore('player', () => {
     }
   }
 
-  const updateMediaSession = () => {
-    if ('mediaSession' in navigator && currentSong.value) {
-      const song = currentSong.value
-
-      const coverUrl = getImageUrl(song.song_cover_url)
-
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: song.song_title,
-        artist: song.artist,
-        album: song.album,
-        artwork: coverUrl ? [{ src: coverUrl, sizes: '512x512', type: 'image/jpeg' }] : [],
-      })
-
-      navigator.mediaSession.setActionHandler('play', () => resumeSong())
-      navigator.mediaSession.setActionHandler('pause', () => pauseSong())
-      navigator.mediaSession.setActionHandler('previoustrack', () => previousSong())
-      navigator.mediaSession.setActionHandler('nexttrack', () => nextSong())
-    }
-  }
+  const updateMediaSession = () => mediaSession.update()
 
   const playAtIndex = async (index: number) => {
     if (index < 0 || index >= currentQueue.value.length) return { success: false }
@@ -222,47 +211,8 @@ export const usePlayerStore = defineStore('player', () => {
     currentIndex.value = -1
   }
 
-  // ================= 队列数据同步 =================
-  const fetchCurrentQueue = async () => {
-    try {
-      const res = await queueApi.getCurrentQueue()
-      const { queue, queue_state } = res
-      updateQueueData(queue)
-      if (queue_state) {
-        syncPlaybackState(queue_state)
-      }
-      return { success: true }
-    } catch (e: unknown) {
-      console.error(errorMessage(e))
-      return { success: false, message: errorMessage(e) }
-    }
-  }
-
-  const updateQueueData = (queue: IQueue) => {
-    if (queue.queue_items) {
-      queue.queue_items.sort((a, b) => a.queue_item_position - b.queue_item_position)
-      currentQueue.value = [...queue.queue_items]
-    }
-    currentQueueId.value = queue.queue_id
-  }
-
-  const syncPlaybackState = (state: IQueueState) => {
-    playMode.value = state.playmode || 'sequential'
-
-    if (!state.current_song_id) return
-
-    const idx = currentQueue.value.findIndex((i) => sameId(i.song.song_id, state.current_song_id))
-    if (idx === -1) return
-
-    currentIndex.value = idx
-    currentSong.value = currentQueue.value[idx]!.song
-
-    if (audioElement.value && currentSong.value) {
-      prepareAudioSource(currentSong.value.song_id, state.current_progress || 0)
-    }
-  }
-
   const prepareAudioSource = (songId: number | string, savedProgress: number) => {
+    if (!audioElement.value || !currentSong.value) return
     const el = audioElement.value!
 
     el.src = getImageUrl(currentSong.value!.song_url)
@@ -281,132 +231,17 @@ export const usePlayerStore = defineStore('player', () => {
     )
   }
 
-  const fetchUserQueues = async () => {
-    try {
-      const res = await queueApi.getMyQueues()
-      const rawQueues = res.queues ?? []
-      rawQueues.sort((a, b) => {
-        const timeA = new Date(a.updated_date).getTime()
-        const timeB = new Date(b.updated_date).getTime()
-        return timeB - timeA
-      })
-      rawQueues.forEach((queue) => {
-        if (queue.queue_items && Array.isArray(queue.queue_items)) {
-          queue.queue_items.sort((a, b) => {
-            return a.queue_item_position - b.queue_item_position
-          })
-        }
-      })
-      userQueues.value = rawQueues
-      return { success: true }
-    } catch (e: unknown) {
-      console.error(errorMessage(e))
-      return { success: false, message: errorMessage(e) }
-    }
-  }
-
-  const fetchQueueDetails = async (queueId: number | string) => {
-    try {
-      const res = await queueApi.getQueueById(queueId)
-      return {
-        success: true,
-        queue: res.queue,
-      }
-    } catch (err: unknown) {
-      console.error(errorMessage(err))
-      return {
-        success: false,
-        message: errorMessage(err),
-      }
-    }
-  }
-
-  const playSongInQueue = async (queueId: number | string, index: number) => {
-    try {
-      if (!sameId(currentQueueId.value, queueId)) {
-        await switchQueue(queueId)
-      }
-      playAtIndex(index)
-      return { success: true }
-    } catch (e) {
-      console.error('切换播放失败', e)
-      return { success: false }
-    }
-  }
-
-  const switchQueue = async (queueId: number | string) => {
-    try {
-      await queueApi.alterQueueToCurrent(queueId)
-      currentQueueId.value = queueId
-      await fetchCurrentQueue()
-      await fetchUserQueues()
-      pauseSong()
-    } catch (err: unknown) {
-      console.error(errorMessage(err))
-      throw err
-    }
-  }
-
-  const deleteQueue = async (queueId: number | string) => {
-    try {
-      const res = await queueApi.deleteQueue(queueId)
-      const { new_queue_id, was_active } = res.data
-      if (was_active) {
-        currentSong.value = null
-        currentQueue.value = []
-        pauseSong()
-        if (new_queue_id) {
-          await switchQueue(new_queue_id)
-        } else {
-          currentQueueId.value = null
-        }
-      }
-      const resF = await fetchUserQueues()
-      if (!resF.success) return { success: false }
-      return { success: true }
-    } catch (err: unknown) {
-      console.error(errorMessage(err))
-      return { success: false }
-    }
-  }
-
-  const clearQueue = async (queueId: number | string) => {
-    try {
-      await queueApi.clearQueue(queueId)
-      if (sameId(currentQueueId.value, queueId)) {
-        currentQueue.value = []
-        currentSong.value = null
-        currentIndex.value = -1
-        pauseSong()
-        const resF = await fetchUserQueues()
-        if (!resF.success) return { success: false }
-        return { success: true }
-      }
-    } catch (err: unknown) {
-      console.error(errorMessage(err))
-      return { success: false }
-    }
-  }
-
-  const playPlaylist = async (playlistId: number | string, startSongId: number | string | null = null) => {
-    try {
-      await queueApi.createQueueFromPlaylist(playlistId)
-      await fetchCurrentQueue()
-      await fetchUserQueues()
-      let startIndex = 0
-      if (startSongId) {
-        const foundIndex = currentQueue.value.findIndex((item) => sameId(item.song.song_id, startSongId))
-        if (foundIndex !== -1) startIndex = foundIndex
-      }
-      if (currentQueue.value.length > 0) {
-        playAtIndex(startIndex)
-      }
-      return { success: true }
-    } catch (err: unknown) {
-      console.error(errorMessage(err))
-      return { success: false }
-    }
-  }
+  const queueService = createQueueService({
+    currentQueue,
+    currentQueueId,
+    userQueues,
+    currentIndex,
+    currentSong,
+    playMode,
+    playAtIndex,
+    pauseSong,
+    prepareAudioSource,
+  })
 
   const playSong = async (song: ISong, mode: 'now' | 'next') => {
     if (mode === 'now' && sameId(currentSong.value?.song_id, song.song_id)) {
@@ -454,6 +289,7 @@ export const usePlayerStore = defineStore('player', () => {
     isQueueVisible,
     isSongDetailVisible,
     lyrics,
+    visualizerBars: visualizer.bars,
 
     hasNext,
     hasPrevious,
@@ -475,14 +311,14 @@ export const usePlayerStore = defineStore('player', () => {
     removeQueueItem: queueMutations.removeQueueItem,
     updateQueueOrder: queueMutations.updateQueueOrder,
 
-    fetchCurrentQueue,
-    fetchUserQueues,
-    fetchQueueDetails,
-    switchQueue,
-    deleteQueue,
-    clearQueue,
-    playPlaylist,
-    playSongInQueue,
+    fetchCurrentQueue: queueService.fetchCurrentQueue,
+    fetchUserQueues: queueService.fetchUserQueues,
+    fetchQueueDetails: queueService.fetchQueueDetails,
+    switchQueue: queueService.switchQueue,
+    deleteQueue: queueService.deleteQueue,
+    clearQueue: queueService.clearQueue,
+    playPlaylist: queueService.playPlaylist,
+    playSongInQueue: queueService.playSongInQueue,
 
     toggleQueueVisibility,
     closeQueue,

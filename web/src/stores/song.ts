@@ -1,15 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
-import type { ISong } from '@/types'
+import { createSongEditingState } from '@/composables/song/use-song-editing'
 
-export type EditableUploadSong = Pick<ISong, 'song_id' | 'song_title' | 'song_cover_url'>
+export type { EditableUploadSong } from '@/composables/song/use-song-editing'
 
 export const useSongStore = defineStore('song', () => {
-  const currentEditingSong = ref<EditableUploadSong | null>(null)
-
-  const setEditingSong = (song: EditableUploadSong) => {
-    currentEditingSong.value = song
-  }
-
-  return { currentEditingSong, setEditingSong }
+  return createSongEditingState()
 })
