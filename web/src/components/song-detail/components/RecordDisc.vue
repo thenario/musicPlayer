@@ -18,8 +18,9 @@ defineProps<{
 
 <style scoped>
 .record-box {
-  width: 380px;
-  height: 380px;
+  width: min(360px, 32vw);
+  aspect-ratio: 1;
+  height: auto;
   position: relative;
 }
 
@@ -27,10 +28,9 @@ defineProps<{
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: #111;
-  background: radial-gradient(circle, #333 0%, #111 30%, #000 100%);
-  padding: 15px;
-  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+  background: radial-gradient(circle, #64748b 0%, #334155 28%, #1e293b 74%, #0f172a 100%);
+  padding: 13px;
+  box-shadow: 0 14px 32px rgb(15 23 42 / 20%);
   animation: rotate-record 25s linear infinite;
   animation-play-state: paused;
   will-change: transform;
@@ -54,9 +54,15 @@ defineProps<{
   transform: translate(-50%, -50%);
   width: 40px;
   height: 40px;
-  background: #111;
+  background: #334155;
   border-radius: 50%;
-  border: 2px solid rgba(255, 255, 255, 0.1);
+  border: 2px solid rgb(255 255 255 / 30%);
+}
+
+@media (max-width: 768px) {
+  .record-box {
+    width: min(260px, 64vw);
+  }
 }
 
 @keyframes rotate-record {

@@ -39,45 +39,78 @@ onMounted(load)
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .playlists-page {
-  @apply p-6 bg-gray-900 min-h-screen text-white;
+  box-sizing: border-box;
+  min-height: 100%;
+  overflow: auto;
+  padding: 24px;
+  color: #20232d;
+  background: #f7f8fa;
 }
 
 .playlists-page__header {
-  @apply flex justify-between items-center mb-6;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .playlists-page__title {
-  @apply text-2xl font-bold;
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
 
 .playlists-page__grid {
-  @apply grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-6;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
+  gap: 20px;
+  width: 100%;
+  max-width: 1200px;
 }
 
 .playlists-page__create {
-  @apply aspect-square bg-gray-800 border-2 border-dashed border-gray-700 rounded-xl flex flex-col items-center justify-center cursor-pointer transition-all;
+  display: flex;
+  aspect-ratio: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed #c9cdd7;
+  border-radius: 12px;
+  color: #7c8493;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
 }
 
 .playlists-page__create:hover {
-  @apply border-blue-500 bg-gray-700;
+  border-color: #8176d1;
+  color: #6256c5;
+  background: #faf9ff;
 }
 
 .playlists-page__create-icon {
-  @apply text-4xl text-gray-500 mb-2;
-}
-
-.playlists-page__create:hover .playlists-page__create-icon {
-  @apply text-blue-500;
+  margin-bottom: 8px;
+  font-size: 34px;
+  font-weight: 300;
+  line-height: 1;
 }
 
 .playlists-page__create-text {
-  @apply text-sm text-gray-400;
+  font-size: 14px;
+  font-weight: 500;
 }
 
-.playlists-page__create:hover .playlists-page__create-text {
-  @apply text-white;
+@media (max-width: 640px) {
+  .playlists-page {
+    padding: 16px;
+  }
+
+  .playlists-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
 }
 </style>

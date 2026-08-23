@@ -21,7 +21,8 @@ export function useMyUploads(defaultPageSize = UPLOAD_PAGE_SIZE) {
         const res = await songApi.getUserUploadSongs(page, pageSize)
         if (requestId !== latestRequest) return
         songs.value = res.songs
-        pagination.setTotal(res.total)
+        const total = Number(res.total)
+        pagination.setTotal(Number.isFinite(total) ? total : 0)
       } catch (err) {
         if (requestId === latestRequest) console.error(err)
       }

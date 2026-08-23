@@ -115,36 +115,49 @@ const deletePlaylistAction = async () => {
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .playlist-detail {
-  @apply h-full flex flex-col bg-gray-950 text-white;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: #f6f8fb;
+  color: #303133;
 }
 
 .playlist-detail__loading {
-  @apply flex-1;
+  flex: 1;
 }
 
 .playlist-detail__body {
-  @apply flex-1 overflow-hidden px-6;
+  flex: 1;
+  min-height: 0;
+  padding: 0 24px 24px;
+  overflow: hidden;
 }
 
 .playlist-detail__empty {
-  @apply flex-1 flex items-center justify-center;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
 }
 
 :deep(.song-row:hover) {
-  background-color: rgba(255, 255, 255, 0.05) !important;
+  background-color: #f0f7ff !important;
   cursor: default;
 }
 
 :deep(.playlist-table) {
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: transparent;
-  --el-table-border-color: rgba(255, 255, 255, 0.05);
-  --el-table-text-color: #9ca3af;
-  --el-table-header-text-color: #6b7280;
+  --el-table-bg-color: #fff;
+  --el-table-tr-bg-color: #fff;
+  --el-table-header-bg-color: #f8fafc;
+  --el-table-border-color: #ebeef5;
+  --el-table-text-color: #303133;
+  --el-table-header-text-color: #606266;
+  border: 1px solid #ebeef5;
+  border-radius: 12px;
+  overflow: hidden;
 }
 
 :deep(.el-table__inner-wrapper::before) {

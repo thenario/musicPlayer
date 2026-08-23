@@ -66,69 +66,112 @@ const goBack = () => {
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .page {
-    @apply min-h-[80vh] flex items-center justify-center p-4;
+    box-sizing: border-box;
+    display: flex;
+    min-height: 100%;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px;
+    background: #f7f8fa;
 }
 
 .profile-form {
-    @apply w-full max-w-md border-none overflow-hidden relative;
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+    overflow: hidden;
+    border: 1px solid #e6e8ee;
 }
 
 .profile-form__banner {
-    @apply h-24 bg-linear-to-r from-indigo-500 via-purple-500 to-pink-500;
+    height: 96px;
+    background: linear-gradient(125deg, #6256c5, #8176d1);
 }
 
 .profile-form__body {
-    @apply relative px-6 pb-10 flex flex-col items-center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 28px 32px;
 }
 
 .profile-form__avatar-wrap {
-    @apply relative -mt-12 mb-6;
+    position: relative;
+    margin-top: -48px;
+    margin-bottom: 20px;
 }
 
 .profile-form__avatar-ring {
-    @apply p-1 bg-white rounded-full shadow-xl relative;
+    position: relative;
+    padding: 4px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 4px 12px rgb(37 42 56 / 14%);
 }
 
 .profile-form__avatar {
-    @apply bg-gray-100 text-3xl font-bold;
+    color: #6256c5;
+    font-size: 28px;
+    font-weight: 700;
+    background: #f0effb;
 }
 
 .profile-form__overlay {
-    @apply absolute inset-1 bg-black rounded-full flex flex-col items-center justify-center text-white opacity-0 transition-opacity cursor-pointer;
+    position: absolute;
+    inset: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    opacity: 0;
+    color: #fff;
+    cursor: pointer;
+    background: rgb(24 27 35 / 62%);
+    transition: opacity 160ms ease;
 }
 
 .profile-form__avatar-ring:hover .profile-form__overlay {
-    @apply opacity-100;
+    opacity: 1;
 }
 
 .profile-form__overlay-text {
-    @apply text-xs mt-1;
+    margin-top: 4px;
+    font-size: 12px;
 }
 
 .profile-form__overlay-input {
-    @apply absolute inset-0 opacity-0 cursor-pointer;
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
 }
 
 .profile-form__title {
-    @apply text-xl font-bold text-gray-800 mb-6;
+    margin: 0 0 22px;
+    color: #303542;
+    font-size: 20px;
+    font-weight: 700;
 }
 
 .profile-form__form {
-    @apply w-full px-4;
+    width: 100%;
 }
 
 .profile-form__actions {
-    @apply flex flex-col gap-3 mt-8 w-full;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+    margin-top: 26px;
 }
 
 /* 继承上一版的卡片悬浮特效和圆角 */
 .profile-card {
-    border-radius: 24px;
-    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
-    transition: all 0.4s ease;
+    border-radius: 14px;
+    box-shadow: 0 4px 14px rgb(37 42 56 / 8%);
 }
 
 /* 输入框圆角优化 */
@@ -143,31 +186,30 @@ const goBack = () => {
 
 /* 主保存按钮（延续渐变风格） */
 .save-btn {
-    height: 46px;
-    border-radius: 12px;
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    border: none;
+    height: 44px;
+    border: 0;
+    border-radius: 8px;
+    background: #6256c5;
     font-weight: 600;
     font-size: 0.95rem;
 }
 
 .save-btn:hover {
-    opacity: 0.9;
-    transform: translateY(-1px);
+    background: #5549b7;
 }
 
 /* 取消按钮 */
 .cancel-btn {
-    height: 46px;
-    border-radius: 12px;
+    height: 44px;
+    border-radius: 8px;
     font-weight: 500;
     border-color: #e5e7eb;
     color: #6b7280;
 }
 
 .cancel-btn:hover {
-    background-color: #f9fafb;
-    color: #4f46e5;
-    border-color: #4f46e5;
+    background-color: #f7f6ff;
+    color: #6256c5;
+    border-color: #aaa2df;
 }
 </style>

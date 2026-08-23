@@ -26,34 +26,32 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .progress-bar {
-  @apply w-full flex items-center gap-3;
+  display: flex; gap: 12px; align-items: center; width: 100%;
 }
 
 .progress-bar__time {
-  @apply text-[10px] font-mono text-gray-500 w-10;
+  width: 40px; color: #909399; font-family: monospace; font-size: 10px;
 }
 
 .progress-bar__time--current {
-  @apply text-right;
+  text-align: right;
 }
 
 .progress-bar__track-wrap {
-  @apply relative flex-1 h-6 flex items-center;
+  position: relative; display: flex; flex: 1; height: 24px; align-items: center;
 }
 
 .progress-bar__track {
-  @apply absolute w-full h-1 bg-gray-700 rounded-full;
+  position: absolute; width: 100%; height: 4px; background: #dcdfe6; border-radius: 999px;
 }
 
 .progress-bar__buffer {
-  @apply absolute h-1 bg-gray-500 rounded-full transition-all duration-300;
+  position: absolute; height: 4px; background: #c0c4cc; border-radius: 999px; transition: width .3s ease;
 }
 
 .progress-bar__played {
-  @apply absolute h-1 bg-green-500 rounded-full;
+  position: absolute; height: 4px; background: #409eff; border-radius: 999px;
 }
 
 .custom-range {
@@ -61,7 +59,7 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
   background: transparent;
   margin: 0;
   outline: none;
-  @apply absolute w-full h-full cursor-pointer z-10;
+  position: absolute; z-index: 10; width: 100%; height: 100%; cursor: pointer;
 }
 
 .custom-range::-webkit-slider-runnable-track {
@@ -74,7 +72,7 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
   height: 12px;
   width: 12px;
   border-radius: 50%;
-  background: #ffffff;
+  background: #409eff;
   cursor: pointer;
   margin-top: -4px;
   box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);

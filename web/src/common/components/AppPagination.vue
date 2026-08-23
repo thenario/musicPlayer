@@ -1,7 +1,7 @@
 <template>
   <el-pagination class="app-pagination" :current-page="current" :page-size="pageSize" :total="total" :page-sizes="pageSizes"
-    :disabled="disabled" layout="total, sizes, prev, pager, next" @current-change="handleCurrentChange"
-    @size-change="handleSizeChange" />
+    :disabled="disabled" layout="total, sizes, prev, pager, next" @update:current-page="handleCurrentChange"
+    @update:page-size="handleSizeChange" />
 </template>
 
 <script setup lang="ts">

@@ -15,25 +15,54 @@ defineProps<{ playlist: IPlaylist }>()
 </script>
 
 <style scoped>
-@reference "../../../../assets/index.css";
-
 .playlist-card {
-  @apply block cursor-pointer;
+  display: block;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
 }
 
 .playlist-card__cover {
-  @apply mb-2 aspect-square overflow-hidden rounded-lg bg-gray-800;
+  aspect-ratio: 1;
+  overflow: hidden;
+  border: 1px solid #e8eaef;
+  border-radius: 12px;
+  background: #eef0f4;
+  box-shadow: 0 2px 6px rgb(31 35 45 / 5%);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
 .playlist-card__img {
-  @apply h-full w-full object-cover transition-transform;
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 220ms ease;
+}
+
+.playlist-card:hover .playlist-card__cover {
+  border-color: #c9c3ea;
+  box-shadow: 0 8px 18px rgb(31 35 45 / 10%);
 }
 
 .playlist-card:hover .playlist-card__img {
-  @apply scale-105;
+  transform: scale(1.04);
 }
 
 .playlist-card__name {
-  @apply truncate font-medium text-white;
+  margin: 10px 2px 0;
+  overflow: hidden;
+  color: #434957;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color 160ms ease;
+}
+
+.playlist-card:hover .playlist-card__name {
+  color: #6256c5;
 }
 </style>

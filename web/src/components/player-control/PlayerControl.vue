@@ -62,61 +62,100 @@ const { playModeTitle, togglePlayMode } = usePlayMode()
 </script>
 
 <style scoped>
-@reference "../../assets/index.css";
-
 .player-control {
-  @apply flex flex-col items-center gap-2;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
 }
 
 .player-control__buttons {
-  @apply flex items-center gap-6;
+  display: flex;
+  gap: 24px;
+  align-items: center;
 }
 
 .player-control__icon {
-  @apply w-5 h-5;
+  width: 20px;
+  height: 20px;
 }
 
 .player-control__icon--lg {
-  @apply w-6 h-6;
+  width: 24px;
+  height: 24px;
 }
 
 .player-control__icon--lg-spaced {
-  @apply w-6 h-6 ml-1;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
 }
 
 .player-control__play-btn {
-  @apply w-12 h-12 flex items-center justify-center bg-white text-black rounded-full transition-all shadow-lg;
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: #409eff;
+  border-radius: 50%;
+  box-shadow: 0 5px 12px rgb(64 158 255 / 25%);
+  transition: transform .2s ease;
 }
 
 .player-control__play-btn:hover {
-  @apply scale-110;
+  transform: scale(1.1);
 }
 
 .player-control__play-btn:active {
-  @apply scale-95;
+  transform: scale(.95);
 }
 
 .ctrl-btn--skip {
-  @apply scale-125;
+  transform: scale(1.25);
 }
 
 .ctrl-btn.is-active {
-  @apply text-green-400;
+  color: #409eff;
 }
 
 .ctrl-btn {
-  color: #9ca3af;
-  transition: color 0.2s;
+  padding: 4px;
+  color: #606266;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  transition: color .2s ease, transform .2s ease;
   display: flex;
   align-items: center;
 }
 
 .ctrl-btn:hover {
-  color: #ffffff;
+  color: #409eff;
 }
 
 .ctrl-btn:disabled {
   opacity: 0.3;
   cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .player-control {
+    width: auto !important;
+  }
+
+  .player-control__buttons {
+    gap: 12px;
+  }
+
+  .player-control__play-btn {
+    width: 42px;
+    height: 42px;
+  }
+
+  .player-control :deep(.progress-bar) {
+    display: none;
+  }
 }
 </style>

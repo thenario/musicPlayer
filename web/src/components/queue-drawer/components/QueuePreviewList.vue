@@ -38,57 +38,55 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .queue-preview-list__header {
-  @apply px-2 py-4 border-b border-white/5 mb-2 flex justify-between items-center;
+  display: flex; align-items: center; justify-content: space-between; padding: 16px 8px; margin-bottom: 8px; border-bottom: 1px solid rgb(255 255 255 / 8%);
 }
 
 .queue-preview-list__title {
-  @apply text-blue-400 font-bold;
+  color: #409eff; font-weight: 700;
 }
 
 .queue-preview-list__count {
-  @apply text-[10px] text-gray-500;
+  color: #6b7280; font-size: 10px;
 }
 
 .queue-preview-list__table {
-  @apply w-full border-separate border-spacing-y-1;
+  width: 100%; border-spacing: 0 4px; border-collapse: separate;
 }
 
 .queue-preview-list__row {
-  @apply transition-all cursor-pointer;
+  cursor: pointer; transition: background-color .2s ease;
 }
 
 .queue-preview-list__row:hover {
-  @apply bg-white/5;
+  background: rgb(255 255 255 / 5%);
 }
 
 .queue-preview-list__icon-col {
-  @apply w-10 text-center;
+  width: 40px; text-align: center;
 }
 
 .queue-preview-list__play-icon {
-  @apply text-gray-600;
+  color: #4b5563;
 }
 
 .queue-preview-list__row:hover .queue-preview-list__play-icon {
-  @apply text-blue-400;
+  color: #409eff;
 }
 
 .queue-preview-list__info-col {
-  @apply px-2 py-3;
+  padding: 12px 8px;
 }
 
 .queue-preview-list__song {
-  @apply text-sm text-gray-200;
+  color: #e5e7eb; font-size: 14px;
 }
 
 .queue-preview-list__row:hover .queue-preview-list__song {
-  @apply text-white;
+  color: #fff;
 }
 
 .queue-preview-list__artist {
-  @apply text-[10px] text-gray-500;
+  color: #6b7280; font-size: 10px;
 }
 </style>

@@ -27,7 +27,7 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
 <style scoped>
 .lyrics-wrapper {
   height: 100%;
-  mask-image: linear-gradient(to bottom, transparent 0%, #000 20%, #000 80%, transparent 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 12%, #000 88%, transparent 100%);
   overflow-y: auto;
   scrollbar-width: none;
 }
@@ -37,19 +37,19 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
 }
 
 .lyric-line {
-  font-size: 20px;
+  font-size: 17px;
   font-weight: 500;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.3);
+  color: #a8abb2;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   text-align: left;
   padding: 12px 0;
-  max-width: 90%;
+  max-width: 100%;
 }
 
 .lyric-line.active {
-  color: #fff;
-  font-size: 26px;
+  color: #303133;
+  font-size: 22px;
   font-weight: 700;
   opacity: 1;
   transform: translateX(10px);
@@ -58,7 +58,7 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
 .translation {
   font-size: 16px;
   margin-top: 4px;
-  color: rgba(255, 255, 255, 0.4);
+  color: #909399;
 }
 
 .lyrics-empty {
@@ -67,7 +67,7 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
   justify-content: center;
   align-items: center;
   font-size: 18px;
-  color: rgba(255, 255, 255, 0.2);
+  color: #909399;
 }
 
 .scroll-spacer {

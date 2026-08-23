@@ -42,49 +42,101 @@ defineOptions({ name: 'HomePage' })
 </script>
 
 <style scoped>
-@reference "../../assets/index.css";
-
 .home-page {
-  @apply text-center;
+  box-sizing: border-box;
+  height: 100%;
+  overflow: auto;
+  padding: 56px 24px;
+  color: #20232d;
+  text-align: center;
+  background: #f7f8fa;
 }
 
 .home-page__title {
-  @apply text-4xl font-bold mb-8;
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
 }
 
 .home-page__subtitle {
-  @apply text-xl text-gray-300 mb-12;
+  margin: 14px 0 40px;
+  color: #777e8c;
+  font-size: 16px;
 }
 
 .home-page__grid {
-  @apply grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .home-page__card {
-  @apply bg-gray-800 p-6 rounded-lg;
+  padding: 28px 24px;
+  border: 1px solid #e8eaef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgb(31 35 45 / 4%);
+  transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.home-page__card:hover {
+  transform: translateY(-3px);
+  border-color: #d9dcef;
+  box-shadow: 0 10px 24px rgb(31 35 45 / 9%);
 }
 
 .home-page__icon {
-  @apply w-12 h-12 mx-auto mb-4;
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 18px;
 }
 
 .home-page__icon--blue {
-  @apply text-blue-400;
+  color: #4d78d6;
 }
 
 .home-page__icon--green {
-  @apply text-green-400;
+  color: #3a9a77;
 }
 
 .home-page__icon--purple {
-  @apply text-purple-400;
+  color: #7a68c7;
 }
 
 .home-page__card-title {
-  @apply text-xl font-semibold mb-2;
+  margin: 0 0 8px;
+  color: #303542;
+  font-size: 18px;
+  font-weight: 650;
 }
 
 .home-page__card-desc {
-  @apply text-gray-400;
+  margin: 0;
+  color: #858c9a;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+@media (max-width: 720px) {
+  .home-page {
+    padding: 40px 16px;
+  }
+
+  .home-page__subtitle {
+    margin-bottom: 28px;
+  }
+
+  .home-page__grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    max-width: 440px;
+  }
+
+  .home-page__card {
+    padding: 22px 20px;
+  }
 }
 </style>

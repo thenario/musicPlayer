@@ -42,53 +42,77 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .song-info {
-  @apply w-[30%] flex items-center gap-4 min-w-0;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  width: 30%;
+  min-width: 0;
 }
 
 .song-info__cover-wrap {
-  @apply relative cursor-pointer shrink-0;
+  position: relative;
+  flex-shrink: 0;
+  cursor: pointer;
 }
 
 .song-info__cover {
-  @apply w-16 h-16 rounded-lg shadow-2xl overflow-hidden transition-transform bg-gray-800;
+  width: 64px;
+  height: 64px;
+  overflow: hidden;
+  background: #eef2f6;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgb(15 23 42 / 12%);
+  transition: transform .2s ease;
 }
 
 .song-info__cover-wrap:hover .song-info__cover {
-  @apply scale-105;
+  transform: scale(1.05);
 }
 
 .song-info__cover-img {
-  @apply w-full h-full object-cover;
+  width: 100%; height: 100%; object-fit: cover;
 }
 
 .song-info__cover-fallback {
-  @apply w-full h-full flex items-center justify-center;
+  display: flex; width: 100%; height: 100%; align-items: center; justify-content: center;
 }
 
 .song-info__cover-icon {
-  @apply w-6 h-6 text-gray-600;
+  width: 24px; height: 24px; color: #909399;
 }
 
 .song-info__cover-overlay {
-  @apply absolute inset-0 bg-black/40 opacity-0 transition-opacity flex items-center justify-center rounded-lg text-white;
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  color: #fff; opacity: 0; background: rgb(0 0 0 / 40%); border-radius: 8px; transition: opacity .2s ease;
 }
 
 .song-info__cover-wrap:hover .song-info__cover-overlay {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 .song-info__text {
-  @apply min-w-0 flex-1;
+  flex: 1; min-width: 0;
 }
 
 .song-info__title {
-  @apply text-white text-base font-semibold truncate;
+  margin: 0;
+  overflow: hidden; color: #303133; font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .song-info__artist {
-  @apply text-gray-400 text-xs truncate mt-1;
+  margin: 4px 0 0; overflow: hidden; color: #909399; font-size: 12px; text-overflow: ellipsis; white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .song-info {
+    width: auto;
+    flex: 1;
+  }
+
+  .song-info__cover {
+    width: 48px;
+    height: 48px;
+  }
 }
 </style>

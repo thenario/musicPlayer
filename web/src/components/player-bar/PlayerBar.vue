@@ -36,9 +36,27 @@ useKeyboardShortcuts()
 </script>
 
 <style scoped>
-@reference "../../assets/index.css";
-
 .player-bar {
-  @apply w-full shrink-0 h-24 bg-gray-900/90 backdrop-blur-lg border-t border-white/5 px-6 flex items-center justify-between z-50 select-none;
+  box-sizing: border-box;
+  z-index: 50;
+  display: flex;
+  flex-shrink: 0;
+  width: 100%;
+  height: 88px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 32px;
+  user-select: none;
+  background: rgb(255 255 255 / 94%);
+  border-top: 1px solid #e5e7eb;
+  box-shadow: 0 -6px 20px rgb(15 23 42 / 6%);
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 768px) {
+  .player-bar {
+    height: 76px;
+    padding: 0 16px;
+  }
 }
 </style>

@@ -100,176 +100,270 @@ const submitUpload = () => submit()
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .page {
-  @apply h-full overflow-y-auto p-6 bg-gray-900 text-white;
+  box-sizing: border-box;
+  height: 100%;
+  overflow-y: auto;
+  padding: 32px 24px 64px;
+  background: #f6f8fb;
+  color: #1f2937;
 }
 
 .page__inner {
-  @apply max-w-3xl mx-auto mt-4 pb-24;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 .page__title {
-  @apply text-3xl font-bold mb-8;
+  margin: 0 0 24px;
+  font-size: 28px;
+  line-height: 1.2;
 }
 
 .upload-card {
-  @apply bg-gray-800 rounded-xl p-8 shadow-xl border border-gray-700;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
 }
 
 .upload-card__section {
-  @apply mb-8;
+  margin-bottom: 28px;
 }
 
-.upload-card__label {
-  @apply block text-sm font-medium text-gray-400 mb-2;
+.upload-card__label,
+.form-grid__label {
+  display: block;
+  margin-bottom: 8px;
+  color: #4b5563;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .upload-card__dropzone {
-  @apply relative border-2 border-dashed rounded-lg p-10 text-center transition-all cursor-pointer;
+  position: relative;
+  padding: 36px 24px;
+  text-align: center;
+  cursor: pointer;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  transition: border-color .2s ease, background-color .2s ease;
 }
 
 .upload-card__dropzone.is-idle {
-  @apply border-gray-600;
+  border-color: #cbd5e1;
 }
 
 .upload-card__dropzone.is-idle:hover {
-  @apply border-gray-400 bg-gray-700/50;
+  border-color: #8aa4c8;
+  background: #f8fbff;
 }
 
 .upload-card__dropzone.is-dragging {
-  @apply border-blue-500 bg-blue-500/10;
+  border-color: #409eff;
+  background: #ecf5ff;
 }
 
 .upload-card__dropzone.is-selected {
-  @apply border-green-500/50 bg-green-500/5;
+  border-color: #67c23a;
+  background: #f0f9eb;
 }
 
 .upload-card__audio-input {
-  @apply hidden;
+  display: none;
 }
 
 .upload-card__placeholder {
-  @apply space-y-4;
+  display: grid;
+  gap: 12px;
 }
 
 .upload-card__emoji {
-  @apply text-5xl opacity-50;
+  font-size: 42px;
+  opacity: .7;
 }
 
 .upload-card__hint {
-  @apply text-lg text-gray-200;
+  margin: 0;
+  font-size: 16px;
 }
 
 .upload-card__hint-accent {
-  @apply text-blue-400 font-semibold;
+  color: #409eff;
+  font-weight: 600;
 }
 
 .upload-card__sub-hint {
-  @apply text-xs text-gray-500 mt-2;
+  margin: 6px 0 0;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
 .upload-card__file-info {
-  @apply flex items-center justify-center space-x-3 text-green-400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: #529b2e;
 }
 
 .upload-card__file-check {
-  @apply text-2xl;
+  font-size: 22px;
 }
 
 .upload-card__file-name {
-  @apply font-medium text-lg truncate max-w-xs;
+  max-width: 360px;
+  overflow: hidden;
+  font-size: 16px;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .upload-card__file-remove {
-  @apply ml-4 p-1 rounded-full text-gray-400;
+  padding: 4px 7px;
+  color: #6b7280;
+  cursor: pointer;
+  background: transparent;
+  border: 0;
+  border-radius: 999px;
 }
 
 .upload-card__file-remove:hover {
-  @apply bg-gray-600;
+  background: #e5e7eb;
 }
 
 .form-grid {
-  @apply grid grid-cols-1 gap-8 mb-8;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 28px;
+  margin-bottom: 28px;
 }
 
 @media (min-width: 768px) {
   .form-grid {
-    @apply grid-cols-2;
+    grid-template-columns: 220px 1fr;
   }
 }
 
-.form-grid__label {
-  @apply block text-sm font-medium text-gray-400 mb-2;
-}
-
 .cover-field {
-  @apply w-full aspect-square border-2 border-dashed border-gray-600 rounded-lg overflow-hidden cursor-pointer transition-colors flex items-center justify-center bg-gray-900/50;
+  display: flex;
+  aspect-ratio: 1;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+  background: #f8fafc;
+  border: 2px dashed #cbd5e1;
+  border-radius: 12px;
+  transition: border-color .2s ease;
 }
 
 .cover-field:hover {
-  @apply border-gray-400;
+  border-color: #8aa4c8;
 }
 
 .cover-field__input {
-  @apply hidden;
+  display: none;
 }
 
 .cover-field__preview {
-  @apply w-full h-full object-cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .cover-field__placeholder {
-  @apply text-center;
+  text-align: center;
 }
 
 .cover-field__plus {
-  @apply text-3xl text-gray-600;
+  color: #94a3b8;
+  font-size: 32px;
 }
 
 .cover-field__hint {
-  @apply text-xs text-gray-500 mt-1;
+  margin: 4px 0 0;
+  color: #94a3b8;
+  font-size: 12px;
 }
 
 .form-fields {
-  @apply flex flex-col space-y-4;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 }
 
 .lyrics-textarea {
-  @apply resize-none text-sm;
+  min-height: 132px;
+  resize: vertical;
+  font-size: 14px;
 }
 
 .upload-progress {
-  @apply mb-8;
+  margin-bottom: 28px;
 }
 
 .upload-progress__row {
-  @apply flex justify-between items-center mb-2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
 }
 
 .upload-progress__label {
-  @apply text-xs text-blue-400 font-medium;
+  color: #409eff;
+  font-size: 12px;
+  font-weight: 600;
 }
 
 .upload-progress__percent {
-  @apply text-xs text-gray-500;
+  color: #909399;
+  font-size: 12px;
 }
 
 .submit-btn {
-  @apply w-full py-4 bg-blue-600 text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-900/20;
+  width: 100%;
+  padding: 13px 20px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  background: #409eff;
+  border: 0;
+  border-radius: 10px;
+  transition: background-color .2s ease, transform .2s ease;
 }
 
 .submit-btn:hover {
-  @apply bg-blue-500;
+  background: #337ecc;
 }
 
 .submit-btn:disabled {
-  @apply bg-gray-700 cursor-not-allowed;
+  cursor: not-allowed;
+  background: #a8abb2;
 }
 
 .input-style {
-  @apply w-full bg-gray-900 border border-gray-700 rounded-lg p-3 focus:border-blue-500 outline-none transition-all placeholder:text-gray-600;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 11px 12px;
+  color: #303133;
+  font: inherit;
+  background: #fff;
+  border: 1px solid #dcdfe6;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+
+.input-style::placeholder {
+  color: #a8abb2;
+}
+
+.input-style:focus {
+  border-color: #409eff;
+  box-shadow: 0 0 0 3px rgb(64 158 255 / 12%);
 }
 
 .el-fade-in-enter-active,

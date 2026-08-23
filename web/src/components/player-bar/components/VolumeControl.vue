@@ -31,34 +31,46 @@ const handleVolumeInput = (event: Event) => {
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .volume-control {
-  @apply w-[30%] flex items-center justify-end gap-4;
+  display: flex; gap: 16px; align-items: center; justify-content: flex-end; width: 30%;
 }
 
 .volume-control__group {
-  @apply flex items-center w-32 gap-2;
+  display: flex; gap: 8px; align-items: center; width: 128px;
 }
 
 .volume-control__mute-btn {
-  @apply text-gray-400 transition-colors;
+  color: #606266; transition: color .2s ease;
 }
 
 .volume-control__mute-btn:hover {
-  @apply text-white;
+  color: #409eff;
 }
 
 .volume-control__icon {
-  @apply w-5 h-5;
+  width: 20px; height: 20px;
 }
 
 .volume-range {
-  @apply w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-white;
-  background-image: linear-gradient(to right, white var(--progress), transparent var(--progress));
+  width: 100%; height: 4px; cursor: pointer; appearance: none; accent-color: #409eff; background-color: #dcdfe6; border-radius: 999px;
+  background-image: linear-gradient(to right, #409eff var(--progress), transparent var(--progress));
 }
 
 .volume-range::-webkit-slider-thumb {
-  @apply appearance-none w-2.5 h-2.5 bg-white rounded-full;
+  width: 10px; height: 10px; appearance: none; background: #409eff; border-radius: 50%;
+}
+
+@media (max-width: 768px) {
+  .volume-control {
+    width: auto;
+  }
+
+  .volume-control__group {
+    width: auto;
+  }
+
+  .volume-range {
+    display: none;
+  }
 }
 </style>

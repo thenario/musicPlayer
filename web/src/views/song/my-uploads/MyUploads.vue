@@ -20,23 +20,56 @@
             </el-button>
         </div>
 
-        <!-- 3. 歌曲列表区：关键点！设为 flex-1 和 overflow-y-auto -->
-        <!-- 这样它会自动占据中间所有空间，多出内容时内部滚动 -->
-        <div class="page__list custom-scrollbar" v-loading="loading">
-            <div v-if="songs && songs.length > 0">
-                <div class="page__list-grid">
-                    <UploadedSongCard
-                        v-for="song in songs"
-                        :key="song.song_id"
-                        :song="song"
-                        @edit="goToSongEdit"
-                    />
-                </div>
-            </div>
+        <div class="page__table">
+            <el-table
+                v-loading="loading"
+                :data="songs"
+                height="100%"
+                class="uploads-table"
+                element-loading-background="rgba(255, 255, 255, 0.72)"
+            >
+                <el-table-column label="歌曲" min-width="42%" show-overflow-tooltip>
+                    <template #default="{ row }">
+                        <div class="uploads-table__song">
+                            <el-image
+                                v-if="row.song_cover_url"
+                                :src="getImageUrl(row.song_cover_url)"
+                                class="uploads-table__cover"
+                                fit="cover"
+                            />
+                            <div v-else class="uploads-table__cover uploads-table__cover--fallback">
+                                <el-icon><Mic /></el-icon>
+                            </div>
+                            <span class="uploads-table__title">{{ row.song_title }}</span>
+                        </div>
+                    </template>
+                </el-table-column>
 
-            <el-empty v-else-if="!loading" description="你还没有上传过任何歌曲" :image-size="200">
-                <el-button type="primary" plain @click="router.push('/upload')">立即去上传</el-button>
-            </el-empty>
+                <el-table-column prop="artist" label="歌手" min-width="22%" show-overflow-tooltip />
+
+                <el-table-column label="上传时间" min-width="20%">
+                    <template #default="{ row }">
+                        <span class="uploads-table__date">{{ formatDate(row.date_added) }}</span>
+                    </template>
+                </el-table-column>
+
+                <el-table-column label="操作" width="96" align="right">
+                    <template #default="{ row }">
+                        <el-tooltip content="编辑歌曲" placement="top">
+                            <el-button link type="primary" class="uploads-table__edit" @click="goToSongEdit(row as EditableUploadSong)">
+                                <el-icon><EditPen /></el-icon>
+                                编辑
+                            </el-button>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
+
+                <template #empty>
+                    <el-empty v-if="!loading" description="你还没有上传过任何歌曲" :image-size="150">
+                        <el-button type="primary" plain @click="router.push('/upload')">立即去上传</el-button>
+                    </el-empty>
+                </template>
+            </el-table>
         </div>
 
         <div class="page__pagination">
@@ -58,9 +91,9 @@ import { useRouter } from 'vue-router';
 import { onMounted } from 'vue';
 import { useSongStore, type EditableUploadSong } from '@/stores/song';
 import { AppPagination } from '@/common';
-import UploadedSongCard from './components/UploadedSongCard.vue';
 import { useMyUploads } from './composables/use-my-uploads';
-import { Back, Upload } from '@element-plus/icons-vue';
+import { Back, EditPen, Mic, Upload } from '@element-plus/icons-vue';
+import { formatDate, getImageUrl } from '@/utils/format';
 
 const router = useRouter();
 const songStore = useSongStore();
@@ -76,76 +109,153 @@ onMounted(load);
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .page {
-    @apply h-full flex flex-col bg-gray-50 p-4;
-}
-
-@media (min-width: 640px) {
-    .page {
-        @apply p-6;
-    }
-}
-
-@media (min-width: 1024px) {
-    .page {
-        @apply p-8;
-    }
+    box-sizing: border-box;
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    padding: 24px;
+    color: #20232d;
+    background: #f7f8fa;
 }
 
 .page__header {
-    @apply flex items-center justify-between mb-8 shrink-0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 20px;
 }
 
 .page__header-left {
-    @apply flex items-center gap-4;
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
 }
 
 .page__title {
-    @apply text-2xl font-bold text-gray-900;
+    margin: 0;
+    overflow: hidden;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .page__upload-icon {
-    @apply mr-1;
+    margin-right: 4px;
 }
 
-.page__list {
-    @apply flex-1 overflow-y-auto pr-2;
+.page__table {
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid #e8eaef;
+    border-radius: 12px;
+    background: #fff;
 }
 
-.page__list-grid {
-    @apply max-w-4xl mx-auto grid gap-4;
+.uploads-table {
+    --el-table-border-color: #eef0f4;
+    --el-table-header-bg-color: #fafbfc;
+    --el-table-header-text-color: #7b8190;
+    --el-table-row-hover-bg-color: #f6f5ff;
+    --el-table-text-color: #4f5563;
+}
+
+:deep(.uploads-table .el-table__header-wrapper th.el-table__cell) {
+    height: 46px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+:deep(.uploads-table .el-table__body-wrapper td.el-table__cell) {
+    height: 64px;
+    border-bottom-color: #f0f1f4;
+}
+
+.uploads-table__song {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    gap: 12px;
+}
+
+.uploads-table__cover {
+    width: 40px;
+    height: 40px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border: 1px solid #eceef3;
+    border-radius: 8px;
+}
+
+.uploads-table__cover--fallback {
+    display: grid;
+    place-items: center;
+    color: #969cab;
+    background: #f2f3f6;
+}
+
+.uploads-table__title {
+    overflow: hidden;
+    color: #303542;
+    font-size: 14px;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.uploads-table__date {
+    color: #9097a7;
+    font-size: 13px;
+}
+
+.uploads-table__edit {
+    font-weight: 500;
 }
 
 .page__pagination {
-    @apply flex justify-center py-6 shrink-0;
-}
-
-/* 确保页面填满高度 */
-:deep(.h-full) {
-    height: 100%;
-}
-
-/* 自定义滚动条样式，让它看起来更现代（可选） */
-.custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #e5e7eb;
-    border-radius: 10px;
-}
-
-.custom-scrollbar::-webkit-scrollbar-track {
-    background-color: transparent;
+    display: flex;
+    min-height: 48px;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 0;
 }
 
 .upload-btn {
-    background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-    border: none;
-    border-radius: 10px;
+    border: 0;
+    border-radius: 8px;
     height: 40px;
+    background: #6256c5;
     font-weight: 600;
+}
+
+.upload-btn:hover {
+    background: #5549b7;
+}
+
+@media (max-width: 640px) {
+    .page {
+        padding: 16px;
+    }
+
+    .page__header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .page__header-left,
+    .upload-btn {
+        width: 100%;
+    }
+
+    .page__table {
+        border-radius: 10px;
+    }
 }
 </style>

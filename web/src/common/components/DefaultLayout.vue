@@ -3,7 +3,7 @@
         <!-- 侧边栏，几个页面跳转，下面是用户，写一个dropdown，有logout和个人主页等 -->
         <el-aside class="sidebar" :width="isCollapse ? '48px' : '196px'" @transitionend="handleSidebarTransitionEnd">
             <el-container class="sidebar-menu-container">
-                <el-menu class="sidebar-menu" :collapse="isCollapse" router default-active="home"
+                <el-menu class="sidebar-menu" :collapse="isCollapse" router :default-active="route.path"
                     :collapse-transition="false">
                     <div class="sidebar-header"
                         style="width: 100%; display: flex; flex-direction: row; justify-content:space-between; align-items: center;">
@@ -39,14 +39,14 @@
                             </el-tooltip>
                         </div>
                     </div>
-                    <el-menu-item class="sidebar-menu-item" index="songs">
+                    <el-menu-item class="sidebar-menu-item" index="/home">
                         <el-icon class="el-menu-item-icon">
                             <House />
                         </el-icon>
                         <template #title>主页</template>
                     </el-menu-item>
 
-                    <el-menu-item class="sidebar-menu-item" index="playlists">
+                    <el-menu-item class="sidebar-menu-item" index="/playlists">
                         <el-icon>
                             <List />
                         </el-icon>
@@ -54,7 +54,7 @@
 
                     </el-menu-item>
 
-                    <el-menu-item class="sidebar-menu-item" index="my-likes">
+                    <el-menu-item class="sidebar-menu-item" index="/songs" disabled>
                         <el-icon>
                             <Star />
                         </el-icon>
@@ -118,8 +118,9 @@ import { Document, Expand, Fold, House, List, Star, SwitchButton, User } from '@
 import { useUserStore } from '@/stores/user';
 import { usePlayerStore } from '@/stores/player'
 import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 const router = useRouter()
+const route = useRoute()
 const userStore = useUserStore()
 const playerStore = usePlayerStore()
 const { user } = storeToRefs(userStore)

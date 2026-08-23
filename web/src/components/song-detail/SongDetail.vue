@@ -3,11 +3,6 @@
     <Transition name="slide-up">
       <div v-if="playerStore.isSongDetailVisible" class="song-detail-overlay">
 
-        <div class="glass-bg">
-          <div class="blur-image" :style="{ backgroundImage: `url(${currentSongCover})` }"></div>
-          <div class="overlay-dark"></div>
-        </div>
-
         <header class="detail-header">
           <button class="action-btn exit-btn" @click="playerStore.toggleSongDetail">
             <el-icon :size="30">
@@ -72,20 +67,22 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   position: fixed;
   inset: 0;
   z-index: 3000;
-  background: #000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: white;
+  color: #303133;
+  background: #f6f8fb;
 }
 
 .detail-header {
-  height: 100px;
+  min-height: 82px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 40px;
+  padding: 0 32px;
   flex-shrink: 0;
+  background: rgb(255 255 255 / 90%);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .song-meta-center {
@@ -93,9 +90,9 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .main-title {
-  font-size: 28px;
-  font-weight: 900;
-  margin-bottom: 2px;
+  margin: 0 0 4px;
+  font-size: 22px;
+  font-weight: 700;
 }
 
 .meta-sub {
@@ -103,62 +100,83 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   align-items: center;
   justify-content: center;
   gap: 8px;
-  font-size: 16px;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 13px;
+  color: #909399;
 }
 
 .sub-artist {
-  color: #1DB954;
+  color: #409eff;
 }
 
 .detail-content {
   flex: 1;
   display: flex;
-  padding: 0 8%;
+  gap: 32px;
+  max-width: 1120px;
+  width: calc(100% - 64px);
+  margin: 0 auto;
+  padding: 28px 0;
   align-items: center;
-  overflow: hidden;
+  min-height: 0;
 }
 
 .content-left {
-  flex: 1;
+  flex: .9;
   display: flex;
   justify-content: center;
   align-items: center;
+  min-height: 0;
 }
 
 .content-right {
-  flex: 1.2;
-  height: 80%;
-  padding-left: 40px;
+  flex: 1;
+  align-self: stretch;
+  min-height: 0;
+  padding: 12px 28px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
 }
 
 .detail-footer {
-  height: 140px;
+  min-height: 118px;
   display: flex;
   justify-content: center;
-  padding: 0 10%;
+  padding: 14px 10%;
   flex-shrink: 0;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
 }
 
-.glass-bg {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
+.player-control-container :deep(.ctrl-btn) {
+  color: #606266;
 }
 
-.blur-image {
-  width: 100%;
-  height: 100%;
-  background-size: cover;
-  background-position: center;
-  filter: blur(80px) brightness(0.2);
-  transform: scale(1.1);
+.player-control-container :deep(.ctrl-btn:hover) {
+  color: #409eff;
 }
 
-.overlay-dark {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+.player-control-container :deep(.player-control__play-btn) {
+  color: #fff;
+  background: #409eff;
+  box-shadow: 0 5px 12px rgb(64 158 255 / 25%);
+}
+
+.player-control-container :deep(.progress-bar__track) {
+  background: #dcdfe6;
+}
+
+.player-control-container :deep(.progress-bar__buffer) {
+  background: #c0c4cc;
+}
+
+.player-control-container :deep(.progress-bar__played) {
+  background: #409eff;
+}
+
+.player-control-container :deep(.progress-bar__time) {
+  color: #909399;
 }
 
 .slide-up-enter-active,
@@ -172,16 +190,45 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .action-btn {
-  background: none;
-  border: none;
-  color: #fff;
-  opacity: 0.5;
+  display: flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  color: #606266;
   cursor: pointer;
-  transition: 0.3s;
+  background: #f5f7fa;
+  border: 1px solid #ebeef5;
+  border-radius: 10px;
+  transition: color .2s ease, background-color .2s ease, transform .2s ease;
 }
 
 .action-btn:hover {
-  opacity: 1;
-  transform: scale(1.1);
+  color: #409eff;
+  background: #ecf5ff;
+  transform: translateY(-1px);
+}
+
+@media (max-width: 768px) {
+  .detail-header {
+    padding: 0 18px;
+  }
+
+  .detail-content {
+    flex-direction: column;
+    width: calc(100% - 32px);
+    overflow-y: auto;
+  }
+
+  .content-left {
+    flex: initial;
+  }
+
+  .content-right {
+    flex: initial;
+    width: 100%;
+    min-height: 320px;
+    box-sizing: border-box;
+  }
 }
 </style>

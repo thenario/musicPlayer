@@ -55,57 +55,55 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .queue-list__item {
-  @apply flex items-center justify-between p-3 mb-2 rounded-lg bg-white/5 transition-all cursor-pointer;
+  display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; cursor: pointer; background: rgb(255 255 255 / 5%); border-radius: 8px; transition: background-color .2s ease;
 }
 
 .queue-list__item:hover {
-  @apply bg-white/10;
+  background: rgb(255 255 255 / 10%);
 }
 
 .queue-list__info {
-  @apply flex items-center gap-3 overflow-hidden;
+  display: flex; gap: 12px; align-items: center; overflow: hidden;
 }
 
 .queue-list__avatar {
-  @apply w-10 h-10 bg-gray-800 rounded flex items-center justify-center shrink-0;
+  display: flex; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center; background: #1f2937; border-radius: 4px;
 }
 
 .queue-list__avatar-icon {
-  @apply text-gray-500;
+  color: #6b7280;
 }
 
 .queue-list__avatar-icon--active {
-  @apply text-blue-500;
+  color: #409eff;
 }
 
 .queue-list__meta {
-  @apply flex flex-col truncate;
+  display: flex; flex-direction: column; overflow: hidden;
 }
 
 .queue-list__name {
-  @apply text-sm font-medium truncate;
+  overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .queue-list__name.is-active {
-  @apply text-blue-400;
+  color: #409eff;
 }
 
 .queue-list__count {
-  @apply text-[10px] text-gray-500;
+  color: #6b7280; font-size: 10px;
 }
 
 .queue-list__actions {
-  @apply flex items-center gap-2;
+  display: flex; gap: 8px; align-items: center;
 }
 
 .queue-list__delete {
-  @apply opacity-40 transition-opacity;
+  opacity: .4; transition: opacity .2s ease;
 }
 
 .queue-list__item:hover .queue-list__delete {
-  @apply opacity-100;
+  opacity: 1;
 }
 </style>

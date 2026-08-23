@@ -61,33 +61,46 @@ watch(() => props.open, (val) => {
 </script>
 
 <style scoped>
-@reference "../../../../assets/index.css";
-
 .add-song-dialog__list {
-  @apply mt-4 max-h-[400px] overflow-y-auto;
+  max-height: 400px;
+  margin-top: 16px;
+  overflow-y: auto;
 }
 
 .add-song-dialog__song {
-  @apply flex justify-between items-center p-3 rounded-lg transition-colors;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background-color .2s ease;
 }
 
 .add-song-dialog__song:hover {
-  @apply bg-white/5;
+  background: #f5f7fa;
 }
 
 .add-song-dialog__song-info {
-  @apply min-w-0 pr-4;
+  min-width: 0;
+  padding-right: 16px;
 }
 
 .add-song-dialog__song-title {
-  @apply text-sm font-medium;
+  margin: 0;
+  color: #303133;
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .add-song-dialog__song-artist {
-  @apply text-xs text-gray-500;
+  margin: 4px 0 0;
+  color: #909399;
+  font-size: 12px;
 }
 
 .add-song-dialog__empty {
-  @apply text-center py-4 text-gray-500;
+  padding: 16px 0;
+  color: #909399;
+  text-align: center;
 }
 </style>

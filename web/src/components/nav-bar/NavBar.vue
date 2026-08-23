@@ -51,8 +51,6 @@ const { logout } = useNavBar()
 </script>
 
 <style scoped>
-@reference "../../assets/index.css";
-
 .navbar-menu {
   background-color: #1f2937;
   /* gray-800 */
@@ -88,30 +86,39 @@ const { logout } = useNavBar()
 }
 
 .navbar-spacer {
-  @apply grow;
+  flex-grow: 1;
 }
 
 .navbar-actions {
-  @apply flex items-center px-4 gap-4;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 0 16px;
 }
 
 .navbar-user {
-  @apply flex items-center gap-2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .navbar-avatar {
-  @apply bg-blue-500;
+  background: #409eff;
 }
 
 .navbar-item-label--logo {
-  @apply text-xl font-bold tracking-wider;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: .08em;
 }
 
 .navbar-logout {
-  @apply text-red-400;
+  color: #f56c6c;
 }
 
 .navbar-register {
-  @apply flex items-center h-full;
+  display: flex;
+  height: 100%;
+  align-items: center;
 }
 </style>

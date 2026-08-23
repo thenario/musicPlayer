@@ -85,113 +85,191 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
-@reference "../../../../assets/index.css";
-
 .playlist-header {
-  @apply shrink-0;
+  flex-shrink: 0;
 }
 
 .playlist-header__banner {
-  @apply p-8 bg-linear-to-b from-blue-900/40 to-gray-950 flex items-end gap-8 border-b border-white/5;
+  display: flex;
+  gap: 28px;
+  align-items: flex-end;
+  padding: 28px 32px;
+  background: linear-gradient(135deg, #eaf4ff, #f8fbff 60%, #fff);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .playlist-header__cover {
-  @apply w-56 h-56 rounded-xl shadow-2xl overflow-hidden shrink-0 relative;
+  position: relative;
+  flex-shrink: 0;
+  width: 192px;
+  height: 192px;
+  overflow: hidden;
+  border-radius: 14px;
+  box-shadow: 0 10px 24px rgb(15 23 42 / 16%);
 }
 
 .playlist-header__cover-img {
-  @apply w-full h-full object-cover transition-transform duration-700;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .5s ease;
 }
 
 .playlist-header__cover:hover .playlist-header__cover-img {
-  @apply scale-110;
+  transform: scale(1.06);
 }
 
 .playlist-header__cover-placeholder {
-  @apply w-full h-full bg-gray-800 flex flex-col items-center justify-center text-gray-500;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+  background: #eef2f6;
 }
 
 .playlist-header__info {
-  @apply flex-1 min-w-0;
+  flex: 1;
+  min-width: 0;
 }
 
 .playlist-header__label {
-  @apply text-xs font-bold uppercase tracking-wider mb-2 text-blue-400;
+  margin: 0 0 8px;
+  color: #409eff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .08em;
 }
 
 .playlist-header__title {
-  @apply text-6xl font-black mb-6 truncate;
+  margin: 0 0 18px;
+  overflow: hidden;
+  color: #303133;
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .playlist-header__meta {
-  @apply flex items-center gap-2 text-sm text-gray-300;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  color: #606266;
+  font-size: 14px;
 }
 
 .playlist-header__avatar {
-  @apply bg-blue-600 font-bold;
+  background: #409eff;
+  font-weight: 700;
 }
 
 .playlist-header__username {
-  @apply font-bold text-white;
+  color: #303133;
+  font-weight: 700;
 }
 
 .playlist-header__sep {
-  @apply opacity-50;
+  opacity: .5;
 }
 
 .playlist-header__actions {
-  @apply p-6 flex items-center justify-between;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 32px;
+  background: #fff;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .playlist-header__actions-group {
-  @apply flex items-center gap-6;
+  display: flex;
+  gap: 20px;
+  align-items: center;
 }
 
 .playlist-header__play {
-  @apply w-14 h-14 bg-green-500 rounded-full flex items-center justify-center shadow-lg transition-transform;
+  display: flex;
+  width: 48px;
+  height: 48px;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: #67c23a;
+  border-radius: 50%;
+  box-shadow: 0 6px 14px rgb(103 194 58 / 25%);
+  transition: transform .2s ease, background-color .2s ease;
 }
 
 .playlist-header__play:hover {
-  @apply scale-105;
+  background: #529b2e;
+  transform: scale(1.05);
 }
 
 .playlist-header__play:active {
-  @apply scale-95;
+  transform: scale(.95);
 }
 
 .playlist-header__play-icon {
-  @apply ml-1;
+  margin-left: 2px;
 }
 
 .playlist-header__like {
-  @apply cursor-pointer transition-colors;
+  cursor: pointer;
+  transition: color .2s ease;
 }
 
 .playlist-header__like.is-active {
-  @apply text-red-500;
+  color: #f56c6c;
 }
 
 .playlist-header__like.is-idle {
-  @apply text-gray-400;
+  color: #909399;
 }
 
 .playlist-header__like.is-idle:hover {
-  @apply text-white;
+  color: #303133;
 }
 
 .playlist-header__more {
-  @apply text-gray-400 cursor-pointer;
+  color: #909399;
+  cursor: pointer;
 }
 
 .playlist-header__more:hover {
-  @apply text-white;
+  color: #303133;
 }
 
 .playlist-header__delete {
-  @apply text-red-500;
+  color: #f56c6c;
 }
 
 .playlist-header__edit-link {
-  @apply no-underline;
+  text-decoration: none;
+}
+
+@media (max-width: 640px) {
+  .playlist-header__banner {
+    gap: 18px;
+    align-items: center;
+    padding: 22px 20px;
+  }
+
+  .playlist-header__cover {
+    width: 112px;
+    height: 112px;
+  }
+
+  .playlist-header__title {
+    margin-bottom: 10px;
+    font-size: 27px;
+  }
+
+  .playlist-header__actions {
+    padding: 16px 20px;
+  }
 }
 </style>

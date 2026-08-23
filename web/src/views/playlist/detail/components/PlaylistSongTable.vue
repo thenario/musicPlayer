@@ -1,9 +1,8 @@
 <template>
   <el-table :data="songs" style="width: 100%" row-class-name="song-row" @row-dblclick="onRowDblClick"
     class="playlist-table">
-    <el-table-column type="index" width="50" label="#" />
 
-    <el-table-column label="标题" min-width="200">
+    <el-table-column label="标题" min-width="24%">
       <template #default="{ row }">
         <div class="playlist-song-table__title-wrap">
           <span class="playlist-song-table__title"
@@ -17,8 +16,8 @@
       </template>
     </el-table-column>
 
-    <el-table-column prop="artist" label="歌手" />
-    <el-table-column prop="album" label="专辑" />
+    <el-table-column prop="artist" label="歌手" min-width="24%" />
+    <el-table-column prop="album" label="专辑" min-width="20%" />
 
     <el-table-column label="时长" width="100" align="right">
       <template #default="{ row }">{{ formatDuration(row.duration) }}</template>
@@ -83,57 +82,73 @@ const onRowDblClick = (row: ISong) => emit('play-song', row)
 </script>
 
 <style scoped>
-@reference "../../../../assets/index.css";
-
 .playlist-song-table__title-wrap {
-  @apply flex items-center gap-3;
+  display: flex;
+  gap: 12px;
+  align-items: center;
 }
 
 .playlist-song-table__title.is-current {
-  @apply text-green-500 font-bold;
+  color: #67c23a;
+  font-weight: 700;
 }
 
 .playlist-song-table__playing {
-  @apply text-green-500 animate-bounce;
+  color: #67c23a;
+  animation: playlist-song-table-bounce 1s infinite;
 }
 
 .playlist-song-table__actions {
-  @apply flex justify-end items-center gap-3 opacity-0 transition-opacity pr-2;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+  opacity: 0;
+  transition: opacity .2s ease;
 }
 
 :deep(.song-row):hover .playlist-song-table__actions {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 .playlist-song-table__action-play {
-  @apply cursor-pointer text-blue-400;
+  color: #409eff;
+  cursor: pointer;
 }
 
 .playlist-song-table__action-play:hover {
-  @apply text-blue-300;
+  color: #337ecc;
 }
 
 .playlist-song-table__action-next {
-  @apply cursor-pointer text-gray-400;
+  color: #909399;
+  cursor: pointer;
 }
 
 .playlist-song-table__action-next:hover {
-  @apply text-white;
+  color: #303133;
 }
 
 .playlist-song-table__action-queue {
-  @apply cursor-pointer text-gray-400;
+  color: #909399;
+  cursor: pointer;
 }
 
 .playlist-song-table__action-queue:hover {
-  @apply text-white;
+  color: #303133;
 }
 
 .playlist-song-table__action-remove {
-  @apply cursor-pointer text-gray-500;
+  color: #909399;
+  cursor: pointer;
 }
 
 .playlist-song-table__action-remove:hover {
-  @apply text-red-500;
+  color: #f56c6c;
+}
+
+@keyframes playlist-song-table-bounce {
+  50% { transform: translateY(-2px); }
 }
 </style>

@@ -90,46 +90,44 @@ const {
 </script>
 
 <style scoped>
-@reference "../../assets/index.css";
-
 .queue-drawer {
-  @apply flex flex-col h-full bg-gray-950 text-gray-100 font-sans;
+  display: flex; flex-direction: column; height: 100%; color: #f3f4f6; font-family: sans-serif; background: #111827;
 }
 
 .queue-drawer__header {
-  @apply h-16 flex items-center justify-between px-4 border-b border-white/5 bg-white/5 shrink-0;
+  display: flex; flex-shrink: 0; height: 64px; align-items: center; justify-content: space-between; padding: 0 16px; background: rgb(255 255 255 / 5%); border-bottom: 1px solid rgb(255 255 255 / 8%);
 }
 
 .queue-drawer__header-actions {
-  @apply flex items-center gap-2;
+  display: flex; gap: 8px; align-items: center;
 }
 
 .queue-drawer__header-tools {
-  @apply flex items-center gap-3;
+  display: flex; gap: 12px; align-items: center;
 }
 
 .queue-drawer__header-back {
-  @apply flex items-center;
+  display: flex; align-items: center;
 }
 
 .queue-drawer__count {
-  @apply text-[10px] text-gray-500 tracking-tighter;
+  color: #6b7280; font-size: 10px; letter-spacing: -.03em;
 }
 
 .queue-drawer__body {
-  @apply flex-1 overflow-y-auto;
+  flex: 1; overflow-y: auto;
 }
 
 .queue-drawer__content {
-  @apply p-2;
+  padding: 8px;
 }
 
 .queue-drawer__table {
-  @apply w-full border-separate border-spacing-y-1;
+  width: 100%; border-spacing: 0 4px; border-collapse: separate;
 }
 
 .queue-drawer__tbody {
-  @apply divide-y divide-transparent;
+  border-color: transparent;
 }
 
 :deep(.queue-drawer-container .el-drawer__body) {

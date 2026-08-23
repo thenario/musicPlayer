@@ -53,78 +53,76 @@ const emit = defineEmits<{
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .queue-item {
-  @apply transition-all cursor-default;
+  cursor: default; transition: background-color .2s ease;
 }
 
 .queue-item:hover {
-  @apply bg-white/5;
+  background: rgb(255 255 255 / 5%);
 }
 
 .queue-item--active {
-  @apply bg-blue-600/10;
+  background: rgb(64 158 255 / 12%);
 }
 
 .queue-item__icon-col {
-  @apply w-12 py-3 text-center;
+  width: 48px; padding: 12px 0; text-align: center;
 }
 
 .queue-item__icon-wrap {
-  @apply relative flex justify-center items-center h-5;
+  position: relative; display: flex; height: 20px; align-items: center; justify-content: center;
 }
 
 .queue-item__handle {
-  @apply opacity-0 cursor-grab text-gray-500 transition-opacity;
+  color: #6b7280; cursor: grab; opacity: 0; transition: opacity .2s ease;
 }
 
 .queue-item:hover .queue-item__handle {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 .queue-item__handle:hover {
-  @apply text-white;
+  color: #fff;
 }
 
 .queue-item__status {
-  @apply absolute text-blue-500;
+  position: absolute; color: #409eff;
 }
 
 .queue-item__title-col {
-  @apply px-2;
+  padding: 0 8px;
 }
 
 .queue-item__meta {
-  @apply flex flex-col truncate max-w-60;
+  display: flex; flex-direction: column; max-width: 240px; overflow: hidden;
 }
 
 .queue-item__title {
-  @apply text-sm truncate font-medium;
+  overflow: hidden; font-size: 14px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .queue-item__title--inactive {
-  @apply text-gray-200;
+  color: #e5e7eb;
 }
 
 .queue-item__title--active {
-  @apply text-blue-400;
+  color: #409eff;
 }
 
 .queue-item__artist {
-  @apply text-[10px] text-gray-500 truncate;
+  overflow: hidden; color: #6b7280; font-size: 10px; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .queue-item__action-col {
-  @apply pr-4 text-right;
+  padding-right: 16px; text-align: right;
 }
 
 .queue-item__remove {
-  @apply opacity-0 transition-opacity;
+  opacity: 0; transition: opacity .2s ease;
 }
 
 .queue-item:hover .queue-item__remove {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 .playing-bar-animation {

@@ -111,129 +111,222 @@ const submitForm = async () => {
 </script>
 
 <style scoped>
-@reference "../../../assets/index.css";
-
 .playlist-edit {
-  @apply min-h-screen bg-gray-950 p-8 flex justify-center;
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 32px 24px;
+  background: #f6f8fb;
 }
 
 .playlist-edit__layout {
-  @apply max-w-5xl w-full grid grid-cols-1 md:grid-cols-12 gap-8;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+  width: 100%;
+  max-width: 1080px;
+  margin: 0 auto;
 }
 
 .playlist-edit__form-card {
-  @apply md:col-span-7 bg-gray-900 rounded-2xl p-8 border border-white/5 shadow-xl;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
 }
 
 .playlist-edit__heading {
-  @apply text-2xl font-bold mb-8 flex items-center gap-2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 24px;
+  color: #303133;
+  font-size: 22px;
 }
 
 .playlist-edit__cover-row {
-  @apply flex items-center gap-4;
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 
 .playlist-edit__preview {
-  @apply relative w-32 h-32 rounded-lg overflow-hidden border-2 border-dashed border-gray-700;
+  position: relative;
+  width: 128px;
+  height: 128px;
+  overflow: hidden;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
 }
 
 .playlist-edit__preview-img {
-  @apply w-full h-full object-cover;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .playlist-edit__preview-overlay {
-  @apply absolute inset-0 bg-black/40 opacity-0 flex items-center justify-center transition-opacity;
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  opacity: 0;
+  background: rgb(15 23 42 / 45%);
+  transition: opacity .2s ease;
 }
 
 .playlist-edit__preview:hover .playlist-edit__preview-overlay {
-  @apply opacity-100;
+  opacity: 1;
 }
 
 .playlist-edit__upload-placeholder {
-  @apply w-32 h-32 rounded-lg border-2 border-dashed border-gray-700 flex flex-col items-center justify-center text-gray-500 transition-colors;
+  display: flex;
+  flex-direction: column;
+  width: 128px;
+  height: 128px;
+  align-items: center;
+  justify-content: center;
+  color: #909399;
+  border: 2px dashed #cbd5e1;
+  border-radius: 10px;
+  transition: border-color .2s ease;
 }
 
 .playlist-edit__upload-placeholder:hover {
-  @apply border-blue-500;
+  border-color: #409eff;
 }
 
 .playlist-edit__upload-hint {
-  @apply text-xs mt-2;
+  margin-top: 8px;
+  font-size: 12px;
 }
 
 .playlist-edit__cover-hint {
-  @apply text-xs text-gray-500;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1.7;
 }
 
 .playlist-edit__form-actions {
-  @apply flex gap-4 mt-8;
+  display: flex;
+  gap: 12px;
+  margin-top: 28px;
 }
 
 .playlist-edit__save {
-  @apply flex-1;
+  flex: 1;
 }
 
 .playlist-edit__preview-col {
-  @apply md:col-span-5 flex flex-col gap-4;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .playlist-edit__preview-label {
-  @apply text-sm font-bold text-gray-500 uppercase tracking-widest;
+  margin: 0;
+  color: #909399;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .08em;
 }
 
 .playlist-edit__sticky {
-  @apply sticky top-8;
+  position: sticky;
+  top: 24px;
 }
 
 .playlist-edit__preview-card {
-  @apply bg-gray-900 rounded-2xl overflow-hidden shadow-2xl border border-white/5;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
 }
 
 .playlist-edit__preview-card-media {
-  @apply aspect-square relative overflow-hidden;
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
 }
 
 .playlist-edit__preview-card-img {
-  @apply w-full h-full object-cover transition-transform duration-500;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform .45s ease;
 }
 
 .playlist-edit__preview-card:hover .playlist-edit__preview-card-img {
-  @apply scale-105;
+  transform: scale(1.04);
 }
 
 .playlist-edit__preview-card-overlay {
-  @apply absolute inset-0 bg-linear-to-t from-black/80 via-transparent to-transparent;
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgb(15 23 42 / 80%), transparent 65%);
 }
 
 .playlist-edit__preview-card-text {
-  @apply absolute bottom-4 left-4 right-4;
+  position: absolute;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  color: #fff;
 }
 
 .playlist-edit__preview-card-title {
-  @apply text-xl font-bold truncate;
+  margin: 0;
+  overflow: hidden;
+  font-size: 20px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .playlist-edit__preview-card-desc {
-  @apply text-sm text-gray-400 line-clamp-2 mt-1;
+  display: -webkit-box;
+  margin: 6px 0 0;
+  overflow: hidden;
+  color: rgb(255 255 255 / 78%);
+  font-size: 13px;
+  line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .playlist-edit__preview-card-footer {
-  @apply p-4 bg-gray-800/50 flex justify-between items-center;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  background: #fff;
 }
 
 .playlist-edit__preview-user {
-  @apply flex items-center gap-2;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .playlist-edit__preview-avatar {
-  @apply bg-blue-600;
+  background: #409eff;
 }
 
 .playlist-edit__preview-username {
-  @apply text-xs text-gray-300;
+  color: #606266;
+  font-size: 12px;
 }
 
 .playlist-edit__preview-badge {
-  @apply text-[10px] text-gray-500;
+  color: #909399;
+  font-size: 11px;
+}
+
+@media (min-width: 768px) {
+  .playlist-edit__layout {
+    grid-template-columns: minmax(0, 7fr) minmax(280px, 5fr);
+  }
 }
 </style>
