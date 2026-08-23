@@ -136,7 +136,8 @@ request.interceptors.response.use(
             router.push({ path: '/login', query: { redirect: router.currentRoute.value.fullPath } })
           }
         } else if (!error.config?.silent) {
-          ElMessage.error(message)
+          ElMessage.error("请登录")
+          router.push({path: 'login'})
         }
       }      //非401错误：集中显示错误信息，再抛出错误待调用方处理
       else {

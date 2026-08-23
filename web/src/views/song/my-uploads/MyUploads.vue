@@ -21,24 +21,17 @@
         </div>
 
         <div class="page__table">
-            <el-table
-                v-loading="loading"
-                :data="songs"
-                height="100%"
-                class="uploads-table"
-                element-loading-background="rgba(255, 255, 255, 0.72)"
-            >
-                <el-table-column label="歌曲" min-width="42%" show-overflow-tooltip>
+            <el-table v-loading="loading" :data="songs" height="100%" class="uploads-table"
+                element-loading-background="rgba(255, 255, 255, 0.72)" ref="uploadsTabelRef">
+                <el-table-column label="歌曲" min-width="36%" show-overflow-tooltip>
                     <template #default="{ row }">
                         <div class="uploads-table__song">
-                            <el-image
-                                v-if="row.song_cover_url"
-                                :src="getImageUrl(row.song_cover_url)"
-                                class="uploads-table__cover"
-                                fit="cover"
-                            />
+                            <el-image v-if="row.song_cover_url" :src="getImageUrl(row.song_cover_url)"
+                                class="uploads-table__cover" fit="cover" />
                             <div v-else class="uploads-table__cover uploads-table__cover--fallback">
-                                <el-icon><Mic /></el-icon>
+                                <el-icon>
+                                    <Mic />
+                                </el-icon>
                             </div>
                             <span class="uploads-table__title">{{ row.song_title }}</span>
                         </div>
@@ -53,12 +46,14 @@
                     </template>
                 </el-table-column>
 
-                <el-table-column label="操作" width="96" align="right">
+                <el-table-column label="操作" width="168" align="right">
                     <template #default="{ row }">
                         <el-tooltip content="编辑歌曲" placement="top">
-                            <el-button link type="primary" class="uploads-table__edit" @click="goToSongEdit(row as EditableUploadSong)">
-                                <el-icon><EditPen /></el-icon>
-                                编辑
+                            <el-button link type="primary" class="uploads-table__edit"
+                                @click="goToSongEdit(row as EditableUploadSong)">
+                                <el-icon>
+                                    <EditPen />
+                                </el-icon>
                             </el-button>
                         </el-tooltip>
                     </template>
@@ -73,13 +68,8 @@
         </div>
 
         <div class="page__pagination">
-            <AppPagination
-                :current="pagination.state.current"
-                :page-size="pagination.state.pageSize"
-                :total="pagination.state.total"
-                :page-sizes="[10, 20, 50]"
-                @page-change="changePage"
-            />
+            <AppPagination :current="pagination.state.current" :page-size="pagination.state.pageSize"
+                :total="pagination.state.total" :page-sizes="[10, 20, 50]" @page-change="handleChangePage" />
         </div>
 
     </div>
@@ -88,7 +78,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'MyUploadsPage' })
 import { useRouter } from 'vue-router';
-import { onMounted } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useSongStore, type EditableUploadSong } from '@/stores/song';
 import { AppPagination } from '@/common';
 import { useMyUploads } from './composables/use-my-uploads';
@@ -100,10 +90,22 @@ const songStore = useSongStore();
 
 const { songs, loading, pagination, changePage, load } = useMyUploads();
 
+const uploadsTabelRef = ref<HTMLElement | null>(null)
+
 const goToSongEdit = (song: EditableUploadSong) => {
     songStore.setEditingSong(song);
     router.push(`/user-uploads/${song.song_id}/edit`);
 };
+
+const handleChangePage = async (page: number, pageSize: number) => {
+    await changePage(page, pageSize)
+    await load()
+
+    uploadsTabelRef.value?.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    })
+}
 
 onMounted(load);
 </script>

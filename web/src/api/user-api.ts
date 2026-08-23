@@ -2,6 +2,7 @@ import type { IAxiosRes, IUser } from '@/types'
 import request from './axios'
 import { tokenStorage, userStorage } from '@/utils/storage'
 import { encryptPassword } from '@/utils/crypto'
+import type { AxiosResponse } from 'axios'
 
 export interface RegisterRequest {
   user_name: string
@@ -56,7 +57,9 @@ async function logout() {
 
 /** 获取当前用户头像地址（silent：失败不集中弹错，由调用方处理）。 */
 async function getUserCover() {
-  const res = await request.get<never, IAxiosRes<UserCoverResponse>>('/users/cover', { silent: true })
+  const res = await request.get<never, IAxiosRes<UserCoverResponse>>('/users/cover', {
+    silent: true,
+  })
   return { success: res.success, user_cover_url: res.data.user_cover_url }
 }
 
@@ -66,4 +69,9 @@ async function editUserProfile(formdata: FormData) {
   return { success: true, ...res.data }
 }
 
-export const userApi = { login, logout, register, editUserProfile, getUserCover }
+// 验证用户是否登录以及token是否到期
+async function authUser() {
+  const res = await request.get<AxiosResponse, IAxiosRes<null>>('/users/auth')
+  return { success: true, message: res.message }
+}
+export const userApi = { login, logout, register, editUserProfile, getUserCover, authUser }

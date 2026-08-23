@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, ref, watch } from 'vue'
 import { debounce } from 'lodash-es'
 import { Search } from '@element-plus/icons-vue'
 import type { ISong } from '@/types'
@@ -56,7 +56,13 @@ watch(() => props.open, (val) => {
   if (val) {
     songSearchQuery.value = ''
     searchResults.value = []
+  } else {
+    debouncedSearch.cancel()
   }
+})
+
+onBeforeUnmount(() => {
+  debouncedSearch.cancel()
 })
 </script>
 

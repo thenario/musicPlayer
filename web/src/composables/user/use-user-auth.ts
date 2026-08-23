@@ -1,7 +1,7 @@
 import type { Ref } from 'vue'
 import { userApi, type RegisterRequest } from '@/api/user-api'
 import type { IUser } from '@/types'
-import  { useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 
 interface UserAuthContext {
   user: Ref<IUser | null>
@@ -10,7 +10,7 @@ interface UserAuthContext {
   clearSession: () => void
 }
 
-const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
+const errorMessage = (error: unknown) => (error instanceof Error ? error.message : '请求失败')
 
 /** Owns account API calls while receiving state mutation callbacks from the store. */
 export function createUserAuth(ctx: UserAuthContext) {
@@ -18,7 +18,7 @@ export function createUserAuth(ctx: UserAuthContext) {
   const fetchUserCoverUrl = async () => {
     try {
       const response = await userApi.getUserCover()
-      router.push({name : 'login'})
+      router.push({ name: 'login' })
       ctx.userCoverUrl.value = response.user_cover_url
     } catch (error) {
       console.error(error)
@@ -51,6 +51,7 @@ export function createUserAuth(ctx: UserAuthContext) {
   const logout = async () => {
     try {
       const response = await userApi.logout()
+      router.replace({ path: '/login' })
       return { success: true, message: response.message }
     } catch (error: unknown) {
       console.error(error)
@@ -60,5 +61,15 @@ export function createUserAuth(ctx: UserAuthContext) {
     }
   }
 
-  return { login, register, logout, fetchUserCoverUrl }
+  const auth = async () => {
+    try {
+      const res = await userApi.authUser()
+      return { success: res.success,message: res.message   }
+    } catch (error: unknown) {
+      console.log(error)
+      return { success: false, message: "认证失败" }
+    }
+  }
+
+  return { login, register, logout, fetchUserCoverUrl, auth }
 }

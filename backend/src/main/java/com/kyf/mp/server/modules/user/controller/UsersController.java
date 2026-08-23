@@ -79,4 +79,9 @@ public class UsersController {
         return ResultModel.success(userService.getUserCoverUrl(userId));
     }
 
+    @GetMapping("/auth")
+    public ResultModel<Void> authentication() {
+        return ResultModel.success(null);
+    }
+
 }

@@ -31,7 +31,7 @@ export function useSongList(defaultPageSize = SONG_PAGE_SIZE) {
 
   const changePage = (page: number, pageSize: number) => {
     pagination.change(page, pageSize)
-    load()
+    return load()
   }
 
   /** Search/reset returns to the first page. */

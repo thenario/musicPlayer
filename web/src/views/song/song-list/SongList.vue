@@ -10,23 +10,13 @@
     </div>
 
     <div class="page__table">
-      <SongTable
-        :songs="songs"
-        :loading="loading"
-        :current-song-id="currentSong?.song_id"
-        @play-now="handlePlayNow"
-        @play-next="handlePlayNext"
-      />
+      <SongTable ref="songTableRef" :songs="songs" :loading="loading" :current-song-id="currentSong?.song_id" @play-now="handlePlayNow"
+        @play-next="handlePlayNext" />
     </div>
 
     <div class="page__pagination">
-      <AppPagination
-        :current="pagination.state.current"
-        :page-size="pagination.state.pageSize"
-        :total="pagination.state.total"
-        :page-sizes="[15, 30, 50]"
-        @page-change="changePage"
-      />
+      <AppPagination :current="pagination.state.current" :page-size="pagination.state.pageSize"
+        :total="pagination.state.total" :page-sizes="[15, 30, 50]" @page-change="handlePageChange" />
     </div>
 
   </div>
@@ -34,7 +24,7 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'SongListPage' })
-import { onMounted } from 'vue'
+import { nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { debounce } from 'lodash-es'
 import { Search } from '@element-plus/icons-vue'
@@ -48,6 +38,8 @@ const playerStore = usePlayerStore()
 const { currentSong } = storeToRefs(playerStore)
 
 const { songs, searchKeyword, loading, pagination, changePage, load } = useSongList()
+
+const songTableRef = ref<InstanceType<typeof SongTable> | null>(null)
 
 const handlePlayNow = async (song: ISong) => {
   await playerStore.playSong(song, "now")
@@ -65,7 +57,18 @@ const debouncedSearch = debounce(() => {
   load()
 }, 500)
 
+const handlePageChange = async (page: number, pageSize: number) => {
+  await changePage(page, pageSize)
+  await nextTick()
+
+  songTableRef.value?.scrollToTop()
+}
+
 onMounted(load)
+
+onBeforeUnmount(() => {
+  debouncedSearch.cancel()
+})
 </script>
 
 <style scoped>

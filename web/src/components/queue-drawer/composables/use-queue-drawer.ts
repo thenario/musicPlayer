@@ -1,4 +1,4 @@
-import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '@/stores/player'
 import { sameId } from '@/utils/format'
@@ -14,6 +14,7 @@ export function useQueueDrawer() {
   const previewQueueId = ref<number | string>(-1)
   const previewData = ref<IQueue | null>(null)
   const previewLoading = ref(false)
+  let scrollTimerId: ReturnType<typeof window.setTimeout> | undefined
 
   const handleTabChange = (tab: string) => {
     activeTab.value = tab
@@ -101,12 +102,25 @@ export function useQueueDrawer() {
   }
 
   watch([isQueueVisible, () => currentSong.value?.song_id], () => {
-    if (isQueueVisible.value) setTimeout(scrollToCurrent, 250)
+    if (scrollTimerId !== undefined) {
+      window.clearTimeout(scrollTimerId)
+      scrollTimerId = undefined
+    }
+    if (isQueueVisible.value) {
+      scrollTimerId = window.setTimeout(() => {
+        scrollTimerId = undefined
+        void scrollToCurrent()
+      }, 250)
+    }
   })
 
   onMounted(() => {
     playerStore.fetchCurrentQueue()
     playerStore.fetchUserQueues()
+  })
+
+  onBeforeUnmount(() => {
+    if (scrollTimerId !== undefined) window.clearTimeout(scrollTimerId)
   })
 
   return {

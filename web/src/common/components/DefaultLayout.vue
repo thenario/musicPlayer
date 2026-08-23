@@ -39,7 +39,7 @@
                             </el-tooltip>
                         </div>
                     </div>
-                    <el-menu-item class="sidebar-menu-item" index="/home">
+                    <el-menu-item class="sidebar-menu-item" index="/songs">
                         <el-icon class="el-menu-item-icon">
                             <House />
                         </el-icon>
@@ -67,7 +67,7 @@
                         <el-icon size="16px">
                             <User />
                         </el-icon>
-                        <span v-if="!isCollapse" style="color:black;">{{ user ? user.user_name : "无昵称" }}</span>
+                        <span v-if="!isCollapse" style="color:black;">{{ user ? user.user_name : "未登录" }}</span>
                     </div>
                     <template #dropdown>
                         <el-dropdown-menu>
@@ -84,7 +84,7 @@
                                 </el-tooltip>
 
                             </el-dropdown-item>
-                            <el-dropdown-item command="logout">
+                            <el-dropdown-item command="logout" v-if="user">
                                 <el-tooltip :disabled="!isCollapse" content="登出" placement="right">
                                     <div>
                                         <el-icon>
@@ -92,6 +92,18 @@
                                         </el-icon>
                                         <span v-if="!isCollapse">
                                             登出
+                                        </span>
+                                    </div>
+                                </el-tooltip>
+                            </el-dropdown-item>
+                            <el-dropdown-item command="login" v-else-if="!user">
+                                <el-tooltip :disabled="!isCollapse" content="登录" placement="right">
+                                    <div>
+                                        <el-icon>
+                                            <Lock />
+                                        </el-icon>
+                                        <span v-if="!isCollapse">
+                                            登录
                                         </span>
                                     </div>
                                 </el-tooltip>
@@ -114,7 +126,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Document, Expand, Fold, House, List, Star, SwitchButton, User } from '@element-plus/icons-vue';
+import { Document, Expand, Fold, House, List, Lock, Star, SwitchButton, User } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { usePlayerStore } from '@/stores/player'
 import { storeToRefs } from 'pinia';
@@ -159,7 +171,14 @@ const handleCommand = async (command: string) => {
             return
         }
         case "user-profile":
-            { router.push({ name: 'user-profile' }) }
+            {
+                router.push({ name: 'user-profile' })
+                return
+            }
+        case "login": {
+            router.push({ path: '/login' })
+            return
+        }
     }
 }
 
@@ -304,7 +323,7 @@ const handleCommand = async (command: string) => {
     align-items: center;
 }
 
-.el-main-content{
+.el-main-content {
     padding: 0 0 0 0;
 }
 </style>

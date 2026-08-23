@@ -31,7 +31,7 @@ export function useMyUploads(defaultPageSize = UPLOAD_PAGE_SIZE) {
 
   const changePage = (page: number, pageSize: number) => {
     pagination.change(page, pageSize)
-    load()
+    return load()
   }
 
   return { songs, loading: task.loading, pagination, load, changePage }

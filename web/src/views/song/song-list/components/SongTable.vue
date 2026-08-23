@@ -1,5 +1,5 @@
 <template>
-  <el-table v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.72)" :data="songs" style="width: 100%"
+  <el-table ref="tableRef" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.72)" :data="songs" style="width: 100%"
     height="100%" row-class-name="song-row" @row-dblclick="onRowDblClick" class="all-songs-table">
     <el-table-column label="标题" min-width="32%" show-overflow-tooltip>
       <template #default="{ row }">
@@ -49,6 +49,8 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import type { TableInstance } from 'element-plus'
 import { Headset, VideoPlay, List } from '@element-plus/icons-vue'
 import type { ISong } from '@/types'
 import { formatDuration, getImageUrl, sameId } from '@/utils/format'
@@ -64,7 +66,13 @@ const emit = defineEmits<{
   (e: 'play-next', song: ISong): void
 }>()
 
+const tableRef = ref<TableInstance>()
+
 const onRowDblClick = (row: ISong) => emit('play-now', row)
+
+const scrollToTop = () => tableRef.value?.setScrollTop(0)
+
+defineExpose({ scrollToTop })
 </script>
 
 <style scoped>
