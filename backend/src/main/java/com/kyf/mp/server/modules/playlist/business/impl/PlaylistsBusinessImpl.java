@@ -23,6 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.file.UploadFileValidator;
+import com.kyf.mp.server.common.file.StoragePathResolver;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.playlist.business.PlaylistsBusiness;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
@@ -74,7 +75,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             String extension = UploadFileValidator.validateImage(file);
             String newFileName = UUID.randomUUID() + "-" + System.currentTimeMillis() + "." + extension;
 
-            savedFile = new File(playlistCoverPath, newFileName);
+            savedFile = StoragePathResolver.resolveFile(playlistCoverPath, newFileName);
             if (!savedFile.getParentFile().exists()) {
                 Files.createDirectories(savedFile.getParentFile().toPath());
             }
@@ -155,7 +156,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         }
         String extension = UploadFileValidator.validateImage(file);
         String fileName = UUID.randomUUID() + "-" + System.currentTimeMillis() + "." + extension;
-        File savedFile = new File(playlistCoverPath, fileName);
+        File savedFile = StoragePathResolver.resolveFile(playlistCoverPath, fileName);
         Files.createDirectories(savedFile.getParentFile().toPath());
         file.transferTo(savedFile);
         return new CoverUpload(fileName, savedFile);
@@ -356,7 +357,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     private void cleanupPlaylistCover(String coverUrl) {
         try {
             String fileName = coverUrl.substring(coverUrl.lastIndexOf("/") + 1);
-            File file = new File(playlistCoverPath, fileName);
+            File file = StoragePathResolver.resolveFile(playlistCoverPath, fileName);
             Files.deleteIfExists(file.toPath());
         } catch (Exception e) {
             log.warn("物理文件清理失败: {}", e.getMessage());

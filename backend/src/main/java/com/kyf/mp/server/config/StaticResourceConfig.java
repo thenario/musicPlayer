@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-import java.nio.file.Path;
+import com.kyf.mp.server.common.file.StoragePathResolver;
 
 @Configuration
 public class StaticResourceConfig implements WebMvcConfigurer {
@@ -32,7 +32,7 @@ public class StaticResourceConfig implements WebMvcConfigurer {
 
     /** 磁盘路径 -> Spring 的 file: URL（兼容 Windows/Linux）。 */
     private String toFileUrl(String path) {
-        String fileUrl = Path.of(path).toUri().toString();
+        String fileUrl = StoragePathResolver.resolveDirectory(path).toUri().toString();
         return fileUrl.endsWith("/") ? fileUrl : fileUrl + "/";
     }
 }

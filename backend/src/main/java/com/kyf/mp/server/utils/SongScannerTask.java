@@ -5,6 +5,7 @@ import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.user.entity.Users;
 import com.kyf.mp.server.modules.user.mapper.UsersMapper;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
+import com.kyf.mp.server.common.file.StoragePathResolver;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,7 +98,8 @@ public class SongScannerTask {
     }
 
     private File[] scanSongFiles() {
-        File[] files = new File(songPath).listFiles((d, name) -> isSupportedSong(name));
+        File[] files = StoragePathResolver.resolveDirectory(songPath).toFile()
+                .listFiles((d, name) -> isSupportedSong(name));
         if (files == null) {
             log.warn("Song directory does not exist or is not readable, path={}", songPath);
         }
@@ -222,7 +224,7 @@ public class SongScannerTask {
             if (artwork != null) {
                 byte[] data = artwork.getBinaryData();
                 String coverName = "auto-" + UUID.randomUUID().toString().substring(0, 8) + ".jpg";
-                File coverFile = new File(songCoverPath, coverName);
+                File coverFile = StoragePathResolver.resolveFile(songCoverPath, coverName);
                 if (!coverFile.getParentFile().exists()) {
                     boolean created = coverFile.getParentFile().mkdirs();
                     log.info("创建封面目录: {}, 结果: {}", coverFile.getParentFile().getAbsolutePath(), created);

@@ -23,6 +23,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.file.UploadFileValidator;
+import com.kyf.mp.server.common.file.StoragePathResolver;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.song.business.SongsBusiness;
 import com.kyf.mp.server.modules.song.dto.EditSongDTO;
@@ -145,8 +146,8 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
         String safeName = (finalArtist + " - " + finalTitle).replaceAll("[\\\\/:*?\"<>|]", "_");
         String audioName = safeName + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + audioExt;
         String coverName = "cover-" + UUID.randomUUID().toString().substring(0, 8) + "." + coverExt;
-        File audioTarget = new File(songPath, audioName);
-        File coverTarget = new File(songCoverPath, coverName);
+        File audioTarget = StoragePathResolver.resolveFile(songPath, audioName);
+        File coverTarget = StoragePathResolver.resolveFile(songCoverPath, coverName);
         Files.createDirectories(audioTarget.getParentFile().toPath());
         Files.createDirectories(coverTarget.getParentFile().toPath());
         audioFile.transferTo(audioTarget);
@@ -264,7 +265,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
         }
         String extension = UploadFileValidator.validateImage(newCover);
         String fileName = "cover-" + UUID.randomUUID().toString().substring(0, 8) + "." + extension;
-        File destFile = new File(songCoverPath, fileName);
+        File destFile = StoragePathResolver.resolveFile(songCoverPath, fileName);
         try {
             Files.createDirectories(destFile.getParentFile().toPath());
             newCover.transferTo(destFile);
@@ -283,7 +284,7 @@ public class SongsBusinessImpl extends BaseBusinessImpl<SongsMapper, Songs> impl
             return;
         }
         String fileName = oldUrl.substring(oldUrl.lastIndexOf("/") + 1);
-        cleanupFile(new File(songCoverPath, fileName));
+        cleanupFile(StoragePathResolver.resolveFile(songCoverPath, fileName));
         log.info("用户ID: {} 修改歌曲，已清理旧封面: {}", userId, fileName);
     }
 

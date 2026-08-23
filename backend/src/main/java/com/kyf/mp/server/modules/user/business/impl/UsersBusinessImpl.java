@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.common.file.UploadFileValidator;
+import com.kyf.mp.server.common.file.StoragePathResolver;
 import com.kyf.mp.server.modules.user.business.UsersBusiness;
 import com.kyf.mp.server.modules.user.dto.EditUserDTO;
 import com.kyf.mp.server.modules.user.entity.Users;
@@ -93,7 +94,7 @@ public class UsersBusinessImpl extends BaseBusinessImpl<UsersMapper, Users> impl
     }
 
     private File prepareCoverDirectory() {
-        File directory = new File(userCoverPath);
+        File directory = StoragePathResolver.resolveDirectory(userCoverPath).toFile();
         if (!directory.exists()) {
             try {
                 Files.createDirectories(directory.toPath());
