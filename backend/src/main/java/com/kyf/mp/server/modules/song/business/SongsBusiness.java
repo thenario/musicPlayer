@@ -8,7 +8,7 @@ import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
 import com.kyf.mp.server.modules.song.vo.LyricsVO;
 
-/**                                             
+/**
  * 歌曲数据访问层：复杂数据库操作在此定义。
  */
 public interface SongsBusiness extends BaseBusiness<Songs> {

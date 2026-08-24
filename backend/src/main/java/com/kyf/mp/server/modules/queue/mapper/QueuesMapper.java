@@ -12,5 +12,4 @@ import com.kyf.mp.server.modules.queue.entity.Queues;
  * @since 2026-04-05
  */
 public interface QueuesMapper extends BaseMapper<Queues> {
-
 }

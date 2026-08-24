@@ -14,5 +14,4 @@ import com.kyf.mp.server.modules.queue.service.PlayStateService;
  */
 @Service
 public class PlayStateServiceImpl implements PlayStateService {
-
 }

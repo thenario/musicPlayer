@@ -234,10 +234,12 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
             if (existingQueues != null && existingQueues.size() >= maxQueuesPerUser) {
                 Queues removableQueue = existingQueues.stream()
-                        .filter(queue -> playState == null || !Objects.equals(queue.getQueueId(), playState.getCurrentQueueId()))
+                        .filter(queue -> playState == null
+                                || !Objects.equals(queue.getQueueId(), playState.getCurrentQueueId()))
                         .findFirst()
                         .orElseThrow(() -> new BusinessException(409, "当前播放队列不可自动删除"));
-                queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>().eq(QueueItems::getQueueId, removableQueue.getQueueId()));
+                queueItemsMapper.delete(
+                        new LambdaQueryWrapper<QueueItems>().eq(QueueItems::getQueueId, removableQueue.getQueueId()));
                 queuesMapper.deleteById(removableQueue.getQueueId());
             }
             Playlists playlist = playlistsMapper.selectById(playlistId);
@@ -447,6 +449,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         }
         queueCustomMapper.decrementSongCount(itemQueueId);
     }
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO dto) {

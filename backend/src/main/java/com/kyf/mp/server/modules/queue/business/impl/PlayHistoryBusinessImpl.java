@@ -12,5 +12,5 @@ import com.kyf.mp.server.modules.queue.mapper.PlayHistoryMapper;
  */
 @Service
 public class PlayHistoryBusinessImpl extends BaseBusinessImpl<PlayHistoryMapper, PlayHistory>
-        implements PlayHistoryBusiness {
+                implements PlayHistoryBusiness {
 }

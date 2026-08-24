@@ -14,6 +14,5 @@ public class ReturnQueue {
     private Boolean isCurrent;
     private LocalDateTime createdDate;
     private LocalDateTime updatedDate;
-
     private List<QueueItemVO> queueItems;
 }

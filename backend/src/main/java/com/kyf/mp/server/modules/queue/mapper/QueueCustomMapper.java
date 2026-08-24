@@ -9,7 +9,6 @@ import org.apache.ibatis.annotations.Param;
 import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
 import com.kyf.mp.server.modules.queue.vo.ReturnQueue;
 
-
 @Mapper
 public interface QueueCustomMapper {
     /**
@@ -21,7 +20,7 @@ public interface QueueCustomMapper {
 
     ReturnQueue selectQueueById(@Param("queueId") Long queueId, @Param("userId") Long userId);
 
-void moveItemPositionsToTemporary(@Param("queueId") Long queueId, @Param("pos") int pos);
+    void moveItemPositionsToTemporary(@Param("queueId") Long queueId, @Param("pos") int pos);
 
     void restoreShiftedItemPositions(@Param("queueId") Long queueId, @Param("pos") int pos);
 

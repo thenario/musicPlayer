@@ -12,5 +12,4 @@ import com.kyf.mp.server.modules.song.entity.Songs;
  * @since 2026-04-05
  */
 public interface SongsMapper extends BaseMapper<Songs> {
-
 }

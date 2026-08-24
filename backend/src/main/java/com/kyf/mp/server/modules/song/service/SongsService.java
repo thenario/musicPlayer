@@ -10,9 +10,15 @@ import com.kyf.mp.server.modules.song.vo.UploadsVO;
 
 public interface SongsService {
     GetSongsVO getSongsPage(Integer page, String keyword);
+
     LyricsVO getLyrics(Long songId);
-    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long userId, String title, String artist, String album, String lyrics);
+
+    void uploadSong(MultipartFile audioFile, MultipartFile coverFile, Long userId, String title, String artist,
+            String album, String lyrics);
+
     IPage<UploadsVO> getUploadSongs(Long userId, Integer page, Integer size);
+
     UploadsVO getUploadSong(Long userId, Long songId);
+
     void editUploadSong(EditSongDTO dto, Long userId, Long songID);
 }

@@ -12,7 +12,5 @@ public class QueueItemVO {
     private Integer queueItemPosition;
     private Long queueId;
     private LocalDateTime addedDate;
-
     private SongVO song;
-
 }

@@ -47,7 +47,6 @@ public class SongsController {
     }
 
     // 获取歌词
-
     @GetMapping("/{song_id}/lyrics")
     public ResultModel<LyricsVO> getLyrics(
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") @Min(value = 1, message = "Song ID must be positive") Long songId) {
@@ -80,6 +79,7 @@ public class SongsController {
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") @Min(value = 1, message = "Song ID must be positive") Long songId) {
         return ResultModel.success(songsService.getUploadSong(userId, songId));
     }
+
     @PatchMapping("/my-uploads/{song_id}")
     public ResultModel<Void> editUploadSong(EditSongDTO dto, @RequestAttribute("userId") Long userId,
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") @Min(value = 1, message = "Song ID must be positive") Long songId) {

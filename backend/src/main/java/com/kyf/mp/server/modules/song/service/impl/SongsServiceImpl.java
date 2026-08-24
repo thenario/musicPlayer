@@ -80,4 +80,5 @@ public class SongsServiceImpl implements SongsService {
         UploadsVO vo = new UploadsVO();
         BeanUtils.copyProperties(song, vo);
         return vo;
-    }}
+    }
+}

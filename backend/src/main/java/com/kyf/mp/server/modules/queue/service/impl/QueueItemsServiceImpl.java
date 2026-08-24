@@ -14,5 +14,4 @@ import com.kyf.mp.server.modules.queue.service.QueueItemsService;
  */
 @Service
 public class QueueItemsServiceImpl implements QueueItemsService {
-
 }

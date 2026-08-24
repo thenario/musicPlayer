@@ -12,5 +12,4 @@ import com.kyf.mp.server.modules.user.entity.Users;
  * @since 2026-04-05
  */
 public interface UsersMapper extends BaseMapper<Users> {
-
 }

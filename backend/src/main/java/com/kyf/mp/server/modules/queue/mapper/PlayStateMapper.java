@@ -12,5 +12,4 @@ import com.kyf.mp.server.modules.queue.entity.PlayState;
  * @since 2026-04-05
  */
 public interface PlayStateMapper extends BaseMapper<PlayState> {
-
 }

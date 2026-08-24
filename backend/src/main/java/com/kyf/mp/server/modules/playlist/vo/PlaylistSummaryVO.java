@@ -8,7 +8,6 @@ import lombok.Data;
 
 @Data
 public class PlaylistSummaryVO {
-
     private Long playlistId;
     private String playlistName;
     private String playlistCoverUrl;

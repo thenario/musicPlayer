@@ -12,5 +12,5 @@ import com.kyf.mp.server.modules.queue.mapper.QueueItemsMapper;
  */
 @Service
 public class QueueItemsBusinessImpl extends BaseBusinessImpl<QueueItemsMapper, QueueItems>
-        implements QueueItemsBusiness {
+                implements QueueItemsBusiness {
 }

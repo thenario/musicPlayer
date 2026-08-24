@@ -9,5 +9,4 @@ package com.kyf.mp.server.modules.queue.service;
  * @since 2026-04-05
  */
 public interface PlayStateService {
-
 }

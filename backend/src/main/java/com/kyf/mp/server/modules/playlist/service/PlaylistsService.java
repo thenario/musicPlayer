@@ -16,21 +16,21 @@ import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
  * @since 2026-04-05
  */
 public interface PlaylistsService {
-    PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
-            Long userId);
+        PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
+                        Long userId);
 
-    PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
-            String description, Long userId);
+        PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
+                        String description, Long userId);
 
-    void deletePlaylist(Long playlistId, Long userId);
+        void deletePlaylist(Long playlistId, Long userId);
 
-    MyPlaylistsVO getMyPlaylists(Long userId);
+        MyPlaylistsVO getMyPlaylists(Long userId);
 
-    PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId);
+        PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId);
 
-    void toggleLike(Long playlistId, Long userId, boolean isLike);
+        void toggleLike(Long playlistId, Long userId, boolean isLike);
 
-    AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId);
+        AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId);
 
-    void removeSongFromPlaylist(Long playlistId, Long songId, Long userId);
+        void removeSongFromPlaylist(Long playlistId, Long songId, Long userId);
 }
