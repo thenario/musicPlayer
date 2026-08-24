@@ -1,6 +1,8 @@
 package com.kyf.mp.server.modules.song.service.impl;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -37,6 +39,7 @@ public class SongsServiceImpl implements SongsService {
     }
 
     @Override
+    @Cacheable(cacheNames = "song-lyrics", key = "#songId")
     public LyricsVO getLyrics(Long songId) {
         return songsBusiness.getLyrics(songId);
     }
@@ -65,6 +68,7 @@ public class SongsServiceImpl implements SongsService {
     }
 
     @Override
+    @CacheEvict(cacheNames = "song-lyrics", key = "#songID")
     public void editUploadSong(EditSongDTO dto, Long userId, Long songID) {
         songsBusiness.editUploadSong(dto, userId, songID);
     }
