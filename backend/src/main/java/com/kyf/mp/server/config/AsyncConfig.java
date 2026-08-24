@@ -1,10 +1,10 @@
 package com.kyf.mp.server.config;
 
-import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.scheduling.annotation.EnableAsync;
 
+@EnableAsync
 @Configuration
-@EnableCaching
-public class RedisConfig {
-
+public class AsyncConfig {
+    
 }
