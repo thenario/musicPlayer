@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.business.BaseBusinessImpl;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
@@ -510,6 +511,15 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         if (queue == null) {
             throw new BusinessException(403, "队列不存在或无权访问");
         }
+
+        queuesMapper.update(null, new LambdaUpdateWrapper<Queues>()
+                .set(Queues::getCurrent, false)
+                .eq(Queues::getCreatorId, userId)
+                .ne(Queues::getQueueId, queueId));
+        queuesMapper.update(null, new LambdaUpdateWrapper<Queues>()
+                .set(Queues::getCurrent, true)
+                .eq(Queues::getQueueId, queueId)
+                .eq(Queues::getCreatorId, userId));
 
         QueueItems firstItem = queueItemsMapper.selectOne(new LambdaQueryWrapper<QueueItems>()
                 .eq(QueueItems::getQueueId, queueId)
