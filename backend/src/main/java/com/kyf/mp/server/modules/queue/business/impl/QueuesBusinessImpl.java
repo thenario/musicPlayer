@@ -1,6 +1,7 @@
 package com.kyf.mp.server.modules.queue.business.impl;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -198,7 +199,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                     .eq(QueueItems::getQueueId, queueId));
 
             queue.setSongCount(0);
-            queue.setUpdatedDate(LocalDateTime.now());
+            queue.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
             queuesMapper.updateById(queue);
 
             PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
