@@ -6,7 +6,7 @@ import com.kyf.mp.server.common.business.BaseBusiness;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
 import com.kyf.mp.server.modules.playlist.vo.AddSongToPlaylistVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
-import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
+import com.kyf.mp.server.modules.playlist.vo.PlaylistContentVO;
 
 /**
  * 歌单数据访问层：复杂数据库操作在此定义。
@@ -20,7 +20,11 @@ public interface PlaylistsBusiness extends BaseBusiness<Playlists> {
 
         void deletePlaylist(Long playlistId, Long userId);
 
-        PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId);
+        void assertCanViewPlaylist(Long playlistId, Long userId);
+
+        PlaylistContentVO getPlaylistContent(Long playlistId);
+
+        boolean isPlaylistLiked(Long playlistId, Long userId);
 
         void toggleLike(Long playlistId, Long userId, boolean isLike);
 

@@ -36,6 +36,7 @@ import com.kyf.mp.server.modules.playlist.mapper.UsersLikeplaylistsRelationMappe
 import com.kyf.mp.server.modules.playlist.mapper.UsersPlaylistsRelationMapper;
 import com.kyf.mp.server.modules.playlist.vo.AddSongToPlaylistVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
+import com.kyf.mp.server.modules.playlist.vo.PlaylistContentVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistSongVO;
 import com.kyf.mp.server.modules.song.entity.Songs;
@@ -215,12 +216,19 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
     }
 
     @Override
-    public PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId) {
+    public void assertCanViewPlaylist(Long playlistId, Long userId) {
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
         if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic()))
             throw new BusinessException(403, "无权访问此私密歌单");
+    }
+
+    @Override
+    public PlaylistContentVO getPlaylistContent(Long playlistId) {
+        Playlists playlist = baseMapper.selectById(playlistId);
+        if (playlist == null)
+            throw new BusinessException(404, "歌单不存在");
 
         List<SongsPlaylistsRelation> relations = songsPlaylistsRelationMapper.findByPlaylistId(playlistId);
 
@@ -248,16 +256,15 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             }
         }
 
-        boolean isLiked = false;
-        if (userId != null) {
-            isLiked = likeRelationMapper.countByUserAndPlaylist(userId, playlistId) > 0;
-        }
-
-        PlaylistDetailVO vo = new PlaylistDetailVO();
+        PlaylistContentVO vo = new PlaylistContentVO();
         vo.setPlaylist(playlist);
         vo.setSongs(songVOList);
-        vo.setIsLiked(isLiked);
         return vo;
+    }
+
+    @Override
+    public boolean isPlaylistLiked(Long playlistId, Long userId) {
+        return userId != null && likeRelationMapper.countByUserAndPlaylist(userId, playlistId) > 0;
     }
 
     @Override

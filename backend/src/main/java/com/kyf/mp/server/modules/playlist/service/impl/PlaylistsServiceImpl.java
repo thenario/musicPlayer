@@ -4,16 +4,21 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.modules.playlist.business.PlaylistsBusiness;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
+import com.kyf.mp.server.modules.playlist.service.PlaylistCacheService;
 import com.kyf.mp.server.modules.playlist.service.PlaylistsService;
 import com.kyf.mp.server.modules.playlist.vo.AddSongToPlaylistVO;
 import com.kyf.mp.server.modules.playlist.vo.MyPlaylistsVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
+import com.kyf.mp.server.modules.playlist.vo.PlaylistContentVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistSummaryVO;
 
@@ -32,25 +37,36 @@ import lombok.RequiredArgsConstructor;
 public class PlaylistsServiceImpl implements PlaylistsService {
 
     private final PlaylistsBusiness playlistsBusiness;
+    private final PlaylistCacheService playlistCacheService;
 
     @Override
+    @CacheEvict(cacheNames = "user-playlists", key = "#userId")
     public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
             Long userId) {
         return playlistsBusiness.createPlaylist(file, name, description, userId);
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "playlist-detail", key = "#playlistId"),
+            @CacheEvict(cacheNames = "user-playlists", key = "#userId")
+    })
     public PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
             String description, Long userId) {
         return playlistsBusiness.editPlaylist(file, playlistId, name, description, userId);
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "playlist-detail", key = "#playlistId"),
+            @CacheEvict(cacheNames = "user-playlists", key = "#userId")
+    })
     public void deletePlaylist(Long playlistId, Long userId) {
         playlistsBusiness.deletePlaylist(playlistId, userId);
     }
 
     @Override
+    @Cacheable(cacheNames = "user-playlists", key = "#userId")
     public MyPlaylistsVO getMyPlaylists(Long userId) {
         if (userId == null)
             throw new BusinessException(401, "请先登录");
@@ -74,20 +90,36 @@ public class PlaylistsServiceImpl implements PlaylistsService {
 
     @Override
     public PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId) {
-        return playlistsBusiness.getPlaylistDetail(playlistId, userId);
+        playlistsBusiness.assertCanViewPlaylist(playlistId, userId);
+        PlaylistContentVO content = playlistCacheService.getPlaylistContent(playlistId);
+
+        PlaylistDetailVO vo = new PlaylistDetailVO();
+        vo.setPlaylist(content.getPlaylist());
+        vo.setSongs(content.getSongs());
+        vo.setIsLiked(playlistsBusiness.isPlaylistLiked(playlistId, userId));
+        return vo;
     }
 
     @Override
+    @CacheEvict(cacheNames = "playlist-detail", key = "#playlistId")
     public void toggleLike(Long playlistId, Long userId, boolean isLike) {
         playlistsBusiness.toggleLike(playlistId, userId, isLike);
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "playlist-detail", key = "#playlistId"),
+            @CacheEvict(cacheNames = "user-playlists", key = "#userId")
+    })
     public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId) {
         return playlistsBusiness.addSongToPlaylist(playlistId, songId, userId);
     }
 
     @Override
+    @Caching(evict = {
+            @CacheEvict(cacheNames = "playlist-detail", key = "#playlistId"),
+            @CacheEvict(cacheNames = "user-playlists", key = "#userId")
+    })
     public void removeSongFromPlaylist(Long playlistId, Long songId, Long userId) {
         playlistsBusiness.removeSongFromPlaylist(playlistId, songId, userId);
     }
