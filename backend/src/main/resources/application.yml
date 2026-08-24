@@ -78,3 +78,11 @@ auth:
     window-seconds: ${LOGIN_WINDOW_SECONDS:900}
 queue:
   max-per-user: ${QUEUE_MAX_PER_USER:5}
+
+springdoc:
+  swagger-ui:
+    path: /docs
+    tags-sorter: alpha
+    operations-sorter: method
+    display-request-duration: true
+    doc-expansion: none
