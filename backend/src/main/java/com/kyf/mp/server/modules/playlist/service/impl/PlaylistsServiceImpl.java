@@ -96,7 +96,7 @@ public class PlaylistsServiceImpl implements PlaylistsService {
         PlaylistDetailVO vo = new PlaylistDetailVO();
         vo.setPlaylist(content.getPlaylist());
         vo.setSongs(content.getSongs());
-        vo.setIsLiked(playlistsBusiness.isPlaylistLiked(playlistId, userId));
+        vo.setLiked(playlistsBusiness.isPlaylistLiked(playlistId, userId));
         return vo;
     }
 

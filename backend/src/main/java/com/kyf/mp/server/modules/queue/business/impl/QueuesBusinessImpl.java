@@ -246,7 +246,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             if (playlist == null) {
                 throw new BusinessException(404, "歌单不存在");
             }
-            if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic())) {
+            if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getPubliclyVisible())) {
                 throw new BusinessException(403, "无权访问此私密歌单");
             }
             String queueName = playlist.getPlaylistName();
@@ -254,7 +254,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             Queues newQueue = new Queues();
             newQueue.setQueueName(queueName);
             newQueue.setCreatorId(userId);
-            newQueue.setIsCurrent(true);
+            newQueue.setCurrent(true);
             newQueue.setSongCount(0);
             queuesMapper.insert(newQueue);
             Long newQueueId = newQueue.getQueueId();
@@ -410,7 +410,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     @AllArgsConstructor
     private static class QueueContext {
         private Long finalQueueId;
-        private boolean isNewQueue;
+        private boolean newQueue;
     }
 
     @Override

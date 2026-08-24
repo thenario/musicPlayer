@@ -27,7 +27,7 @@ public class UpdateCurrentQueueStateDTO {
     private Integer currentProgress;
 
     @JsonProperty("is_playing")
-    private Boolean isPlaying;
+    private Boolean playing;
 
     @JsonProperty("playmode")
     @Pattern(regexp = "sequential|repeat_all|repeat_one|shuffle", message = "播放模式不合法")

@@ -1,7 +1,9 @@
 package com.kyf.mp.server.modules.playlist.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import lombok.Getter;
@@ -40,7 +42,9 @@ public class Playlists implements Serializable {
 
     private Integer playCount;
 
-    private Boolean isPublic;
+    @TableField("is_public")
+    @JsonProperty("is_public")
+    private Boolean publiclyVisible;
 
     private String description;
 }

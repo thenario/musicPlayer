@@ -92,7 +92,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             playlist.setSongCount(0);
             playlist.setLikeCount(0);
             playlist.setPlayCount(0);
-            playlist.setIsPublic(true);
+            playlist.setPubliclyVisible(true);
 
             this.save(playlist);
 
@@ -220,7 +220,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
         Playlists playlist = baseMapper.selectById(playlistId);
         if (playlist == null)
             throw new BusinessException(404, "歌单不存在");
-        if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getIsPublic()))
+        if (!Objects.equals(playlist.getCreatorId(), userId) && !Boolean.TRUE.equals(playlist.getPubliclyVisible()))
             throw new BusinessException(403, "无权访问此私密歌单");
     }
 

@@ -62,7 +62,7 @@ class QueuesBusinessImplTest {
         Playlists playlist = new Playlists();
         playlist.setPlaylistName("My playlist");
         playlist.setCreatorId(7L);
-        playlist.setIsPublic(false);
+        playlist.setPubliclyVisible(false);
 
         SongsPlaylistsRelation first = relation(11L, 1);
         SongsPlaylistsRelation second = relation(12L, 2);
