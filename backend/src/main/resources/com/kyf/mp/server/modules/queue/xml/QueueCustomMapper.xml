@@ -62,8 +62,8 @@
         qi.queue_item_id, qi.queue_item_position, qi.queue_id as qi_queue_id, qi.added_date,
         s.song_id, s.song_title, s.song_cover_url, s.song_url, s.artist, s.album FROM play_state ps
         LEFT JOIN queues q ON ps.user_id = q.creator_id AND ps.current_queue_id = q.queue_id LEFT
-        JOIN queue_items qi ON q.queue_id = qi.queue_id LEFT JOIN songs s ON qi.song_id = s.song_id WHERE
-        ps.user_id = #{userId} ORDER BY qi.queue_item_position ASC </select>
+        JOIN queue_items qi ON q.queue_id = qi.queue_id LEFT JOIN songs s ON qi.song_id = s.song_id
+        WHERE ps.user_id = #{userId} ORDER BY qi.queue_item_position ASC </select>
 
     <select id="selectMyQueues" resultMap="ReturnQueueMap"> SELECT q.queue_id, q.queue_name,
         q.creator_id, q.song_count, q.is_current, q.created_date, q.updated_date, qi.queue_item_id,
@@ -79,16 +79,20 @@
         q.queue_id = qi.queue_id LEFT JOIN songs s ON qi.song_id = s.song_id WHERE q.queue_id =
         #{queueId} AND q.creator_id = #{userId} ORDER BY qi.queue_item_position ASC </select>
 
-<update id="moveItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position = queue_item_position + 1000000 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} </update>
+    <update id="moveItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position =
+        queue_item_position + 1000000 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} </update>
 
-    <update id="restoreShiftedItemPositions"> UPDATE queue_items SET queue_item_position = queue_item_position - 999999 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} + 1000000 </update>
+    <update id="restoreShiftedItemPositions"> UPDATE queue_items SET queue_item_position =
+        queue_item_position - 999999 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} +
+        1000000 </update>
 
     <update id="incrementSongCount"> UPDATE queues SET song_count = song_count + 1 WHERE queue_id =
         #{queueId} </update>
 
     <select id="selectItemDetailForDelete" resultType="map"> SELECT qi.queue_id,
         qi.queue_item_position, qi.song_id FROM queue_items qi JOIN queues q ON qi.queue_id =
-        q.queue_id WHERE qi.queue_item_id = #{itemId} AND q.creator_id = #{userId} ORDER BY q.updated_date DESC, qi.queue_item_position ASC </select>
+        q.queue_id WHERE qi.queue_item_id = #{itemId} AND q.creator_id = #{userId} ORDER BY
+        q.updated_date DESC, qi.queue_item_position ASC </select>
 
     <update id="shiftPositionsDown"> UPDATE queue_items SET queue_item_position =
         queue_item_position - 1 WHERE queue_id = #{queueId} AND queue_item_position > #{pos} </update>
