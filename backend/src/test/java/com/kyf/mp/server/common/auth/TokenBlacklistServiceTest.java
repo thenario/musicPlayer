@@ -11,6 +11,7 @@ import com.kyf.mp.server.utils.JwtUtils;
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -38,6 +39,7 @@ class TokenBlacklistServiceTest {
     }
 
     @Test
+    @DisplayName("注销有效令牌时，应以哈希键和有效期写入黑名单")
     void revokingValidTokenStoresHashedKeyWithTtl() {
         String token = jwtUtils.createToken(1L, "tester");
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -52,6 +54,7 @@ class TokenBlacklistServiceTest {
     }
 
     @Test
+    @DisplayName("Redis 存在黑名单标记时，应识别令牌已被撤销")
     void recognizesRedisBlacklistMarker() {
         String token = jwtUtils.createToken(1L, "tester");
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
@@ -64,6 +67,7 @@ class TokenBlacklistServiceTest {
     }
 
     @Test
+    @DisplayName("撤销无效令牌时，不应访问 Redis")
     void ignoresInvalidTokenDuringRevocation() {
         service.revoke("not-a-jwt");
 

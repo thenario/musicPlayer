@@ -6,6 +6,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.testcontainers.containers.MySQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -19,6 +20,7 @@ class FlywayMySqlMigrationTest {
             .withPassword("test");
 
     @Test
+    @DisplayName("空 MySQL 数据库应迁移至最新版本")
     void migratesEmptyMySqlDatabaseToLatestSchema() throws Exception {
         Flyway flyway = Flyway.configure()
                 .dataSource(MYSQL.getJdbcUrl(), MYSQL.getUsername(), MYSQL.getPassword())

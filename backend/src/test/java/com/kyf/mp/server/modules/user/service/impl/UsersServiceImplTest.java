@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -40,6 +41,7 @@ class UsersServiceImplTest {
     }
 
     @Test
+    @DisplayName("匹配旧版 SHA-256 密码时，应迁移为 BCrypt 并持久化")
     void migratesMatchingLegacySha256PasswordToBcrypt() {
         Users user = new Users();
         user.setPassword(LEGACY_SHA256);
@@ -51,6 +53,7 @@ class UsersServiceImplTest {
     }
 
     @Test
+    @DisplayName("旧版 SHA-256 密码不匹配时，不应迁移或持久化")
     void rejectsNonMatchingLegacySha256PasswordWithoutMigrating() {
         Users user = new Users();
         user.setPassword(LEGACY_SHA256);
@@ -62,6 +65,7 @@ class UsersServiceImplTest {
     }
 
     @Test
+    @DisplayName("匹配 BCrypt 密码时，不应执行不必要的更新")
     void acceptsBcryptPasswordWithoutUnnecessaryUpdate() {
         Users user = new Users();
         user.setPassword(passwordEncoder.encode(LEGACY_SHA256));

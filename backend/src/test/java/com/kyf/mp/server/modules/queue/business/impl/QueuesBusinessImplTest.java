@@ -6,8 +6,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -58,6 +60,7 @@ class QueuesBusinessImplTest {
     }
 
     @Test
+    @DisplayName("从歌单创建队列时，应按原歌单顺序写入队列项")
     void copiesPlaylistItemsThroughQueueItemMapper() {
         Playlists playlist = new Playlists();
         playlist.setPlaylistName("My playlist");
@@ -89,6 +92,7 @@ class QueuesBusinessImplTest {
     }
 
     @Test
+    @DisplayName("重新添加已存在歌曲时，应先关闭旧位置且不增加歌曲数量")
     void reinsertedSongClosesItsOldPositionBeforeInsertion() {
         Queues queue = new Queues();
         queue.setQueueId(123L);
@@ -118,6 +122,33 @@ class QueuesBusinessImplTest {
         verify(queueCustomMapper).restoreShiftedItemPositions(123L, 3);
         verify(queueCustomMapper, org.mockito.Mockito.never()).incrementSongCount(123L);
     }
+
+    @Test
+    @DisplayName("删除当前歌曲之前的项目时，应同步播放位置")
+    void deletingItemBeforeCurrentSongSynchronizesPlaybackPosition() {
+        Long userId = 7L;
+        Long queueId = 123L;
+        Long deletedItemId = 456L;
+
+        // Arrange：模拟删除队列第 1 首歌，而当前播放的是另一首歌。
+        when(queueCustomMapper.selectItemDetailForDelete(deletedItemId, userId)).thenReturn(Map.of(
+                "queue_id", queueId,
+                "queue_item_position", 1,
+                "song_id", 11L));
+        PlayState playState = new PlayState();
+        playState.setCurrentSongId(22L);
+        when(playStateMapper.selectOne(any(Wrapper.class))).thenReturn(playState);
+
+        // Act：执行真实业务实现，所有 Mapper 都是 mock，不会访问数据库。
+        queuesBusiness.removeSongFromQueue(userId, queueId, deletedItemId);
+
+        // Assert：业务层应删除项目、将后续项目位置左移，并按当前歌曲重新同步位置。
+        verify(queueItemsMapper).deleteById(deletedItemId);
+        verify(queueCustomMapper).shiftPositionsDown(queueId, 1);
+        verify(queueCustomMapper).syncPlayStatePosition(userId, queueId);
+        verify(queueCustomMapper).decrementSongCount(queueId);
+    }
+
     private SongsPlaylistsRelation relation(Long songId, int position) {
         SongsPlaylistsRelation relation = new SongsPlaylistsRelation();
         relation.setSongId(songId);

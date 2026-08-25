@@ -12,6 +12,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
@@ -50,6 +51,7 @@ class SongScannerTaskTest {
     }
 
     @Test
+    @DisplayName("默认配置下，不应删除本地缺失的歌曲记录")
     void doesNotDeleteMissingSongsByDefault() {
         when(songsMapper.selectList(any(QueryWrapper.class))).thenReturn(List.of(song(1L, "/static/songs/missing.mp3")));
 
@@ -59,6 +61,7 @@ class SongScannerTaskTest {
     }
 
     @Test
+    @DisplayName("显式开启清理时，应删除本地缺失的歌曲记录")
     void deletesMissingSongsOnlyWhenExplicitlyEnabled() {
         ReflectionTestUtils.setField(scanner, "removeMissingSongs", true);
         when(songsMapper.selectList(any(QueryWrapper.class))).thenReturn(List.of(song(1L, "/static/songs/missing.mp3")));
@@ -69,6 +72,7 @@ class SongScannerTaskTest {
     }
 
     @Test
+    @DisplayName("静态 URL 已存在的歌曲，不应重复插入")
     void doesNotInsertSongAlreadyKnownByItsStaticUrl() throws IOException {
         Files.createFile(songsDirectory.resolve("existing.mp3"));
         when(songsMapper.selectList(any(QueryWrapper.class))).thenReturn(List.of(song(1L, "/static/songs/existing.mp3")));

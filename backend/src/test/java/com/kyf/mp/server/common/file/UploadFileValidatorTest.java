@@ -8,11 +8,13 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.mock.web.MockMultipartFile;
 
 class UploadFileValidatorTest {
 
     @Test
+    @DisplayName("可读取的 PNG 图片应通过封面校验")
     void acceptsReadablePngImage() throws Exception {
         BufferedImage image = new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -23,6 +25,7 @@ class UploadFileValidatorTest {
     }
 
     @Test
+    @DisplayName("内容无效的图片应被拒绝")
     void rejectsImageWithInvalidContent() {
         MockMultipartFile file = new MockMultipartFile("cover", "cover.png", "image/png", new byte[] {1, 2, 3});
 
@@ -32,6 +35,7 @@ class UploadFileValidatorTest {
     }
 
     @Test
+    @DisplayName("Content-Type 不合法的音频应被拒绝")
     void rejectsAudioWithUnexpectedContentType() {
         MockMultipartFile file = new MockMultipartFile("song", "song.mp3", "text/plain", new byte[] {1});
 

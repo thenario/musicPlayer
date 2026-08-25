@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -39,6 +40,7 @@ class LoginRateLimiterTest {
     }
 
     @Test
+    @DisplayName("首次登录尝试时，应设置限流计数的过期时间")
     void setsExpiryForFirstAttempt() {
         when(valueOperations.increment(org.mockito.ArgumentMatchers.anyString())).thenReturn(1L);
 
@@ -49,6 +51,7 @@ class LoginRateLimiterTest {
     }
 
     @Test
+    @DisplayName("登录尝试次数超过上限时，应拒绝请求")
     void rejectsAttemptsAboveConfiguredLimit() {
         when(valueOperations.increment(org.mockito.ArgumentMatchers.anyString())).thenReturn(6L);
 
@@ -58,6 +61,7 @@ class LoginRateLimiterTest {
     }
 
     @Test
+    @DisplayName("Redis 不可用时，应降级放行登录请求")
     void allowsLoginWhenRedisIsUnavailable() {
         when(valueOperations.increment(org.mockito.ArgumentMatchers.anyString()))
                 .thenThrow(new RedisConnectionFailureException("redis unavailable"));
