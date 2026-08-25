@@ -1,6 +1,8 @@
 package com.kyf.mp.server.modules.queue.business.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -19,10 +21,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
 import com.kyf.mp.server.modules.playlist.entity.SongsPlaylistsRelation;
 import com.kyf.mp.server.modules.playlist.mapper.PlaylistsMapper;
 import com.kyf.mp.server.modules.playlist.mapper.SongsPlaylistsRelationMapper;
+import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
 import com.kyf.mp.server.modules.queue.entity.PlayState;
 import com.kyf.mp.server.modules.queue.entity.QueueItems;
 import com.kyf.mp.server.modules.song.entity.Songs;
@@ -154,5 +158,46 @@ class QueuesBusinessImplTest {
         relation.setSongId(songId);
         relation.setSongPlaylistPosition(position);
         return relation;
+    }
+
+    // addSongToQueue：
+    // - 歌曲不存在时抛 404
+    // - mode=true 时更新当前歌曲、位置、进度
+    // - mode=false 时不更新已有播放状态
+    // - 首次加歌时创建 PlayState
+    // - 新歌曲时增加 song_count
+    // - 已存在歌曲重插时不增加 song_count
+
+    // removeSongFromQueue：
+    // - 删除当前歌曲时切换到下一首
+    // - 删除最后一首当前歌曲时清空 currentSongId 且位置归零
+    // - 队列项不属于目标队列时抛 404
+    // 这是最适合你的起点：Mapper Mock 已经准备好，能直接练 when、verify、ArgumentCaptor 和异常断言。
+    // 2. 写 SongsBusinessImplTest
+    // 建议先不碰文件上传，先测两个简单方法：
+    // getLyrics：
+    // - 歌曲存在且有歌词时正确返回
+    // - 歌曲存在但歌词为空时返回空字符串
+    // - 歌曲不存在时抛 404
+
+    // editUploadSong：
+    // - 歌曲不存在时抛 404
+    // - 上传者不是当前用户时抛 403
+    // - 修改名称时调用 updateById
+    // - 没有任何字段变化时不调用 updateById
+    @Test
+    @DisplayName("添加歌曲时，歌曲不存在抛404错误")
+    void addSongToQueueButSongNotExists() {
+        Long songId = 1L;
+        Long queueId = 1L;
+        AddSongToQueue dto = new AddSongToQueue();
+        dto.setSongId(songId);
+        dto.setMode(false);
+        when(songsMapper.selectById(songId)).thenReturn(null);
+
+        BusinessException e = assertThrows(BusinessException.class, () ->{
+            queuesBusiness.addSongToQueue(songId, queueId, dto);
+        });
+        assertThat(e.getCode()).isEqualTo(404);
     }
 }
