@@ -12,8 +12,8 @@ import com.kyf.mp.server.common.ResultModel;
 import com.kyf.mp.server.common.auth.JwtAuthenticationFilter;
 import com.kyf.mp.server.common.auth.TokenBlacklistService;
 import com.kyf.mp.server.modules.user.dto.EditUserDTO;
-import com.kyf.mp.server.modules.user.dto.LoginRequest;
-import com.kyf.mp.server.modules.user.dto.RegisterRequest;
+import com.kyf.mp.server.modules.user.dto.LoginRequestDTO;
+import com.kyf.mp.server.modules.user.dto.RegisterRequestDTO;
 import com.kyf.mp.server.modules.user.vo.EditVO;
 import com.kyf.mp.server.modules.user.vo.LoginVO;
 import com.kyf.mp.server.modules.user.entity.Users;
@@ -52,13 +52,13 @@ public class UsersController {
 
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "使用用户名和密码登录，成功后返回 JWT")
-    public ResultModel<LoginVO> login(@RequestBody @Valid LoginRequest request) {
+    public ResultModel<LoginVO> login(@RequestBody @Valid LoginRequestDTO request) {
         return ResultModel.success(userService.login(request.getUserName(), request.getPassword()));
     }
 
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "使用用户名、邮箱和密码注册新用户")
-    public ResultModel<Void> register(@RequestBody @Valid RegisterRequest request) {
+    public ResultModel<Void> register(@RequestBody @Valid RegisterRequestDTO request) {
         Users user = new Users();
         user.setUserName(request.getUserName());
         user.setUserEmail(request.getUserEmail());

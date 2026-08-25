@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.kyf.mp.server.common.ResultModel;
-import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
+import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
 import com.kyf.mp.server.modules.queue.dto.AlterQueueDTO;
 import com.kyf.mp.server.modules.queue.dto.CreateQueueFromPlaylistDTO;
 import com.kyf.mp.server.modules.queue.dto.ReorderDTO;
@@ -21,11 +21,11 @@ import com.kyf.mp.server.modules.queue.dto.SetPlayModeDTO;
 import com.kyf.mp.server.modules.queue.dto.UpdateQueueStateDataDTO;
 import com.kyf.mp.server.modules.queue.vo.AddSongToQueueVO;
 import com.kyf.mp.server.modules.queue.vo.AlterQueueVO;
-import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylist;
-import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
+import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylistVO;
+import com.kyf.mp.server.modules.queue.vo.CurrentQueueVO;
 import com.kyf.mp.server.modules.queue.vo.DeleteQueueVO;
-import com.kyf.mp.server.modules.queue.vo.MyQueues;
-import com.kyf.mp.server.modules.queue.vo.SingleQueue;
+import com.kyf.mp.server.modules.queue.vo.MyQueuesVO;
+import com.kyf.mp.server.modules.queue.vo.SingleQueueVO;
 import com.kyf.mp.server.modules.queue.service.QueuesService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -57,7 +57,7 @@ public class QueuesController {
 
     @GetMapping("/current")
     @Operation(summary = "获取当前播放队列", description = "返回当前用户的播放状态和当前队列详情")
-    public ResultModel<CurrentQueue> getCurrentQueue(
+    public ResultModel<CurrentQueueVO> getCurrentQueue(
             @Parameter(hidden = true)
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Long userId) {
         return ResultModel.success(queueService.getCurrentQueue(userId));
@@ -84,7 +84,7 @@ public class QueuesController {
 
     @GetMapping
     @Operation(summary = "获取我的队列列表", description = "返回当前用户创建的全部播放队列")
-    public ResultModel<MyQueues> getMyQueues(
+    public ResultModel<MyQueuesVO> getMyQueues(
             @Parameter(hidden = true)
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Long userId) {
         return ResultModel.success(queueService.getMyQueues(userId));
@@ -92,7 +92,7 @@ public class QueuesController {
 
     @PostMapping
     @Operation(summary = "从歌单创建播放队列", description = "根据指定歌单创建当前用户的播放队列")
-    public ResultModel<CreateQueueFromPlaylist> createQueueFromPlaylist(
+    public ResultModel<CreateQueueFromPlaylistVO> createQueueFromPlaylist(
             @Parameter(hidden = true)
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录或非法请求") @Min(value = 1, message = "用户未登录或非法请求") Long userId,
             @RequestBody @Valid @NotNull(message = "歌单ID不能为空") CreateQueueFromPlaylistDTO dto) {
@@ -101,7 +101,7 @@ public class QueuesController {
 
     @GetMapping("/{queueId}")
     @Operation(summary = "获取队列详情", description = "返回指定队列及其歌曲列表")
-    public ResultModel<SingleQueue> getQueueById(
+    public ResultModel<SingleQueueVO> getQueueById(
             @Parameter(hidden = true)
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Long userId,
             @Parameter(description = "队列 ID", required = true, example = "1")
@@ -137,7 +137,7 @@ public class QueuesController {
             @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户未登录") @Min(value = 1, message = "用户未登录") Long userId,
             @Parameter(description = "队列 ID", required = true, example = "1")
             @PathVariable Long queueId,
-            @RequestBody @Valid @NotNull(message = "请求体不能为空") AddSongToQueue dto) {
+            @RequestBody @Valid @NotNull(message = "请求体不能为空") AddSongToQueueDTO dto) {
         Long finalParamId = (queueId == null || queueId <= 0) ? null : queueId;
         return ResultModel.success(queueService.addSongToQueue(userId, finalParamId, dto));
     }

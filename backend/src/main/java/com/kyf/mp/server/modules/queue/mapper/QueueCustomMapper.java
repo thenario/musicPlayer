@@ -6,19 +6,19 @@ import java.util.Map;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
-import com.kyf.mp.server.modules.queue.vo.ReturnQueue;
+import com.kyf.mp.server.modules.queue.vo.CurrentQueueVO;
+import com.kyf.mp.server.modules.queue.vo.ReturnQueueVO;
 
 @Mapper
 public interface QueueCustomMapper {
     /**
      * 根据用户ID查询当前播放状态、队列信息及歌曲列表
      */
-    List<CurrentQueue> selectCurrentQueueDetail(@Param("userId") Long userId);
+    List<CurrentQueueVO> selectCurrentQueueDetail(@Param("userId") Long userId);
 
-    List<ReturnQueue> selectMyQueues(@Param("userId") Long userId);
+    List<ReturnQueueVO> selectMyQueues(@Param("userId") Long userId);
 
-    ReturnQueue selectQueueById(@Param("queueId") Long queueId, @Param("userId") Long userId);
+    ReturnQueueVO selectQueueById(@Param("queueId") Long queueId, @Param("userId") Long userId);
 
     void moveItemPositionsToTemporary(@Param("queueId") Long queueId, @Param("pos") int pos);
 

@@ -22,7 +22,7 @@ import com.kyf.mp.server.modules.playlist.entity.SongsPlaylistsRelation;
 import com.kyf.mp.server.modules.playlist.mapper.PlaylistsMapper;
 import com.kyf.mp.server.modules.playlist.mapper.SongsPlaylistsRelationMapper;
 import com.kyf.mp.server.modules.queue.business.QueuesBusiness;
-import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
+import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
 import com.kyf.mp.server.modules.queue.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.server.modules.queue.entity.PlayState;
 import com.kyf.mp.server.modules.queue.entity.QueueItems;
@@ -33,12 +33,12 @@ import com.kyf.mp.server.modules.queue.mapper.QueueItemsMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueuesMapper;
 import com.kyf.mp.server.modules.queue.vo.AddSongToQueueVO;
 import com.kyf.mp.server.modules.queue.vo.AlterQueueVO;
-import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylist;
-import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
+import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylistVO;
+import com.kyf.mp.server.modules.queue.vo.CurrentQueueVO;
 import com.kyf.mp.server.modules.queue.vo.DeleteQueueVO;
-import com.kyf.mp.server.modules.queue.vo.MyQueues;
-import com.kyf.mp.server.modules.queue.vo.ReturnQueue;
-import com.kyf.mp.server.modules.queue.vo.SingleQueue;
+import com.kyf.mp.server.modules.queue.vo.MyQueuesVO;
+import com.kyf.mp.server.modules.queue.vo.ReturnQueueVO;
+import com.kyf.mp.server.modules.queue.vo.SingleQueueVO;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 
 import lombok.AllArgsConstructor;
@@ -65,19 +65,19 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     private int maxQueuesPerUser;
 
     @Override
-    public CurrentQueue getCurrentQueue(Long userId) {
+    public CurrentQueueVO getCurrentQueue(Long userId) {
         if (userId == null) {
             throw new BusinessException(401, "用户未登录");
         }
 
         try {
-            List<CurrentQueue> list = queueCustomMapper.selectCurrentQueueDetail(userId);
+            List<CurrentQueueVO> list = queueCustomMapper.selectCurrentQueueDetail(userId);
 
             if (list == null || list.isEmpty()) {
                 return null;
             }
 
-            CurrentQueue result = list.get(0);
+            CurrentQueueVO result = list.get(0);
 
             if (result == null || result.getQueueState() == null) {
                 return null;
@@ -92,27 +92,27 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
     }
 
     @Override
-    public MyQueues getMyQueues(Long userId) {
+    public MyQueuesVO getMyQueues(Long userId) {
         if (userId == null)
             throw new BusinessException(401, "用户未登录");
 
-        List<ReturnQueue> list = queueCustomMapper.selectMyQueues(userId);
+        List<ReturnQueueVO> list = queueCustomMapper.selectMyQueues(userId);
 
-        MyQueues result = new MyQueues();
+        MyQueuesVO result = new MyQueuesVO();
         result.setQueues(list != null ? list : new ArrayList<>());
 
         return result;
     }
 
     @Override
-    public SingleQueue getQueueById(Long userId, Long queueId) {
-        ReturnQueue queueDetail = queueCustomMapper.selectQueueById(queueId, userId);
+    public SingleQueueVO getQueueById(Long userId, Long queueId) {
+        ReturnQueueVO queueDetail = queueCustomMapper.selectQueueById(queueId, userId);
 
         if (queueDetail == null) {
             throw new BusinessException(404, "队列不存在");
         }
 
-        SingleQueue vo = new SingleQueue();
+        SingleQueueVO vo = new SingleQueueVO();
         vo.setQueue(queueDetail);
 
         return vo;
@@ -222,7 +222,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public CreateQueueFromPlaylist createQueueFromPlaylist(Long userId, Long playlistId) {
+    public CreateQueueFromPlaylistVO createQueueFromPlaylist(Long userId, Long playlistId) {
         if (userId == null || playlistId == null || playlistId <= 0) {
             throw new BusinessException(400, "参数错误，歌单ID不能为空");
         }
@@ -281,7 +281,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
                 playStateMapper.updateById(playState);
             }
 
-            CreateQueueFromPlaylist vo = new CreateQueueFromPlaylist();
+            CreateQueueFromPlaylistVO vo = new CreateQueueFromPlaylistVO();
             vo.setQueueId(newQueueId);
             vo.setSongCount(insertedSongs);
 
@@ -297,7 +297,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto) {
+    public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueueDTO dto) {
         Long songId = dto.getSongId();
         boolean mode = dto.getMode() != null && dto.getMode();
 

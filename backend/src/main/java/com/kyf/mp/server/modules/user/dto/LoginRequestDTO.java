@@ -8,7 +8,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class LoginRequest {
+public class LoginRequestDTO {
 
     @JsonProperty("user_name")
     @NotBlank(message = "用户名不能为空")

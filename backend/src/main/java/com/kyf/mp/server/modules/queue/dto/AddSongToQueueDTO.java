@@ -7,7 +7,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class AddSongToQueue {
+public class AddSongToQueueDTO {
     @JsonProperty("song_id")
     @NotNull(message = "歌曲ID不能为空")
     @Min(value = 1, message = "歌曲ID必须合法")

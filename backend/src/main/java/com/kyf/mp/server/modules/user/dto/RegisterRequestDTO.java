@@ -9,7 +9,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class RegisterRequest {
+public class RegisterRequestDTO {
 
     @JsonProperty("user_name")
     @NotBlank(message = "用户名不能为空")

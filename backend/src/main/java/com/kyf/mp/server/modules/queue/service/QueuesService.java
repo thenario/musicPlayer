@@ -2,15 +2,15 @@ package com.kyf.mp.server.modules.queue.service;
 
 import java.util.List;
 
-import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
+import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
 import com.kyf.mp.server.modules.queue.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.server.modules.queue.vo.AddSongToQueueVO;
 import com.kyf.mp.server.modules.queue.vo.AlterQueueVO;
-import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylist;
-import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
+import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylistVO;
+import com.kyf.mp.server.modules.queue.vo.CurrentQueueVO;
 import com.kyf.mp.server.modules.queue.vo.DeleteQueueVO;
-import com.kyf.mp.server.modules.queue.vo.MyQueues;
-import com.kyf.mp.server.modules.queue.vo.SingleQueue;
+import com.kyf.mp.server.modules.queue.vo.MyQueuesVO;
+import com.kyf.mp.server.modules.queue.vo.SingleQueueVO;
 
 /**
  * <p>
@@ -21,19 +21,19 @@ import com.kyf.mp.server.modules.queue.vo.SingleQueue;
  * @since 2026-04-05
  */
 public interface QueuesService {
-    CurrentQueue getCurrentQueue(Long userId);
+    CurrentQueueVO getCurrentQueue(Long userId);
 
-    MyQueues getMyQueues(Long userId);
+    MyQueuesVO getMyQueues(Long userId);
 
-    SingleQueue getQueueById(Long userId, Long queueId);
+    SingleQueueVO getQueueById(Long userId, Long queueId);
 
     DeleteQueueVO deleteQueue(Long userId, Long queueId);
 
     void clearQueue(Long userId, Long queueId);
 
-    CreateQueueFromPlaylist createQueueFromPlaylist(Long userId, Long playlistId);
+    CreateQueueFromPlaylistVO createQueueFromPlaylist(Long userId, Long playlistId);
 
-    AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto);
+    AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueueDTO dto);
 
     void removeSongFromQueue(Long userId, Long queueId, Long queueItemId);
 

@@ -26,7 +26,7 @@ import com.kyf.mp.server.modules.playlist.entity.Playlists;
 import com.kyf.mp.server.modules.playlist.entity.SongsPlaylistsRelation;
 import com.kyf.mp.server.modules.playlist.mapper.PlaylistsMapper;
 import com.kyf.mp.server.modules.playlist.mapper.SongsPlaylistsRelationMapper;
-import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
+import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
 import com.kyf.mp.server.modules.queue.entity.PlayState;
 import com.kyf.mp.server.modules.queue.entity.QueueItems;
 import com.kyf.mp.server.modules.song.entity.Songs;
@@ -35,7 +35,7 @@ import com.kyf.mp.server.modules.queue.mapper.PlayStateMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueueCustomMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueueItemsMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueuesMapper;
-import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylist;
+import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylistVO;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -82,7 +82,7 @@ class QueuesBusinessImplTest {
             return 1;
         });
 
-        CreateQueueFromPlaylist result = queuesBusiness.createQueueFromPlaylist(7L, 99L);
+        CreateQueueFromPlaylistVO result = queuesBusiness.createQueueFromPlaylist(7L, 99L);
 
         ArgumentCaptor<QueueItems> items = ArgumentCaptor.forClass(QueueItems.class);
         verify(queueItemsMapper, org.mockito.Mockito.times(2)).insert(items.capture());
@@ -115,7 +115,7 @@ class QueuesBusinessImplTest {
             return 1;
         });
 
-        com.kyf.mp.server.modules.queue.dto.AddSongToQueue request = new com.kyf.mp.server.modules.queue.dto.AddSongToQueue();
+        com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO request = new com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO();
         request.setSongId(11L);
         request.setMode(true);
         queuesBusiness.addSongToQueue(7L, 123L, request);
@@ -190,7 +190,7 @@ class QueuesBusinessImplTest {
     void addSongToQueueButSongNotExists() {
         Long songId = 1L;
         Long queueId = 1L;
-        AddSongToQueue dto = new AddSongToQueue();
+        AddSongToQueueDTO dto = new AddSongToQueueDTO();
         dto.setSongId(songId);
         dto.setMode(false);
         when(songsMapper.selectById(songId)).thenReturn(null);

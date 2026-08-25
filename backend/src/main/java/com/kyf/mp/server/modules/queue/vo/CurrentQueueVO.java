@@ -3,7 +3,7 @@ package com.kyf.mp.server.modules.queue.vo;
 import lombok.Data;
 
 @Data
-public class CurrentQueue {
+public class CurrentQueueVO {
     private QueueStateVO queueState;
-    private ReturnQueue queue;
+    private ReturnQueueVO queue;
 }

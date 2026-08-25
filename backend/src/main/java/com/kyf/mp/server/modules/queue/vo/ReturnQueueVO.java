@@ -8,7 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class ReturnQueue {
+public class ReturnQueueVO {
     private Long queueId;
     private String queueName;
     private Long creatorId;

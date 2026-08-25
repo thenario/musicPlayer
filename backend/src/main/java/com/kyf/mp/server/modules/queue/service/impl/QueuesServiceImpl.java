@@ -9,16 +9,16 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import com.kyf.mp.server.modules.queue.business.QueuesBusiness;
-import com.kyf.mp.server.modules.queue.dto.AddSongToQueue;
+import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
 import com.kyf.mp.server.modules.queue.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.server.modules.queue.service.QueuesService;
 import com.kyf.mp.server.modules.queue.vo.AddSongToQueueVO;
 import com.kyf.mp.server.modules.queue.vo.AlterQueueVO;
-import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylist;
-import com.kyf.mp.server.modules.queue.vo.CurrentQueue;
+import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylistVO;
+import com.kyf.mp.server.modules.queue.vo.CurrentQueueVO;
 import com.kyf.mp.server.modules.queue.vo.DeleteQueueVO;
-import com.kyf.mp.server.modules.queue.vo.MyQueues;
-import com.kyf.mp.server.modules.queue.vo.SingleQueue;
+import com.kyf.mp.server.modules.queue.vo.MyQueuesVO;
+import com.kyf.mp.server.modules.queue.vo.SingleQueueVO;
 
 import lombok.RequiredArgsConstructor;
 
@@ -38,19 +38,19 @@ public class QueuesServiceImpl implements QueuesService {
 
     @Override
     @Cacheable(cacheNames = "user-queues", key = "#userId + ':' +'current'")
-    public CurrentQueue getCurrentQueue(Long userId) {
+    public CurrentQueueVO getCurrentQueue(Long userId) {
         return queuesBusiness.getCurrentQueue(userId);
     }
 
     @Override
     @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + 'all-queues'")
-    public MyQueues getMyQueues(Long userId) {
+    public MyQueuesVO getMyQueues(Long userId) {
         return queuesBusiness.getMyQueues(userId);
     }
 
     @Override
     @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + #queueId")
-    public SingleQueue getQueueById(Long userId, Long queueId) {
+    public SingleQueueVO getQueueById(Long userId, Long queueId) {
         return queuesBusiness.getQueueById(userId, queueId);
     }
 
@@ -79,7 +79,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + 'all-queues'"),
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':'+ 'current'")
     })
-    public CreateQueueFromPlaylist createQueueFromPlaylist(Long userId, Long playlistId) {
+    public CreateQueueFromPlaylistVO createQueueFromPlaylist(Long userId, Long playlistId) {
         return queuesBusiness.createQueueFromPlaylist(userId, playlistId);
     }
 
@@ -89,7 +89,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + 'all-queues'"),
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + #paramQueueId"),
     })
-    public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueue dto) {
+    public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueueDTO dto) {
         return queuesBusiness.addSongToQueue(userId, paramQueueId, dto);
     }
 
