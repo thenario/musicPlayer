@@ -25,6 +25,13 @@ export interface QueueMutationsContext {
  * 通过 context 读写共享队列状态；删除当前歌曲时回调 playAtIndex/stopPlayback。
  */
 export function createQueueMutations(ctx: QueueMutationsContext) {
+  /** 队列项位置使用 1 基连续序号；currentIndex 仍保持 0 基数组下标。 */
+  const normalizeQueuePositions = () => {
+    ctx.currentQueue.value.forEach((item, index) => {
+      item.queue_item_position = index + 1
+    })
+  }
+
   const reorderQueueOrder = async () => {
     if (!ctx.currentQueueId.value) return
     else {
@@ -41,6 +48,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
 
   const updateQueueOrder = async (newQueue: IQueueItem[]) => {
     ctx.currentQueue.value = newQueue
+    normalizeQueuePositions()
 
     if (ctx.currentSong.value) {
       const tempCurrentSong = ctx.currentSong.value
@@ -60,6 +68,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     if (idx !== -1) {
       ctx.currentQueue.value.splice(idx, 1)
       if (idx < ctx.currentIndex.value) ctx.currentIndex.value--
+      normalizeQueuePositions()
     }
     return idx
   }
@@ -74,16 +83,12 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       })
       ctx.currentQueueId.value = data.queue_id
     }
+    normalizeQueuePositions()
 
     if (ctx.currentQueueId.value && isNewAddition) {
       const target = ctx.userQueues.value.find((q) => sameId(q.queue_id, ctx.currentQueueId.value))
       if (target) target.song_count++
     }
-  }
-
-  const rollbackQueue = (tempId: string) => {
-    const idx = ctx.currentQueue.value.findIndex((i) => i.queue_item_id === tempId)
-    if (idx !== -1) ctx.currentQueue.value.splice(idx, 1)
   }
 
   const syncRemoveToServer = async (id: number | string) => {
@@ -102,6 +107,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
   const handleStateAfterRemoval = (idx: number) => {
     const isDeletingCurrent = idx === ctx.currentIndex.value
     ctx.currentQueue.value.splice(idx, 1)
+    normalizeQueuePositions()
     if (isDeletingCurrent) {
       if (ctx.currentQueue.value.length > 0) {
         const nextIdx = Math.min(idx, ctx.currentQueue.value.length - 1)
@@ -114,31 +120,37 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     }
   }
 
-  const addToQueue = async (song: ISong, insertNext = false) => {
+  /** mode=true 为立即播放；两种模式都会插入到当前歌曲之后。 */
+  const addToQueue = async (song: ISong, playImmediately = false) => {
     if (!song?.song_id) return { targetIndex: -1, success: false }
 
+    const previousQueue = [...ctx.currentQueue.value]
+    const previousIndex = ctx.currentIndex.value
     const oldIdx = handleDuplicateSong(song.song_id)
-    const targetIndex = Math.max(0, insertNext ? ctx.currentIndex.value + 1 : ctx.currentIndex.value)
+    const targetIndex = Math.max(0, ctx.currentIndex.value + 1)
 
     const tempId = `temp-${Date.now()}`
     const newItem = {
       queue_item_id: tempId,
-      queue_item_position: targetIndex,
+      queue_item_position: targetIndex + 1,
       queue_id: ctx.currentQueueId.value ?? -1,
       song,
       added_date: new Date(),
     }
 
     ctx.currentQueue.value.splice(targetIndex, 0, newItem)
-    if (!insertNext) ctx.currentIndex.value = targetIndex
+    normalizeQueuePositions()
+    if (playImmediately) ctx.currentIndex.value = targetIndex
 
     try {
-      const res = await queueApi.addSongToQueue(song.song_id, ctx.currentQueueId.value || 0, insertNext)
+      const res = await queueApi.addSongToQueue(song.song_id, ctx.currentQueueId.value || 0, playImmediately)
       finalizeQueueItem(tempId, res.data, oldIdx === -1)
       return { targetIndex, success: true }
     } catch (err: unknown) {
       console.error(err instanceof Error ? err.message : err)
-      rollbackQueue(tempId)
+      ctx.currentQueue.value = previousQueue
+      ctx.currentIndex.value = previousIndex
+      normalizeQueuePositions()
       return { targetIndex: -1, success: false }
     }
   }
@@ -201,6 +213,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       ctx.currentQueue.value = others
       ctx.currentIndex.value = -1
     }
+    normalizeQueuePositions()
 
     const res = await reorderQueueOrder()
     return res?.success ? { success: true } : { success: false }

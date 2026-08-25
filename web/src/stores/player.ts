@@ -249,9 +249,9 @@ export const usePlayerStore = defineStore('player', () => {
       return { success: true }
     }
 
-    const insertNext = mode === 'next'
+    const playImmediately = mode === 'now'
 
-    const res = await queueMutations.addToQueue(song, insertNext)
+    const res = await queueMutations.addToQueue(song, playImmediately)
     if (!res.success) {
       return { success: false }
     }

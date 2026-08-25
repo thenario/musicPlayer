@@ -314,7 +314,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         int currentPos = (playState != null) ? playState.getCurrentPosition() : 0;
         boolean hasState = (playState != null);
 
-        int insertPos = Math.max(1, mode ? currentPos + 1 : currentPos);
+        int insertPos = Math.max(1, currentPos + 1);
 
         QueueItems existingItem = queueItemsMapper.selectOne(new LambdaQueryWrapper<QueueItems>()
                 .eq(QueueItems::getQueueId, finalQueueId)
@@ -338,7 +338,8 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         queueItemsMapper.insert(newItem);
         queueCustomMapper.restoreShiftedItemPositions(finalQueueId, insertPos);
 
-        if (!mode || !hasState || context.isNewQueue()) {
+        // mode=true 表示立即播放；下一首播放仅调整队列顺序。
+        if (mode || !hasState || context.isNewQueue()) {
             if (playState == null) {
                 playState = new PlayState();
                 playState.setUserId(userId);
@@ -354,6 +355,9 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             else
                 playStateMapper.updateById(playState);
         }
+
+        // 删除并重插已有歌曲时，当前歌曲的位置可能随队列移位；以实际队列项为准。
+        queueCustomMapper.syncPlayStatePosition(userId, finalQueueId);
 
         if (!wasExisted) {
             queueCustomMapper.incrementSongCount(finalQueueId);
@@ -446,9 +450,12 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
             Long nextSongId = (nextItem != null) ? nextItem.getSongId() : null;
             playState.setCurrentSongId(nextSongId);
+            playState.setCurrentPosition(nextItem != null ? nextItem.getQueueItemPosition() : 0);
             playState.setCurrentProgress(0);
             playStateMapper.updateById(playState);
         }
+        // 删除当前歌曲之前的项目会使其位置前移，按当前歌曲重新同步实际位置。
+        queueCustomMapper.syncPlayStatePosition(userId, itemQueueId);
         queueCustomMapper.decrementSongCount(itemQueueId);
     }
 

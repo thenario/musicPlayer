@@ -82,7 +82,7 @@ const playSong = async (song: ISong) => {
 }
 
 const handlePlayNext = async (song: ISong) => {
-  const res = await playerStore.addToQueue(song, true)
+  const res = await playerStore.addToQueue(song, false)
   if (res.success) ElMessage.success(`《${song.song_title}》已设为下一首播放`)
 }
 
