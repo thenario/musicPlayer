@@ -17,6 +17,12 @@ import com.kyf.mp.server.modules.playlist.vo.AddSongToPlaylistVO;
 import com.kyf.mp.server.modules.playlist.vo.MyPlaylistsVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.kyf.mp.server.modules.playlist.service.PlaylistsService;
 
 import jakarta.validation.constraints.Min;
@@ -36,85 +42,104 @@ import lombok.RequiredArgsConstructor;
 @RestController
 @RequestMapping("/api/playlists")
 @RequiredArgsConstructor
+@Tag(name = "歌单", description = "歌单的创建、编辑和歌曲管理")
+@SecurityRequirement(name = "bearerAuth")
 public class PlaylistsController {
     private final PlaylistsService playlistsService;
 
-    // 1. 创建歌单
     @PostMapping
+    @Operation(summary = "创建歌单", description = "上传歌单封面并为当前用户创建歌单")
     public ResultModel<PlaylistActionVO> createPlaylist(
+            @Parameter(description = "歌单封面图片", required = true)
             @RequestParam("cover_image") @NotNull(message = "请上传歌单封面") MultipartFile file,
+            @Parameter(description = "歌单名称", required = true, example = "我的收藏")
             @RequestParam("name") @NotBlank(message = "歌单名称不能为空") String name,
+            @Parameter(description = "歌单描述", example = "平时喜欢听的歌曲")
             @RequestParam(value = "description", required = false) String description,
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
         return ResultModel.success(playlistsService.createPlaylist(file, name, description, userId));
     }
 
-    // 2. 编辑歌单详情
     @PatchMapping
+    @Operation(summary = "编辑歌单信息", description = "只能编辑当前用户创建的歌单；所有修改字段均为可选")
     public ResultModel<PlaylistActionVO> editPlaylist(
+            @Parameter(description = "新的歌单封面图片")
             @RequestParam(value = "cover_image", required = false) MultipartFile file,
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @RequestParam("playlist_id") @NotNull(message = "歌单ID不能为空") @Min(value = 1, message = "ID must be positive") Long playlistId,
+            @Parameter(description = "新的歌单名称", example = "我的收藏")
             @RequestParam(value = "name", required = false) @NotBlank(message = "歌单名称不能为空") String name,
+            @Parameter(description = "新的歌单描述")
             @RequestParam(value = "description", required = false) String description,
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
         return ResultModel.success(playlistsService.editPlaylist(file, playlistId, name, description, userId));
     }
 
-    // 3. 删除歌单
     @DeleteMapping("/{id}")
+    @Operation(summary = "删除歌单", description = "只能删除当前用户创建的歌单")
     public ResultModel<Void> deletePlaylist(
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @PathVariable("id") @NotNull(message = "歌单ID不能为空") @Min(value = 1, message = "ID must be positive") Long id,
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
         playlistsService.deletePlaylist(id, userId);
         return ResultModel.success(null);
     }
 
-    // 4. 获取我的歌单列表
     @GetMapping
+    @Operation(summary = "获取我的歌单列表", description = "返回当前用户创建的全部歌单摘要")
     public ResultModel<MyPlaylistsVO> getMyPlaylists(
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute(value = "userId", required = false) @NotNull(message = "用户ID不能为空") Long userId) {
         return ResultModel.success(playlistsService.getMyPlaylists(userId));
     }
 
-    // 5. 获取歌单详情（含歌曲）
     @GetMapping("/{id}")
+    @Operation(summary = "获取歌单详情", description = "返回歌单基本信息、歌曲列表和当前用户的点赞状态")
     public ResultModel<PlaylistDetailVO> getPlaylistById(
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @PathVariable("id") @NotNull(message = "歌单ID不能为空") @Min(value = 1, message = "ID must be positive") Long id,
-            @RequestAttribute("userId") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
         return ResultModel.success(playlistsService.getPlaylistDetail(id, userId));
     }
 
-    // 6. 点赞/取消点赞
     @PostMapping("/{id}/likes")
+    @Operation(summary = "点赞歌单")
     public ResultModel<Void> like(
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @PathVariable("id") @NotNull(message = "参数不完整") @Min(value = 1, message = "ID must be positive") Long id,
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Long userId) {
         playlistsService.toggleLike(id, userId, true);
         return ResultModel.success(null);
     }
 
     @DeleteMapping("/{id}/unlikes")
+    @Operation(summary = "取消点赞歌单")
     public ResultModel<Void> unlike(
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @PathVariable("id") @NotNull(message = "参数不完整") @Min(value = 1, message = "ID must be positive") Long id,
-            @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute(value = "userId", required = false) @NotNull(message = "参数不完整") Long userId) {
         playlistsService.toggleLike(id, userId, false);
         return ResultModel.success(null);
     }
 
-    // 7. 歌单添加/移除歌曲
     @PostMapping("/{playlist_id}/songs/{song_id}")
+    @Operation(summary = "向歌单添加歌曲", description = "只能向当前用户创建的歌单添加歌曲")
     public ResultModel<AddSongToPlaylistVO> addSong(
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long playlistId,
+            @Parameter(description = "歌曲 ID", required = true, example = "1")
             @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long songId,
-            @RequestAttribute("userId") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
         return ResultModel.success(playlistsService.addSongToPlaylist(playlistId, songId, userId));
     }
 
     @DeleteMapping("/{playlist_id}/songs/{song_id}")
+    @Operation(summary = "从歌单移除歌曲", description = "只能从当前用户创建的歌单移除歌曲")
     public ResultModel<Void> removeSong(
+            @Parameter(description = "歌单 ID", required = true, example = "1")
             @PathVariable("playlist_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long playlistId,
+            @Parameter(description = "歌曲 ID", required = true, example = "1")
             @PathVariable("song_id") @NotNull(message = "歌单ID或歌曲ID不能为空") @Min(value = 1, message = "ID must be positive") Long songId,
-            @RequestAttribute("userId") Long userId) {
+            @Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
         playlistsService.removeSongFromPlaylist(playlistId, songId, userId);
         return ResultModel.success(null);
     }
