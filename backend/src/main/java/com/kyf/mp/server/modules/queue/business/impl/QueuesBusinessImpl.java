@@ -334,7 +334,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         newItem.setQueueId(finalQueueId);
         newItem.setSongId(songId);
         newItem.setQueueItemPosition(insertPos);
-        newItem.setAddedDate(LocalDateTime.now());
+        newItem.setAddedDate(LocalDateTime.now(ZoneId.systemDefault()));
         queueItemsMapper.insert(newItem);
         queueCustomMapper.restoreShiftedItemPositions(finalQueueId, insertPos);
 
@@ -348,7 +348,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             playState.setCurrentSongId(songId);
             playState.setCurrentPosition(insertPos);
             playState.setCurrentProgress(0);
-            playState.setUpdatedDate(LocalDateTime.now());
+            playState.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
 
             if (!hasState)
                 playStateMapper.insert(playState);
@@ -406,7 +406,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         newQ.setQueueName("默认列表");
         newQ.setCreatorId(userId);
         newQ.setSongCount(0);
-        newQ.setCreatedDate(LocalDateTime.now());
+        newQ.setCreatedDate(LocalDateTime.now(ZoneId.systemDefault()));
         queuesMapper.insert(newQ);
 
         return new QueueContext(newQ.getQueueId(), true);
@@ -505,7 +505,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         ps.setCurrentProgress(dto.getCurrentProgress() != null ? dto.getCurrentProgress() : 0);
         ps.setPlaymode(dto.getPlaymode() != null ? dto.getPlaymode() : "sequential");
 
-        ps.setUpdatedDate(LocalDateTime.now());
+        ps.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
     }
 
     @Override
@@ -560,7 +560,7 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
         ps.setCurrentSongId(songId);
         ps.setCurrentPosition(1);
         ps.setCurrentProgress(0);
-        ps.setUpdatedDate(LocalDateTime.now());
+        ps.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
     }
 
     @Override
@@ -582,12 +582,12 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
             playState.setUserId(userId);
             playState.setCurrentQueueId(queueId);
             playState.setPlaymode(playMode);
-            playState.setUpdatedDate(LocalDateTime.now());
+            playState.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
             playStateMapper.insert(playState);
         } else {
             playState.setCurrentQueueId(queueId);
             playState.setPlaymode(playMode);
-            playState.setUpdatedDate(LocalDateTime.now());
+            playState.setUpdatedDate(LocalDateTime.now(ZoneId.systemDefault()));
             playStateMapper.updateById(playState);
         }
 
