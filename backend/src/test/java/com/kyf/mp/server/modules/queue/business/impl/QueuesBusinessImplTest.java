@@ -55,6 +55,7 @@ class QueuesBusinessImplTest {
     private SongsMapper songsMapper;
     @Mock
     private SongsPlaylistsRelationMapper songsPlaylistsRelationMapper;
+
     @InjectMocks
     private QueuesBusinessImpl queuesBusiness;
 
@@ -160,31 +161,6 @@ class QueuesBusinessImplTest {
         return relation;
     }
 
-    // addSongToQueue：
-    // - 歌曲不存在时抛 404
-    // - mode=true 时更新当前歌曲、位置、进度
-    // - mode=false 时不更新已有播放状态
-    // - 首次加歌时创建 PlayState
-    // - 新歌曲时增加 song_count
-    // - 已存在歌曲重插时不增加 song_count
-
-    // removeSongFromQueue：
-    // - 删除当前歌曲时切换到下一首
-    // - 删除最后一首当前歌曲时清空 currentSongId 且位置归零
-    // - 队列项不属于目标队列时抛 404
-    // 这是最适合你的起点：Mapper Mock 已经准备好，能直接练 when、verify、ArgumentCaptor 和异常断言。
-    // 2. 写 SongsBusinessImplTest
-    // 建议先不碰文件上传，先测两个简单方法：
-    // getLyrics：
-    // - 歌曲存在且有歌词时正确返回
-    // - 歌曲存在但歌词为空时返回空字符串
-    // - 歌曲不存在时抛 404
-
-    // editUploadSong：
-    // - 歌曲不存在时抛 404
-    // - 上传者不是当前用户时抛 403
-    // - 修改名称时调用 updateById
-    // - 没有任何字段变化时不调用 updateById
     @Test
     @DisplayName("添加歌曲时，歌曲不存在抛404错误")
     void addSongToQueueButSongNotExists() {
@@ -195,9 +171,54 @@ class QueuesBusinessImplTest {
         dto.setMode(false);
         when(songsMapper.selectById(songId)).thenReturn(null);
 
-        BusinessException e = assertThrows(BusinessException.class, () ->{
+        BusinessException e = assertThrows(BusinessException.class, () -> {
             queuesBusiness.addSongToQueue(songId, queueId, dto);
         });
         assertThat(e.getCode()).isEqualTo(404);
+    }
+
+    @Test
+    @DisplayName("设置播放模式，找不到对应的队列")
+    void setPlaymodeButNullQueue() {
+        Long userId = 1L;
+        Long queueId = 2L;
+        String playmode = "sequential";
+        when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(null);
+
+        BusinessException e = assertThrows(BusinessException.class, () -> {
+            queuesBusiness.setPlayMode(userId, queueId, playmode);
+        });
+        assertThat(e.getCode()).isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("设置播放模式，找到对应队列，找到对应播放状态")
+    void setPlaymodeAndQueueAndPlaystateExist() {
+        Long userId = 1L;
+        Long queueId = 2L;
+        String playmode = "sequential";
+        PlayState p = new PlayState();
+        p.setCurrentQueueId(queueId);
+        Queues q = new Queues();
+        when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(q);
+        when(playStateMapper.selectOne(any(Wrapper.class))).thenReturn(p);
+
+        queuesBusiness.setPlayMode(userId, queueId, playmode);
+        verify(playStateMapper).updateById(p);
+    }
+
+    @Test
+    @DisplayName("设置播放模式，找到对应队列，但找不到找到对应播放状态，新建播放状态")
+    void setPlaymodeAndQueueExistButPlaystateNot() {
+        Long userId = 1L;
+        Long queueId = 2L;
+        String playmode = "sequential";
+
+        Queues q = new Queues();
+        when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(q);
+        when(playStateMapper.selectOne(any(Wrapper.class))).thenReturn(null);
+
+        queuesBusiness.setPlayMode(userId, queueId, playmode);
+        verify(playStateMapper).insert(any(PlayState.class));
     }
 }
