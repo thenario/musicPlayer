@@ -19,6 +19,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.testcontainers.shaded.org.checkerframework.checker.units.qual.A;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.kyf.mp.server.common.BusinessException;
@@ -218,7 +219,11 @@ class QueuesBusinessImplTest {
         when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(q);
         when(playStateMapper.selectOne(any(Wrapper.class))).thenReturn(null);
 
+        ArgumentCaptor<PlayState> captor = ArgumentCaptor.forClass(PlayState.class);
         queuesBusiness.setPlayMode(userId, queueId, playmode);
-        verify(playStateMapper).insert(any(PlayState.class));
+        verify(playStateMapper).insert(captor.capture());
+        PlayState pl = captor.getValue();
+        assertThat(pl.getPlaymode()).isEqualTo(playmode);
+        assertThat(pl.getUserId()).isEqualTo(userId);
     }
 }
