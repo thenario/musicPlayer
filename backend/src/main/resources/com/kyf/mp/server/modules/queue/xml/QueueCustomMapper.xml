@@ -19,7 +19,7 @@
         <association property="song" resultMap="SongVOMap" />
     </resultMap>
 
-    <resultMap id="ReturnQueueMap" type="com.kyf.mp.server.modules.queue.vo.ReturnQueue">
+    <resultMap id="ReturnQueueMap" type="com.kyf.mp.server.modules.queue.vo.ReturnQueueVO">
         <id property="queueId" column="queue_id" />
         <result property="queueName" column="queue_name" />
         <result property="creatorId" column="creator_id" />
@@ -30,7 +30,7 @@
         <collection property="queueItems" resultMap="QueueItemVOMap" />
     </resultMap>
 
-    <resultMap id="CurrentQueueMap" type="com.kyf.mp.server.modules.queue.vo.CurrentQueue">
+    <resultMap id="CurrentQueueMap" type="com.kyf.mp.server.modules.queue.vo.CurrentQueueVO">
         <id column="current_queue_id" />
 
         <association property="queueState"
@@ -43,7 +43,7 @@
         </association>
 
         <association property="queue"
-            javaType="com.kyf.mp.server.modules.queue.vo.ReturnQueue">
+            javaType="com.kyf.mp.server.modules.queue.vo.ReturnQueueVO">
             <id property="queueId" column="queue_id" />
             <result property="queueName" column="queue_name" />
             <result property="creatorId" column="creator_id" />
