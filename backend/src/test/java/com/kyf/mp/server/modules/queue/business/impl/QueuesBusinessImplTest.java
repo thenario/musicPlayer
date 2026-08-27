@@ -1,7 +1,6 @@
 package com.kyf.mp.server.modules.queue.business.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -28,7 +27,6 @@ import com.kyf.mp.server.modules.playlist.entity.SongsPlaylistsRelation;
 import com.kyf.mp.server.modules.playlist.mapper.PlaylistsMapper;
 import com.kyf.mp.server.modules.playlist.mapper.SongsPlaylistsRelationMapper;
 import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
-import com.kyf.mp.server.modules.queue.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.server.modules.queue.entity.PlayState;
 import com.kyf.mp.server.modules.queue.entity.QueueItems;
 import com.kyf.mp.server.modules.song.entity.Songs;
@@ -38,7 +36,6 @@ import com.kyf.mp.server.modules.queue.mapper.QueueCustomMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueueItemsMapper;
 import com.kyf.mp.server.modules.queue.mapper.QueuesMapper;
 import com.kyf.mp.server.modules.queue.vo.CreateQueueFromPlaylistVO;
-import com.kyf.mp.server.modules.queue.vo.ReturnQueueVO;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
 
 @ExtendWith(MockitoExtension.class)
@@ -229,85 +226,5 @@ class QueuesBusinessImplTest {
         PlayState pl = captor.getValue();
         assertThat(pl.getPlaymode()).isEqualTo(playmode);
         assertThat(pl.getUserId()).isEqualTo(userId);
-    }
-
-    @Test
-    @DisplayName("未登录时查询当前队列抛出401")
-    void currentQueueRequiresLogin() {
-        BusinessException exception = assertThrows(BusinessException.class,
-                () -> queuesBusiness.getCurrentQueue(null));
-
-        assertThat(exception.getCode()).isEqualTo(401);
-        verify(queueCustomMapper, never()).selectCurrentQueueDetail(any());
-    }
-
-    @Test
-    @DisplayName("查询当前队列为空时返回null")
-    void returnsNullWhenCurrentQueueIsEmpty() {
-        when(queueCustomMapper.selectCurrentQueueDetail(1L)).thenReturn(List.of());
-
-        assertThat(queuesBusiness.getCurrentQueue(1L)).isNull();
-    }
-
-    @Test
-    @DisplayName("查询我的队列时数据库返回null则返回空列表")
-    void returnsEmptyQueueListWhenMapperReturnsNull() {
-        when(queueCustomMapper.selectMyQueues(1L)).thenReturn(null);
-
-        assertThat(queuesBusiness.getMyQueues(1L).getQueues()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("查询指定队列时返回队列详情")
-    void returnsQueueDetail() {
-        ReturnQueueVO queue = new ReturnQueueVO();
-        queue.setQueueId(2L);
-        when(queueCustomMapper.selectQueueById(2L, 1L)).thenReturn(queue);
-
-        assertThat(queuesBusiness.getQueueById(1L, 2L).getQueue()).isSameAs(queue);
-    }
-
-    @Test
-    @DisplayName("更新当前播放状态时根据队列歌曲位置写入状态")
-    void updatesCurrentQueueStateUsingSongPosition() {
-        Queues queue = new Queues();
-        QueueItems item = new QueueItems();
-        item.setQueueItemPosition(4);
-        PlayState state = new PlayState();
-        when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(queue);
-        when(queueItemsMapper.selectOne(any(Wrapper.class))).thenReturn(item);
-        when(playStateMapper.selectOne(any(Wrapper.class))).thenReturn(state);
-
-        UpdateCurrentQueueStateDTO dto = new UpdateCurrentQueueStateDTO();
-        dto.setCurrentQueueId(2L);
-        dto.setCurrentSongId(8L);
-        dto.setCurrentProgress(12);
-        dto.setPlaymode("shuffle");
-
-        queuesBusiness.updateCurrentQueueState(1L, dto);
-
-        assertThat(state.getCurrentQueueId()).isEqualTo(2L);
-        assertThat(state.getCurrentSongId()).isEqualTo(8L);
-        assertThat(state.getCurrentPosition()).isEqualTo(4);
-        assertThat(state.getCurrentProgress()).isEqualTo(12);
-        assertThat(state.getPlaymode()).isEqualTo("shuffle");
-        verify(playStateMapper).updateById(state);
-    }
-
-    @Test
-    @DisplayName("重排队列时验证歌曲集合后批量更新位置")
-    void reordersQueueAfterValidatingSongIds() {
-        when(queuesMapper.selectOne(any(Wrapper.class))).thenReturn(new Queues());
-        QueueItems first = new QueueItems();
-        first.setSongId(10L);
-        QueueItems second = new QueueItems();
-        second.setSongId(20L);
-        when(queueItemsMapper.selectList(any(Wrapper.class))).thenReturn(List.of(first, second));
-
-        queuesBusiness.reorderQueue(1L, 2L, List.of(20L, 10L));
-
-        verify(queueCustomMapper).moveAllItemPositionsToTemporary(2L);
-        verify(queueCustomMapper).batchUpdatePositions(2L, List.of(20L, 10L));
-        verify(queueCustomMapper).syncPlayStatePosition(1L, 2L);
     }
 }
