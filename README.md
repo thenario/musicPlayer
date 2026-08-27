@@ -4,6 +4,12 @@
 
 > 最后一次大规模重构：**2026-08-09**。完整重构历程见文末 [重构历程](#重构历程)。
 
+## 当前版本：v0 基础准线
+
+当前这版已经可以完成前端、后端、MySQL、Redis 和 Nginx 的完整运行，记为 **v0**（2026-08-27）。它是后续功能开发、部署调整和问题排查时的可运行参考版本。
+
+v0 的 Docker 部署采用“宿主机先构建产物、Docker 再组装运行镜像”的方式：前端需要先生成 `web/dist/`，后端需要先生成 `backend/target/*.jar`，然后再执行 Compose。后续如果改为 Docker 多阶段构建或 CI/CD，不改变 v0 的功能基线即可。
+
 ---
 
 ## 技术栈
@@ -33,6 +39,9 @@ pnpm lint
 cd ../backend
 ./mvnw clean test
 ```
+
+> Windows PowerShell 使用 `mvnw.cmd`；后端集成测试和 Compose 运行都需要本机 Docker daemon 正常运行。
+
 ## 目录结构
 
 ```
@@ -55,7 +64,8 @@ vue_musicplayer/
 │       ├── config/      # 安全配置、静态资源映射（/static/** 兜底）
 │       └── modules/     # 按业务分包（Song / Playlist / Queue / User）
 ├── mysql/               # MySQL 数据卷
-├── nginx/               # Nginx 反向代理（只跟踪 Dockerfile + conf）
+├── web/nginx.conf       # 生产环境 Nginx 配置
+├── web/dockerfile       # Nginx 静态镜像构建文件
 ├── static/              # 用户上传资源（歌曲/封面，不入库，由 nginx 直接读取）
 └── compose.yml   # MySQL + 后端 + Nginx 全栈编排
 ```
@@ -65,23 +75,37 @@ vue_musicplayer/
 ### 开发环境
 
 ```bash
-# 1. 起基础设施（MySQL + 后端 + nginx 走 docker，nginx 暴露在宿主机 8080）
-#    首次启动或改过 Dockerfile/nginx.conf 后加 --build；镜像会自行构建前端与后端。
-docker compose up -d --build
-
-# 2. 前端 dev server（vite，端口 5173）
+# 1. 构建前端产物（Nginx 镜像会复制 web/dist/）
 cd web
 pnpm install
+pnpm build
+
+# 2. 构建后端 JAR（后端镜像会复制 backend/target/*.jar）
+cd ../backend
+./mvnw clean package -DskipTests
+
+# Windows PowerShell 使用：.\mvnw.cmd clean package -DskipTests
+
+# 3. 回到项目根目录，启动 MySQL、Redis、后端和 Nginx
+cd ..
+docker compose up -d --build
+
+# 4. 启动前端 dev server（Vite，端口 5173）
+cd web
 pnpm dev
 ```
 
-访问 `http://localhost:5173`。开发时代理链路：
+如果前端或后端代码发生变化，需要重新执行对应的构建命令，再执行 `docker compose up -d --build`。如果只使用前端开发服务器，前端代码修改会由 Vite 热更新。
+
+访问 `http://localhost:5173` 时，开发代理链路是：
 
 ```
-浏览器(5173) ──> Vite 代理 ──> 127.0.0.1:8080（docker nginx）
-                  /api/*        → proxy_pass 到 backend-server
-                  /static/*     → nginx 直接读 static/ 卷（性能更好）
+浏览器(5173) ──> Vite 代理 ──> 127.0.0.1:8080（Docker 后端）
+                  /api/*        → Spring Boot
+                  /static/*     → Spring Boot 静态资源兜底
 ```
+
+如果要验证生产 Nginx 链路，访问 `http://localhost`；此时 Nginx 会把 `/api/` 转发给 `backend-server:8080`，并直接读取 `/static/` 卷。
 
 > 裸跑后端（不用 nginx）时：`cd backend && ./mvnw spring-boot:run`，
 > `/static/**` 由后端 [StaticResourceConfig](backend/src/main/java/com/kyf/mp/server/config/StaticResourceConfig.java) 兜底提供（同样支持 Range 断点续传）。
@@ -89,18 +113,23 @@ pnpm dev
 ### 生产部署
 
 ```bash
+# 确保 web/dist/ 和 backend/target/*.jar 已经生成
 docker compose up -d --build
 ```
 
-- nginx 镜像在构建阶段自动执行前端构建，并内置产物；无需手工复制 `web/dist`。
-- 访问 `http://<host>:8080`
+- `web/dockerfile` 将已有的 `web/dist/` 放入 Nginx 镜像。
+- `backend/dockerfile` 将已有的 `backend/target/*.jar` 放入 Java 运行镜像。
+- Nginx 访问地址：`http://<host>`；后端直连地址：`http://<host>:8080`。
 
 ## 环境变量
 
 | 位置 | 文件 | 说明 |
 |---|---|---|
+| Docker Compose | 根目录 `.env` | 从 [.env.example](.env.example) 复制，填写 `MYSQL_ROOT_PASSWORD`、`MYSQL_APP_PASSWORD` 和 `JWT_SECRET` 等变量 |
 | 前端 | [web/.env.example](web/.env.example) | `VITE_API_URL` 留空 = 相对路径（接口走同源 `/api`，静态走同源 `/static`，由 nginx/Vite 代理处理） |
 | 后端 | [backend/.../application.example.yml](backend/src/main/resources/application.example.yml) | 全部敏感配置用 `${VAR:default}` 占位，可被环境变量覆盖（`MYSQL_PASSWORD`、`JWT_SECRET` 等） |
+
+> Compose 从根目录 `.env` 读取 `MYSQL_APP_PASSWORD`，再把它传入容器内的 `MYSQL_PASSWORD`。两者是“宿主机变量名”和“容器环境变量名”的区别；密码值必须保持一致。
 
 ## 静态资源链路
 
@@ -116,15 +145,16 @@ docker compose up -d --build
 - 前端用 **pnpm**（`packageManager` 已锁定 `pnpm@11.17.0`），**不要用 npm** 安装依赖。esbuild 的构建脚本已在 `pnpm-workspace.yaml`（`allowBuilds`）里放行。
 
 ### 后端部署
-- 后端 Dockerfile 使用多阶段构建：Docker 会在构建阶段执行 Maven 打包，无需在宿主机预先生成 `target/*.jar`。
+- 当前后端 Dockerfile 是运行镜像，Docker 不会自动执行 Maven 打包；Compose 前必须在 `backend/target/` 中生成 JAR。
 - 后端不提供数据库密码或 JWT 密钥默认值；裸跑时复制 `backend/.env.example` 为 `backend/.env` 并填写，Docker 部署时在根 `.env` 中填写 `MYSQL_ROOT_PASSWORD`、`MYSQL_APP_PASSWORD` 和 `JWT_SECRET`。
+- MySQL 只会在空数据目录第一次初始化时读取密码变量。已有 `mysql/data/` 时，修改 `.env` 不会自动修改数据库用户密码。
 
 ### 端口
-- docker 的 nginx 占用宿主机 **8080**；裸跑后端（Spring Boot 默认也是 8080）会**端口冲突**。裸跑调试时改 `SERVER_PORT` 环境变量，或停掉 nginx 容器。
+- docker 的 Nginx 占用宿主机 **80**，后端直连占用 **8080**。如果本机已有服务占用这些端口，需要修改 Compose 端口映射或先停止冲突服务。
 
 ### 静态资源
 - `static/` 是用户上传数据，**不入库**。首次部署克隆后为空目录：docker 会自动创建挂载目录，上传时后端用 `mkdirs()` 自动建 `songs/` 等子目录。
-- 修改 `nginx/conf/nginx.conf` 后，运行中的容器仍是旧配置，必须**重建镜像**才生效：`docker compose up -d --build nginx`。
+- 修改 `web/nginx.conf` 后，运行中的容器仍是旧配置，必须**重建镜像**才生效：`docker compose up -d --build nginx`。
 
 ### 数据库迁移
 - 表结构由 Flyway 管理；初始结构为 `backend/src/main/resources/db/migration/V1__initial_schema.sql`。
@@ -137,9 +167,23 @@ docker compose up -d --build
 - `DbdataInit <songs-directory> <song-covers-directory>` 目前仅校验并扫描媒体目录，供后续实现本地文件元数据导入使用；它不会启动服务或写入数据库。
 
 ### 前端开发
-- dev 下 Vite 把 `/api`、`/static` 代理到 `127.0.0.1:8080`（docker nginx）。**docker 没启动时接口会 502**。
+- dev 下 Vite 把 `/api`、`/static` 代理到 `127.0.0.1:8080`（Docker 后端）。**后端容器没启动时接口会 502**。
 - `VITE_API_URL` 留空 = 相对路径，依赖 nginx / Vite 代理；如果前端裸跑（无代理），图片与接口会 404。
-- 生产镜像会自动构建并托管前端 SPA，部署仅需 `docker compose up -d --build`。
+- 生产镜像会托管已经生成的前端 SPA；部署前需要先执行 `pnpm build` 和 Maven 打包。
+
+## 基础准线是什么意思
+
+“基础准线”（baseline）就是一个被确认可以运行的参考点。它不代表项目已经完成，也不代表后续不能修改，而是约定：后面的改动都可以和这个版本比较，出现问题时也可以回到这个版本定位差异。
+
+在本项目中，v0 基础准线至少包括：
+
+- 前端能够构建并通过类型检查；
+- 后端 JAR 能够启动并连接 MySQL、Redis；
+- Docker Compose 能够启动完整服务链路；
+- Nginx 能够托管前端、转发 `/api/` 并读取 `/static/`；
+- 已有功能和数据库迁移能够保持可用。
+
+以后可以把一个重要稳定版本继续标记为 `v1`、`v2`。如果使用 Git 标签，可以在确认提交后执行 `git tag v0`，让版本号固定指向某一次提交。
 
 
 ## 重构历程
@@ -217,4 +261,22 @@ docker compose up -d --build
 **样式规范**
 -  前端样式重构：模板 Tailwind 原子类 → 语义化 BEM 类名，样式收进 `<style scoped>`（顶部 `@reference` + `@apply` 迁移原原子类），`hover`/`focus`/`group-hover` 等变体改写为纯 CSS 选择器，动态 `:class` 原子条件改为 `is-active` 等语义类。涉及 31 个 `.vue` 文件
 
-> Docker Compose creates the `music_app` database user only when MySQL initializes an empty data directory. For an existing volume, provision that user manually or recreate the empty development volume before switching the backend credentials.
+### 2026-08-27 · v0 可运行基础准线
+
+**Docker Compose 部署收敛**
+- 确认 MySQL 8、Redis 7、Spring Boot 后端和 Nginx 的 Compose 服务链路可以运行。
+- 前端改为先执行 `pnpm build` 生成 `web/dist/`，再由 `web/dockerfile` 构建 Nginx 静态镜像。
+- 后端改为先执行 Maven 打包生成 `backend/target/*.jar`，再由 `backend/dockerfile` 构建 Java 运行镜像。
+- 统一 Compose 构建上下文：后端使用 `./backend`，前端 Nginx 使用 `./web`；Nginx 通过 `backend-server:8080` 转发接口，并通过卷读取 `static/`。
+- 确认宿主机端口：Nginx 使用 `80`，后端直连使用 `8080`，MySQL 使用 `3306`。
+
+**配置与数据初始化**
+- 统一使用根目录 `.env` 管理 `MYSQL_ROOT_PASSWORD`、`MYSQL_APP_PASSWORD`、`JWT_SECRET` 等部署变量。
+- 明确 `MYSQL_APP_PASSWORD` 是 Compose 变量，容器内通过 `MYSQL_PASSWORD` 提供给 Spring Boot 和 MySQL。
+- 记录 MySQL 空数据目录初始化规则：已有 `mysql/data/` 时，修改 `.env` 不会自动修改已存在用户的密码。
+
+**v0 验证与文档**
+- 补充前端类型检查、单元测试、后端测试和 Docker Compose 的可复现验证说明。
+- 将当前可运行状态确定为后续开发和回归排查的 v0 参考版本。
+
+> Docker Compose 只有在 MySQL 使用空数据目录第一次初始化时才会创建 `music_app` 用户并设置密码；已有数据卷需要手动修改用户密码，或在确认数据可删除后重新初始化。
