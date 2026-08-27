@@ -97,8 +97,10 @@ const switchMode = () => {
 
 const handleLogin = async () => {
     const result = await login()
-    if (!result.success) return
-
+    if (!result.success) {
+        ElMessage.error("登录失败")
+        return
+    }
     ElMessage.success('登录成功，欢迎回来！')
     void playerStore.fetchUserQueues()
     void playerStore.fetchCurrentQueue()
