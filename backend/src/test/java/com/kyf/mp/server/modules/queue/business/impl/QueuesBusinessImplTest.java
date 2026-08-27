@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -190,6 +191,8 @@ class QueuesBusinessImplTest {
             queuesBusiness.setPlayMode(userId, queueId, playmode);
         });
         assertThat(e.getCode()).isEqualTo(403);
+        verify(playStateMapper,never()).insert(any(PlayState.class));
+        verify(playStateMapper,never()).updateById(any(PlayState.class));
     }
 
     @Test
