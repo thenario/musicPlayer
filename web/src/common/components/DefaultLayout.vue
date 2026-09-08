@@ -54,11 +54,11 @@
 
                     </el-menu-item>
 
-                    <el-menu-item class="sidebar-menu-item" index="/songs" disabled>
+                    <el-menu-item class="sidebar-menu-item" index="/history">
                         <el-icon>
-                            <Star />
+                            <Clock />
                         </el-icon>
-                        <template #title>我喜欢</template>
+                        <template #title>我听过</template>
                     </el-menu-item>
                 </el-menu>
                 <!-- 用户底栏 -->
@@ -126,7 +126,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Document, Expand, Fold, House, List, Lock, Star, SwitchButton, User } from '@element-plus/icons-vue';
+import { Clock, Document, Expand, Fold, House, List, Lock, Star, SwitchButton, User } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { usePlayerStore } from '@/stores/player'
 import { storeToRefs } from 'pinia';
@@ -187,7 +187,7 @@ const handleCommand = async (command: string) => {
 <style scoped>
 .default-layout {
     height: 100%;
-    background: rgb(157, 128, 128);
+    background-color: aliceblue;
 }
 
 .sidebar {
@@ -324,6 +324,12 @@ const handleCommand = async (command: string) => {
 }
 
 .el-main-content {
-    padding: 0 0 0 0;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0;
+  overflow: auto;
 }
 </style>

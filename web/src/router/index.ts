@@ -89,6 +89,12 @@ const routes = [
         component: () => import('@/views/song/upload/SongUpload.vue'),
         meta: { requiresAuth: true, title: '上传歌曲' },
       },
+      {
+        path: '/history',
+        name: 'history',
+        component: () => import("@/views/song/song-history/index.vue"),
+        meta: { required: true, title: '播放历史' }
+      },
     ],
   },
 ]

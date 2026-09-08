@@ -26,8 +26,8 @@ export interface ISong {
   uploader_id: number | string
   uploader_name: string
   song_cover_url: string | null
-  lyrics?: string
-  t_lyrics?: string
+  lyrics?: string | null
+  t_lyrics?: string | null
 }
 
 export interface IPagination {
