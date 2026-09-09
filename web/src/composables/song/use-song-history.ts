@@ -1,35 +1,56 @@
 import { songApi } from '@/api/song-api'
-import type { ISong } from '@/types'
+import { ref } from 'vue'
+import type { ISong, PlayhistorySong } from '@/types'
 import { usePlayerStore } from '@/stores/player'
-const playerStore = usePlayerStore()
 export function createSongHistory() {
+  const playHistory = ref<PlayhistorySong[]>([])
+
+  const getPlayHistory = async () => {
+    try {
+      const res = await songApi.getPlayHistory()
+      if (!res.success) {
+        return { success: false, history: playHistory.value }
+      }
+
+      playHistory.value = [...(res.history ?? [])].sort(
+        (a, b) => new Date(b.play_time).getTime() - new Date(a.play_time).getTime(),
+      )
+      return { success: true, history: playHistory.value }
+    } catch (e: unknown) {
+      console.log(e)
+      return { success: false, history: playHistory.value }
+    }
+  }
+
   const syncPlayHistory = async (song: ISong) => {
     try {
       await songApi.syncPlayHistory(song)
+      await getPlayHistory()
       return true
     } catch (e: unknown) {
-        console.log(e)
-        return false
+      console.log(e)
+      return false
     }
   }
-  const playAllHistory = async() => {
-    // 逻辑是发送播放请求，后端更新播放队列和播放状态，前端重新拿queue等内容进行播放
-    try{
-        const historyRes = await songApi.playAllHistory()
-        if(!historyRes.success){
-            return false
-        }
-        const currentQueueRes = await playerStore.fetchCurrentQueue()
-        const queuesRes = await playerStore.fetchUserQueues()
-        if(!currentQueueRes || !queuesRes){
-            return false
-        }
-        playerStore.playAtIndex(0)
-        return true
-    }
-    catch(e : unknown){
-        console.log(e)
-        return false
+  const playAllHistory = async () => {
+    try {
+      const playerStore = usePlayerStore()
+      const historyRes = await songApi.playAllHistory()
+      if (!historyRes.success) {
+        return { success: false }
+      }
+      const currentQueueRes = await playerStore.fetchCurrentQueue()
+      const queuesRes = await playerStore.fetchUserQueues()
+      if (!currentQueueRes.success || !queuesRes.success) {
+        return { success: false }
+      }
+      await playerStore.playAtIndex(0)
+      return { success: true }
+    } catch (e: unknown) {
+      console.log(e)
+      return { success: false }
     }
   }
+
+  return { playHistory, syncPlayHistory, playAllHistory, getPlayHistory }
 }

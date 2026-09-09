@@ -1,5 +1,5 @@
 import type { AxiosProgressEvent } from 'axios'
-import type { IAxiosRes, IPagination, ISong, IUploadSong } from '@/types'
+import type { IAxiosRes, IPagination, ISong, IUploadSong, PlayhistorySong } from '@/types'
 import request from './axios'
 
 type SongId = number | string
@@ -79,13 +79,20 @@ const editUserUploadSongs = async (formdata: FormData, songId: SongId) => {
 }
 
 const syncPlayHistory = async (song: ISong) => {
-  const res = await request.patch<never, IAxiosRes<null>>(`/song/history`, { song: song })
+  const res = await request.patch<never, IAxiosRes<null>>(`/songs/history`, null, {
+    params: { song_id: song.song_id },
+  })
   return { success: res.success, message: res.message }
 }
 
 const playAllHistory = async () => {
-  const res = await request.post<never, IAxiosRes<null>>(`/song/history`)
+  const res = await request.post<never, IAxiosRes<null>>(`/songs/history`)
   return { success: res.success, message: res.message }
+}
+
+const getPlayHistory = async () => {
+  const res = await request.get<never, IAxiosRes<PlayhistorySong[]>>(`/songs/history`)
+  return { success: res.success, history: res.data, message: res.message }
 }
 
 export const songApi = {
@@ -97,4 +104,5 @@ export const songApi = {
   editUserUploadSongs,
   syncPlayHistory,
   playAllHistory,
+  getPlayHistory,
 }

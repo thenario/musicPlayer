@@ -1,5 +1,7 @@
 package com.kyf.mp.server.modules.song.controller;
 
+import java.util.List;
+
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -16,6 +18,7 @@ import com.kyf.mp.server.common.ResultModel;
 import com.kyf.mp.server.modules.song.dto.EditSongDTO;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
 import com.kyf.mp.server.modules.song.vo.LyricsVO;
+import com.kyf.mp.server.modules.song.vo.PlayHistoryVO;
 import com.kyf.mp.server.modules.song.vo.UploadsVO;
 import com.kyf.mp.server.modules.song.service.SongsService;
 
@@ -28,6 +31,8 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.RequestBody;
+
 
 /**
  * <p>
@@ -116,6 +121,29 @@ public class SongsController {
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") @Min(value = 1, message = "Song ID must be positive") Long songId) {
         songsService.editUploadSong(dto, userId, songId);
         return ResultModel.success(null);
+    }
+
+    @PatchMapping("/history")
+    @Operation(summary = "更新历史播放", description = "更新该用户的播放历史")
+    @SecurityRequirement( name = "bearAuth" )
+    public ResultModel<Void> syncPlayHistory(
+        @Parameter(description= "歌曲id", required = true, example = "1")
+        @RequestParam("song_id") @NotNull(message = "缺少歌曲ID") Long songId,
+        @Parameter(hidden = true) @RequestAttribute("userId") Long userId
+    ){
+        songsService.syncPlayHistory(userId, songId);
+        return ResultModel.success(null);
+    }
+
+    @PostMapping("/history")
+    public ResultModel<Void> playAllhistory(@Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
+        songsService.playAllhistory(userId);
+        return ResultModel.success(null);
+    }
+
+    @GetMapping("/history")
+    public ResultModel<List<PlayHistoryVO>> getPlayHistory(@Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
+        return ResultModel.success(songsService.getPlayHistory(userId));
     }
 
 }

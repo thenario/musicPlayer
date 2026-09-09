@@ -297,6 +297,78 @@ public class QueuesBusinessImpl extends BaseBusinessImpl<QueuesMapper, Queues> i
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public Long createQueueFromHistory(Long userId, List<Long> songIds) {
+        if (userId == null || songIds == null || songIds.isEmpty()) {
+            throw new BusinessException(400, "播放历史为空");
+        }
+
+        PlayState playState = playStateMapper.selectOne(new LambdaQueryWrapper<PlayState>()
+                .eq(PlayState::getUserId, userId));
+        boolean hasPlayState = playState != null;
+        Long currentQueueId = hasPlayState ? playState.getCurrentQueueId() : null;
+
+        List<Queues> existingQueues = queuesMapper.selectList(new LambdaQueryWrapper<Queues>()
+                .eq(Queues::getCreatorId, userId)
+                .orderByAsc(Queues::getCreatedDate));
+
+        if (existingQueues.size() >= maxQueuesPerUser) {
+            Queues removableQueue = existingQueues.stream()
+                    .filter(queue -> !Objects.equals(queue.getQueueId(), currentQueueId))
+                    .findFirst()
+                    .orElseThrow(() -> new BusinessException(409, "当前播放队列不可自动删除"));
+
+            queueItemsMapper.delete(new LambdaQueryWrapper<QueueItems>()
+                    .eq(QueueItems::getQueueId, removableQueue.getQueueId()));
+            queuesMapper.deleteById(removableQueue.getQueueId());
+        }
+
+        // 新队列设为当前队列前，取消该用户其他队列的当前标记。
+        queuesMapper.update(null, new LambdaUpdateWrapper<Queues>()
+                .set(Queues::getCurrent, false)
+                .eq(Queues::getCreatorId, userId));
+
+        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
+        Queues queue = new Queues();
+        queue.setQueueName("播放历史");
+        queue.setCreatorId(userId);
+        queue.setCurrent(true);
+        queue.setSongCount(songIds.size());
+        queue.setCreatedDate(now);
+        queue.setUpdatedDate(now);
+        queuesMapper.insert(queue);
+
+        for (int i = 0; i < songIds.size(); i++) {
+            QueueItems item = new QueueItems();
+            item.setQueueId(queue.getQueueId());
+            item.setSongId(songIds.get(i));
+            item.setQueueItemPosition(i + 1);
+            item.setAddedDate(now);
+            queueItemsMapper.insert(item);
+        }
+
+        if (!hasPlayState) {
+            playState = new PlayState();
+            playState.setUserId(userId);
+            playState.setPlaymode("sequential");
+            playState.setCurrentProgress(0);
+        }
+        playState.setCurrentQueueId(queue.getQueueId());
+        playState.setCurrentSongId(songIds.get(0));
+        playState.setCurrentPosition(1);
+        playState.setCurrentProgress(0);
+        playState.setUpdatedDate(now);
+
+        if (hasPlayState) {
+            playStateMapper.updateById(playState);
+        } else {
+            playStateMapper.insert(playState);
+        }
+
+        return queue.getQueueId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueueDTO dto) {
         Long songId = dto.getSongId();
         boolean mode = dto.getMode() != null && dto.getMode();

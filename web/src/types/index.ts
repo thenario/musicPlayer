@@ -115,3 +115,8 @@ export interface LyricLine {
   content: string
   translation?: string
 }
+
+export interface PlayhistorySong {
+  song: ISong,
+  play_time: Date
+}

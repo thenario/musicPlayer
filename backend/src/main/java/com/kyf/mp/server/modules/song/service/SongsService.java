@@ -1,11 +1,14 @@
 package com.kyf.mp.server.modules.song.service;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kyf.mp.server.modules.song.dto.EditSongDTO;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
 import com.kyf.mp.server.modules.song.vo.LyricsVO;
+import com.kyf.mp.server.modules.song.vo.PlayHistoryVO;
 import com.kyf.mp.server.modules.song.vo.UploadsVO;
 
 public interface SongsService {
@@ -21,4 +24,10 @@ public interface SongsService {
     UploadsVO getUploadSong(Long userId, Long songId);
 
     void editUploadSong(EditSongDTO dto, Long userId, Long songID);
+
+    List<PlayHistoryVO> getPlayHistory(Long userId);
+
+    void playAllhistory(Long userId);
+
+    void syncPlayHistory(Long userId, Long songId);
 }

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyf.mp.server.modules.song.mapper.PlayHistoryMapper">
+
+    <resultMap id="PlayHistoryMap" type="com.kyf.mp.server.modules.song.vo.PlayHistoryVO">
+        <result property="playTime" column="played_date" />
+        <association property="song"
+                javaType="com.kyf.mp.server.modules.song.vo.SongVO">
+            <id property="songId" column="song_id" />
+            <result property="songTitle" column="song_title" />
+            <result property="songCoverUrl" column="song_cover_url" />
+            <result property="songUrl" column="song_url" />
+            <result property="artist" column="artist" />
+            <result property="album" column="album" />
+        </association>
+    </resultMap>
+
+    <select id="selectHistoryWithSong" resultMap="PlayHistoryMap">
+        SELECT ph.played_date,
+               s.song_id,
+               s.song_title,
+               s.song_cover_url,
+               s.song_url,
+               s.artist,
+               s.album
+        FROM play_history ph
+        INNER JOIN songs s ON s.song_id = ph.song_id
+        WHERE ph.user_id = #{userId}
+        ORDER BY ph.played_date DESC, ph.history_id DESC
+    </select>
+
+</mapper>

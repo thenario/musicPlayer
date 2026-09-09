@@ -30,6 +30,8 @@ public interface QueuesBusiness extends BaseBusiness<Queues> {
 
     CreateQueueFromPlaylistVO createQueueFromPlaylist(Long userId, Long playlistId);
 
+    Long createQueueFromHistory(Long userId, List<Long> songIds);
+
     AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueueDTO dto);
 
     void removeSongFromQueue(Long userId, Long queueId, Long queueItemId);

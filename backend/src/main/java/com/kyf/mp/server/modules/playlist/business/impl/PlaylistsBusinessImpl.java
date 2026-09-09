@@ -37,7 +37,6 @@ import com.kyf.mp.server.modules.playlist.mapper.UsersPlaylistsRelationMapper;
 import com.kyf.mp.server.modules.playlist.vo.AddSongToPlaylistVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistContentVO;
-import com.kyf.mp.server.modules.playlist.vo.PlaylistDetailVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistSongVO;
 import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;

@@ -11,6 +11,7 @@ import { createPlaybackSync } from '@/composables/player/use-playback-sync'
 import { createQueueMutations } from '@/composables/player/use-queue-mutations'
 import { createQueueService } from '@/composables/player/use-queue-service'
 
+import { useSongStore } from './song'
 const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
 
 export const usePlayerStore = defineStore('player', () => {
@@ -124,6 +125,8 @@ export const usePlayerStore = defineStore('player', () => {
       }
       updateMediaSession()
       syncPlayStateToBackend()
+      // 只能在 Pinia 激活后、动作执行时获取 store，不能在模块加载时获取。
+      void useSongStore().syncPlayHistory(song)
       return { success: true }
     } catch (err: unknown) {
       console.error(errorMessage(err))
