@@ -10,4 +10,5 @@ public class SongVO {
     private String songUrl;
     private String artist;
     private String album;
+    private Integer duration;
 }

@@ -126,7 +126,7 @@
 </template>
 <script setup lang="ts">
 import { ref } from 'vue';
-import { Clock, Document, Expand, Fold, House, List, Lock, Star, SwitchButton, User } from '@element-plus/icons-vue';
+import { Clock, Document, Expand, Fold, House, List, Lock, SwitchButton, User } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
 import { usePlayerStore } from '@/stores/player'
 import { storeToRefs } from 'pinia';

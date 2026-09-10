@@ -56,11 +56,13 @@ const emit = defineEmits<{
 
 <style scoped>
 .queue-list__item {
-  display: flex; align-items: center; justify-content: space-between; padding: 12px; margin-bottom: 8px; cursor: pointer; background: rgb(255 255 255 / 5%); border-radius: 8px; transition: background-color .2s ease;
+  display: flex; align-items: center; justify-content: space-between; padding: 14px; margin-bottom: 10px; cursor: pointer; background: #ffffff; border: 1px solid #e8eaef; border-radius: 10px; transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
 .queue-list__item:hover {
-  background: rgb(255 255 255 / 10%);
+  background: #ffffff;
+  border-color: #d9d5ff;
+  box-shadow: 0 4px 14px rgb(38 35 78 / 7%);
 }
 
 .queue-list__info {
@@ -68,15 +70,15 @@ const emit = defineEmits<{
 }
 
 .queue-list__avatar {
-  display: flex; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center; background: #1f2937; border-radius: 4px;
+  display: flex; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center; background: #f1f0ff; border-radius: 8px;
 }
 
 .queue-list__avatar-icon {
-  color: #6b7280;
+  color: #969cab;
 }
 
 .queue-list__avatar-icon--active {
-  color: #409eff;
+  color: #6256c5;
 }
 
 .queue-list__meta {
@@ -88,11 +90,11 @@ const emit = defineEmits<{
 }
 
 .queue-list__name.is-active {
-  color: #409eff;
+  color: #6256c5;
 }
 
 .queue-list__count {
-  color: #6b7280; font-size: 10px;
+  color: #969cab; font-size: 11px;
 }
 
 .queue-list__actions {

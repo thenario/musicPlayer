@@ -58,11 +58,11 @@ const emit = defineEmits<{
 }
 
 .queue-item:hover {
-  background: rgb(255 255 255 / 5%);
+  background: #f4f3ff;
 }
 
 .queue-item--active {
-  background: rgb(64 158 255 / 12%);
+  background: #efedff;
 }
 
 .queue-item__icon-col {
@@ -74,7 +74,7 @@ const emit = defineEmits<{
 }
 
 .queue-item__handle {
-  color: #6b7280; cursor: grab; opacity: 0; transition: opacity .2s ease;
+  color: #a0a6b2; cursor: grab; opacity: 0; transition: opacity .2s ease;
 }
 
 .queue-item:hover .queue-item__handle {
@@ -82,11 +82,11 @@ const emit = defineEmits<{
 }
 
 .queue-item__handle:hover {
-  color: #fff;
+  color: #6256c5;
 }
 
 .queue-item__status {
-  position: absolute; color: #409eff;
+  position: absolute; color: #6256c5;
 }
 
 .queue-item__title-col {
@@ -102,15 +102,15 @@ const emit = defineEmits<{
 }
 
 .queue-item__title--inactive {
-  color: #e5e7eb;
+  color: #353a46;
 }
 
 .queue-item__title--active {
-  color: #409eff;
+  color: #6256c5;
 }
 
 .queue-item__artist {
-  overflow: hidden; color: #6b7280; font-size: 10px; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; color: #969cab; font-size: 11px; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .queue-item__action-col {
@@ -129,7 +129,7 @@ const emit = defineEmits<{
   display: inline-block;
   width: 12px;
   height: 12px;
-  background: #3b82f6;
+  background: #6256c5;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='3' height='15' x='1' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='10.5' y='4.5'%3E%3Canimate attributeName='y' values='1;4.5;1' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='22;15;22' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='20' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3C/svg%3E");
 }
 </style>

@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
+import org.apache.catalina.connector.ClientAbortException;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -81,6 +82,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<ResultModel<Void>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         return validationError("请求参数类型不匹配");
+    }
+
+    // 音频播放、切歌或拖动进度时，浏览器可能主动取消旧的 Range 请求。
+    @ExceptionHandler(ClientAbortException.class)
+    public void handleClientAbort(ClientAbortException e) {
+        log.debug("客户端中止了资源连接");
     }
 
     @ExceptionHandler(Exception.class)

@@ -19,6 +19,7 @@
     </div>
 </template>
 <script setup lang="ts">
+defineOptions({ name: 'SongHistoryPage' })
 import type { ISong } from '@/types';
 import SongTable from '@/views/song/song-list/components/SongTable.vue';
 import { VideoPlay } from '@element-plus/icons-vue';

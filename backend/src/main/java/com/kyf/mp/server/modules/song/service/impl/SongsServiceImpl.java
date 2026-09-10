@@ -1,12 +1,8 @@
 package com.kyf.mp.server.modules.song.service.impl;
 
-import com.kyf.mp.server.common.auth.LoginRateLimiter;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,8 +26,6 @@ import com.kyf.mp.server.modules.song.vo.LyricsVO;
 import com.kyf.mp.server.modules.song.vo.PlayHistoryVO;
 import com.kyf.mp.server.modules.song.vo.UploadsVO;
 
-import lombok.RequiredArgsConstructor;
-
 /**
  * <p>
  * 服务实现类：业务逻辑编排，数据访问委托给 SongsBusiness。
@@ -43,16 +37,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 public class SongsServiceImpl implements SongsService {
 
-    private final LoginRateLimiter loginRateLimiter;
     private final SongsBusiness songsBusiness;
     private final PlayHistoryMapper playHistoryMapper;
     private final QueuesBusiness queuesBusiness;
 
-    SongsServiceImpl(LoginRateLimiter loginRateLimiter, PlayHistoryMapper playHistoryMapper,
-            SongsBusiness songsBusiness, QueuesBusiness queuesBusiness) {
-        this.loginRateLimiter = loginRateLimiter;
-        this.playHistoryMapper = playHistoryMapper;
+    public SongsServiceImpl(SongsBusiness songsBusiness, PlayHistoryMapper playHistoryMapper,
+            QueuesBusiness queuesBusiness) {
         this.songsBusiness = songsBusiness;
+        this.playHistoryMapper = playHistoryMapper;
         this.queuesBusiness = queuesBusiness;
     }
 
@@ -112,25 +104,38 @@ public class SongsServiceImpl implements SongsService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void syncPlayHistory(Long userId, Long songId) {
-        if (userId == null) {
-            throw new com.kyf.mp.server.common.BusinessException(404, "用户不存在");
+        if (userId == null || songId == null) {
+            throw new com.kyf.mp.server.common.BusinessException(400, "用户或歌曲不存在");
         }
-        Map<String, Object> params = new HashMap<>();
-        params.put("user_id", userId);
-        params.put("song_id", songId);
-        List<PlayHistory> histories = playHistoryMapper.selectByMap(params);
-        if (!histories.isEmpty()) {
-            PlayHistory playHistory = histories.get(0);
-            playHistory.setPlayedDate(LocalDateTime.now(ZoneId.systemDefault()));
+
+        LocalDateTime now = LocalDateTime.now(ZoneId.systemDefault());
+        List<PlayHistory> sameSongHistories = playHistoryMapper.selectList(
+                new LambdaQueryWrapper<PlayHistory>()
+                        .eq(PlayHistory::getUserId, userId)
+                        .eq(PlayHistory::getSongId, songId)
+                        .orderByDesc(PlayHistory::getPlayedDate)
+                        .orderByDesc(PlayHistory::getHistoryId));
+
+        if (sameSongHistories.isEmpty()) {
+            PlayHistory playHistory = new PlayHistory();
+            playHistory.setSongId(songId);
+            playHistory.setUserId(userId);
+            playHistory.setPlayedDate(now);
+            playHistoryMapper.insert(playHistory);
+        } else {
+            // 同一首歌只保留一条记录，重复播放时更新这条记录的时间。
+            PlayHistory playHistory = sameSongHistories.get(0);
+            playHistory.setPlayedDate(now);
             playHistoryMapper.updateById(playHistory);
 
+            List<Long> duplicateIds = sameSongHistories.stream()
+                    .skip(1)
+                    .map(PlayHistory::getHistoryId)
+                    .toList();
+            if (!duplicateIds.isEmpty()) {
+                playHistoryMapper.deleteBatchIds(duplicateIds);
+            }
         }
-        PlayHistory playHistory = new PlayHistory();
-        playHistory.setSongId(songId);
-        playHistory.setUserId(userId);
-        playHistory.setPlayedDate(
-                LocalDateTime.now(ZoneId.systemDefault()));
-        playHistoryMapper.insert(playHistory);
 
         LambdaQueryWrapper<PlayHistory> wrapper = new LambdaQueryWrapper<PlayHistory>()
                 .eq(PlayHistory::getUserId, userId)

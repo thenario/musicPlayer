@@ -136,12 +136,14 @@ public class SongsController {
     }
 
     @PostMapping("/history")
+    @SecurityRequirement(name = "bearerAuth")
     public ResultModel<Void> playAllhistory(@Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
         songsService.playAllhistory(userId);
         return ResultModel.success(null);
     }
 
     @GetMapping("/history")
+    @SecurityRequirement(name = "bearerAuth")
     public ResultModel<List<PlayHistoryVO>> getPlayHistory(@Parameter(hidden = true) @RequestAttribute("userId") Long userId) {
         return ResultModel.success(songsService.getPlayHistory(userId));
     }

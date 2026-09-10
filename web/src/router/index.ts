@@ -93,7 +93,7 @@ const routes = [
         path: '/history',
         name: 'history',
         component: () => import("@/views/song/song-history/index.vue"),
-        meta: { required: true, title: '播放历史' }
+        meta: { requiresAuth: true, title: '播放历史' }
       },
     ],
   },

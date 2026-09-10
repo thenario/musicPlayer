@@ -13,6 +13,7 @@
             <result property="songUrl" column="song_url" />
             <result property="artist" column="artist" />
             <result property="album" column="album" />
+            <result property="duration" column="duration" />
         </association>
     </resultMap>
 
@@ -23,7 +24,8 @@
                s.song_cover_url,
                s.song_url,
                s.artist,
-               s.album
+               s.album,
+               s.duration
         FROM play_history ph
         INNER JOIN songs s ON s.song_id = ph.song_id
         WHERE ph.user_id = #{userId}
