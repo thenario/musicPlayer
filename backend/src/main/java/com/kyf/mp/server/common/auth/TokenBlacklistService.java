@@ -45,7 +45,7 @@ public class TokenBlacklistService {
                     .orElse(null);
             expireAt = expiration != null ? expiration.toEpochMilli() : System.currentTimeMillis() + defaultTtlMillis;
         } catch (JwtException | IllegalArgumentException e) {
-            log.debug("revoke: token already invalid, nothing to revoke: {}", e.getMessage());
+            log.debug("revoke: token already invalid, nothing to revoke", e);
             return;
         }
 

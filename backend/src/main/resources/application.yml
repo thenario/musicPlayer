@@ -79,3 +79,6 @@ springdoc:
     operations-sorter: method
     display-request-duration: true
     doc-expansion: none
+
+app:
+  log-level: INFO

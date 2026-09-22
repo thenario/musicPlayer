@@ -205,7 +205,7 @@ public class SongScannerTask {
             songsMapper.insert(song);
             return true;
         } catch (Exception e) {
-            log.error("解析失败 {}: {}", file.getName(), e.getMessage());
+            log.error("解析失败: {}", file.getName(), e);
             return false;
         }
     }

@@ -57,7 +57,7 @@ public class DotenvEnvironmentPostProcessor implements EnvironmentPostProcessor 
             }
         } catch (IOException e) {
             // 读取失败不阻断启动，交由后续占位符解析报错，便于定位缺失项
-            log.error("[dotenv] 读取 .env 失败: " + e.getMessage());
+            log.error("[dotenv] 读取 .env 失败", e);
         }
         return map;
     }

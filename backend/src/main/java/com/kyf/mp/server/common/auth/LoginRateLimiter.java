@@ -40,7 +40,7 @@ public class LoginRateLimiter {
                 redisTemplate.expire(key, windowSeconds, TimeUnit.SECONDS);
             }
         } catch (RedisConnectionFailureException | RedisSystemException exception) {
-            log.warn("Login rate limiting unavailable; allowing request: {}", exception.getMessage());
+            log.warn("Login rate limiting unavailable; allowing request", exception);
             return;
         }
         if (attempts != null && attempts > maxAttempts) {

@@ -366,7 +366,7 @@ public class PlaylistsBusinessImpl extends BaseBusinessImpl<PlaylistsMapper, Pla
             File file = StoragePathResolver.resolveFile(playlistCoverPath, fileName);
             Files.deleteIfExists(file.toPath());
         } catch (Exception e) {
-            log.warn("物理文件清理失败: {}", e.getMessage());
+            log.warn("物理文件清理失败", e);
         }
     }
 }

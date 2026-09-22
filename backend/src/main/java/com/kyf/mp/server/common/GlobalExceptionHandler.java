@@ -30,13 +30,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ResultModel<Void>> handleBusinessException(BusinessException e) {
         HttpStatus status = resolveStatus(e.getCode());
-        log.warn("业务异常: status={}, message={}", status.value(), e.getMessage());
+        log.warn("业务异常: status={}, message={}", status.value(), e.getMessage(), e);
         return ResponseEntity.status(status).body(ResultModel.error(e.getMessage(), status.value()));
     }
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ResultModel<Void>> handleAccessDenied(AccessDeniedException exception) {
-        log.warn("访问被拒绝: {}", exception.getMessage());
+        log.warn("访问被拒绝", exception);
         return ResponseEntity.status(HttpStatus.FORBIDDEN)
                 .body(ResultModel.error("没有访问权限", HttpStatus.FORBIDDEN.value()));
     }
