@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <!-- APP_LOG_LEVEL 或 app.log-level 可覆盖业务包日志级别。 -->
+    <springProperty scope="context"
+                    name="appLogLevel"
+                    source="app.log-level"
+                    defaultValue="INFO"/>
+
+    <property name="CONSOLE_LOG_PATTERN"
+              value="&gt;&gt; [MY-MUSIC-APP] %d{HH:mm:ss} %clr(%5p) %clr(---){faint} %clr(%logger{36}){cyan} %clr(:){faint} %clr(%m){green}%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <!-- dev 由启动参数或环境变量显式激活：--spring.profiles.active=dev。 -->
+    <springProfile name="dev">
+        <logger name="com.kyf.mp.server" level="${appLogLevel}"/>
+        <logger name="org.springframework.web" level="DEBUG"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+
+    <!-- 未指定 profile，或指定了 test/prod 等其他 profile 时使用。 -->
+    <springProfile name="!dev">
+        <logger name="com.kyf.mp.server" level="${appLogLevel}"/>
+        <root level="INFO">
+            <appender-ref ref="CONSOLE"/>
+        </root>
+    </springProfile>
+</configuration>

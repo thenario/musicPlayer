@@ -44,13 +44,6 @@ spring:
     password: ${MYSQL_PASSWORD}   # 必填：仅通过环境变量提供
     driver-class-name: com.mysql.cj.jdbc.Driver
 
-logging:
-  level:
-    root: info
-    "com.kyf.mp.server": ${APP_LOG_LEVEL:info}
-  pattern:
-    console: ">> [MY-MUSIC-APP] %d{HH:mm:ss} %clr(%5p) %clr(---){faint} %clr(%logger{36}){cyan} %clr(:){faint} %clr(%m){green}%n"
-
 jwt:
   secret: ${JWT_SECRET}   # 必填：至少 32 字节，仅通过环境变量提供
   expire: ${JWT_EXPIRE:86400000}     # 毫秒；86400000 = 1 天
