@@ -8,7 +8,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.server.modules.queue.business.QueuesBusiness;
+import com.kyf.mp.server.modules.queue.service.workflow.QueuesWorkflow;
 import com.kyf.mp.server.modules.queue.dto.AddSongToQueueDTO;
 import com.kyf.mp.server.modules.queue.dto.UpdateCurrentQueueStateDTO;
 import com.kyf.mp.server.modules.queue.service.QueuesService;
@@ -24,7 +24,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排，数据访问委托给 QueuesBusiness。
+ * 服务实现类：业务逻辑编排，业务流程委托给 QueuesWorkflow。
  * </p>
  *
  * @author kyf
@@ -34,24 +34,24 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class QueuesServiceImpl implements QueuesService {
 
-    private final QueuesBusiness queuesBusiness;
+    private final QueuesWorkflow queuesWorkflow;
 
     @Override
     @Cacheable(cacheNames = "user-queues", key = "#userId + ':' +'current'")
     public CurrentQueueVO getCurrentQueue(Long userId) {
-        return queuesBusiness.getCurrentQueue(userId);
+        return queuesWorkflow.getCurrentQueue(userId);
     }
 
     @Override
     @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + 'all-queues'")
     public MyQueuesVO getMyQueues(Long userId) {
-        return queuesBusiness.getMyQueues(userId);
+        return queuesWorkflow.getMyQueues(userId);
     }
 
     @Override
     @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + #queueId")
     public SingleQueueVO getQueueById(Long userId, Long queueId) {
-        return queuesBusiness.getQueueById(userId, queueId);
+        return queuesWorkflow.getQueueById(userId, queueId);
     }
 
     @Override
@@ -61,7 +61,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + #queueId"),
     })
     public DeleteQueueVO deleteQueue(Long userId, Long queueId) {
-        return queuesBusiness.deleteQueue(userId, queueId);
+        return queuesWorkflow.deleteQueue(userId, queueId);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + #queueId"),
     })
     public void clearQueue(Long userId, Long queueId) {
-        queuesBusiness.clearQueue(userId, queueId);
+        queuesWorkflow.clearQueue(userId, queueId);
     }
 
     @Override
@@ -80,7 +80,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':'+ 'current'")
     })
     public CreateQueueFromPlaylistVO createQueueFromPlaylist(Long userId, Long playlistId) {
-        return queuesBusiness.createQueueFromPlaylist(userId, playlistId);
+        return queuesWorkflow.createQueueFromPlaylist(userId, playlistId);
     }
 
     @Override
@@ -90,7 +90,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + #paramQueueId"),
     })
     public AddSongToQueueVO addSongToQueue(Long userId, Long paramQueueId, AddSongToQueueDTO dto) {
-        return queuesBusiness.addSongToQueue(userId, paramQueueId, dto);
+        return queuesWorkflow.addSongToQueue(userId, paramQueueId, dto);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + #queueId"),
     })
     public void removeSongFromQueue(Long userId, Long queueId, Long queueItemId) {
-        queuesBusiness.removeSongFromQueue(userId, queueId, queueItemId);
+        queuesWorkflow.removeSongFromQueue(userId, queueId, queueItemId);
     }
 
     @Override
@@ -108,7 +108,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':'+ 'current'"),
     })
     public void updateCurrentQueueState(Long userId, UpdateCurrentQueueStateDTO wrapper) {
-        queuesBusiness.updateCurrentQueueState(userId, wrapper);
+        queuesWorkflow.updateCurrentQueueState(userId, wrapper);
     }
 
     @Override
@@ -118,7 +118,7 @@ public class QueuesServiceImpl implements QueuesService {
 
     })
     public AlterQueueVO alterQueueToCurrent(Long userId, Long queueId) {
-        return queuesBusiness.alterQueueToCurrent(userId, queueId);
+        return queuesWorkflow.alterQueueToCurrent(userId, queueId);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':'+ 'current'"),
     })
     public void setPlayMode(Long userId, Long queueId, String playMode) {
-        queuesBusiness.setPlayMode(userId, queueId, playMode);
+        queuesWorkflow.setPlayMode(userId, queueId, playMode);
     }
 
     @Override
@@ -136,6 +136,6 @@ public class QueuesServiceImpl implements QueuesService {
             @CacheEvict(cacheNames = "user-queues", key = "#userId + ':' + #queueId"),
     })
     public void reorderQueue(Long userId, Long queueId, List<Long> songIds) {
-        queuesBusiness.reorderQueue(userId, queueId, songIds);
+        queuesWorkflow.reorderQueue(userId, queueId, songIds);
     }
 }

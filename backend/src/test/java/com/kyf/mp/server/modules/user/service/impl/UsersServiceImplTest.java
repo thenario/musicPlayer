@@ -5,16 +5,17 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import com.kyf.mp.server.common.auth.LoginRateLimiter;
-import com.kyf.mp.server.modules.user.business.UsersBusiness;
 import com.kyf.mp.server.modules.user.entity.Users;
+import com.kyf.mp.server.modules.user.repository.UsersRepository;
+import com.kyf.mp.server.modules.user.service.workflow.UsersWorkflow;
 import com.kyf.mp.server.utils.JwtUtils;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,7 +24,10 @@ class UsersServiceImplTest {
     private static final String LEGACY_SHA256 = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
 
     @Mock
-    private UsersBusiness usersBusiness;
+    private UsersRepository usersRepository;
+
+    @Mock
+    private UsersWorkflow usersWorkflow;
 
     @Mock
     private JwtUtils jwtUtils;
@@ -37,7 +41,7 @@ class UsersServiceImplTest {
     @BeforeEach
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder(4);
-        usersService = new UsersServiceImpl(usersBusiness, passwordEncoder, jwtUtils, loginRateLimiter);
+        usersService = new UsersServiceImpl(usersWorkflow, usersRepository, passwordEncoder, jwtUtils, loginRateLimiter);
     }
 
     @Test
@@ -49,7 +53,7 @@ class UsersServiceImplTest {
         assertThat(usersService.matchesPassword(LEGACY_SHA256, user)).isTrue();
         assertThat(user.getPassword()).startsWith("$2");
         assertThat(passwordEncoder.matches(LEGACY_SHA256, user.getPassword())).isTrue();
-        verify(usersBusiness).updateById(user);
+        verify(usersRepository).updateById(user);
     }
 
     @Test
@@ -61,7 +65,7 @@ class UsersServiceImplTest {
         assertThat(usersService.matchesPassword("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", user))
                 .isFalse();
         assertThat(user.getPassword()).isEqualTo(LEGACY_SHA256);
-        verifyNoInteractions(usersBusiness);
+        verifyNoInteractions(usersRepository);
     }
 
     @Test
@@ -71,6 +75,6 @@ class UsersServiceImplTest {
         user.setPassword(passwordEncoder.encode(LEGACY_SHA256));
 
         assertThat(usersService.matchesPassword(LEGACY_SHA256, user)).isTrue();
-        verifyNoInteractions(usersBusiness);
+        verifyNoInteractions(usersRepository);
     }
 }

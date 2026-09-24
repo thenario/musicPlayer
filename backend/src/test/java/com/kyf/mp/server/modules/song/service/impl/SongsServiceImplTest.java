@@ -14,27 +14,32 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.kyf.mp.server.modules.queue.entity.PlayHistory;
-import com.kyf.mp.server.modules.queue.business.QueuesBusiness;
-import com.kyf.mp.server.modules.song.business.SongsBusiness;
+import com.kyf.mp.server.modules.queue.repository.impl.PlayHistoryRepositoryImpl;
+import com.kyf.mp.server.modules.queue.service.workflow.QueuesWorkflow;
 import com.kyf.mp.server.modules.song.mapper.PlayHistoryMapper;
+import com.kyf.mp.server.modules.song.repository.SongsRepository;
+import com.kyf.mp.server.modules.song.service.workflow.SongsWorkflow;
 
 @ExtendWith(MockitoExtension.class)
 class SongsServiceImplTest {
 
     @Mock
-    private SongsBusiness songsBusiness;
+    private SongsWorkflow songsWorkflow;
+
+    @Mock
+    private SongsRepository songsRepository;
 
     @Mock
     private PlayHistoryMapper playHistoryMapper;
 
     @Mock
-    private QueuesBusiness queuesBusiness;
+    private QueuesWorkflow queuesWorkflow;
 
     private SongsServiceImpl songsService;
 
     @BeforeEach
     void setUp() {
-        songsService = new SongsServiceImpl(songsBusiness, playHistoryMapper, queuesBusiness);
+        songsService = new SongsServiceImpl(songsWorkflow, songsRepository, new PlayHistoryRepositoryImpl(playHistoryMapper), queuesWorkflow);
     }
 
     @Test

@@ -23,6 +23,7 @@ v0 的 Docker 部署采用“宿主机先构建产物、Docker 再组装运行�
 ## 架构与质量基线
 
 - 按 `Song`、`Playlist`、`Queue`、`User` 模块组织后端；JWT 认证、Redis token 黑名单、统一异常响应与请求校验位于公共层。
+- 后端按 `Controller → Service（含 Workflow）→ Repository → Mapper/XML` 分工；原 `business` 层已拆分为业务流程与纯数据访问，详见 [后端分层与手写指南](backend/ARCHITECTURE.md)。
 - Flyway 是唯一的表结构演进入口；后端测试会在临时 MySQL 8 容器上验证全部迁移。
 - 上传文件经扩展名、Content-Type、图片魔数和音频解析校验；静态资源在 nginx 与裸跑后端两种路径下均可访问。
 - 队列、歌单和播放状态的关键写操作在事务内执行；前端对异步响应、音频事件和 Blob 预览资源均有生命周期处理。

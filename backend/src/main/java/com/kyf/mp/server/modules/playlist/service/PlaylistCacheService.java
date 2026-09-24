@@ -3,7 +3,7 @@ package com.kyf.mp.server.modules.playlist.service;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
-import com.kyf.mp.server.modules.playlist.business.PlaylistsBusiness;
+import com.kyf.mp.server.modules.playlist.service.workflow.PlaylistsWorkflow;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistContentVO;
 
 import lombok.RequiredArgsConstructor;
@@ -17,10 +17,10 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PlaylistCacheService {
 
-    private final PlaylistsBusiness playlistsBusiness;
+    private final PlaylistsWorkflow playlistsWorkflow;
 
     @Cacheable(cacheNames = "playlist-detail", key = "#playlistId")
     public PlaylistContentVO getPlaylistContent(Long playlistId) {
-        return playlistsBusiness.getPlaylistContent(playlistId);
+        return playlistsWorkflow.getPlaylistContent(playlistId);
     }
 }

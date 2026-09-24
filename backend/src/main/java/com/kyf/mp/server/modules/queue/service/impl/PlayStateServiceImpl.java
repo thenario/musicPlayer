@@ -6,7 +6,7 @@ import com.kyf.mp.server.modules.queue.service.PlayStateService;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排，数据访问委托给 business 层。
+ * 服务实现类：业务逻辑编排，数据访问由 Repository 层封装。
  * </p>
  *
  * @author kyf

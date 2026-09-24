@@ -11,10 +11,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kyf.mp.server.common.BusinessException;
-import com.kyf.mp.server.modules.playlist.business.PlaylistsBusiness;
 import com.kyf.mp.server.modules.playlist.entity.Playlists;
+import com.kyf.mp.server.modules.playlist.repository.PlaylistsRepository;
 import com.kyf.mp.server.modules.playlist.service.PlaylistCacheService;
 import com.kyf.mp.server.modules.playlist.service.PlaylistsService;
+import com.kyf.mp.server.modules.playlist.service.workflow.PlaylistsWorkflow;
 import com.kyf.mp.server.modules.playlist.vo.AddSongToPlaylistVO;
 import com.kyf.mp.server.modules.playlist.vo.MyPlaylistsVO;
 import com.kyf.mp.server.modules.playlist.vo.PlaylistActionVO;
@@ -26,7 +27,7 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排，数据访问委托给 PlaylistsBusiness。
+ * 服务实现类：业务逻辑编排，业务流程委托给 PlaylistsWorkflow。
  * </p>
  *
  * @author kyf
@@ -36,14 +37,15 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class PlaylistsServiceImpl implements PlaylistsService {
 
-    private final PlaylistsBusiness playlistsBusiness;
+    private final PlaylistsWorkflow playlistsWorkflow;
+    private final PlaylistsRepository playlistsRepository;
     private final PlaylistCacheService playlistCacheService;
 
     @Override
     @CacheEvict(cacheNames = "user-playlists", key = "#userId")
     public PlaylistActionVO createPlaylist(MultipartFile file, String name, String description,
             Long userId) {
-        return playlistsBusiness.createPlaylist(file, name, description, userId);
+        return playlistsWorkflow.createPlaylist(file, name, description, userId);
     }
 
     @Override
@@ -53,7 +55,7 @@ public class PlaylistsServiceImpl implements PlaylistsService {
     })
     public PlaylistActionVO editPlaylist(MultipartFile file, Long playlistId, String name,
             String description, Long userId) {
-        return playlistsBusiness.editPlaylist(file, playlistId, name, description, userId);
+        return playlistsWorkflow.editPlaylist(file, playlistId, name, description, userId);
     }
 
     @Override
@@ -62,7 +64,7 @@ public class PlaylistsServiceImpl implements PlaylistsService {
             @CacheEvict(cacheNames = "user-playlists", key = "#userId")
     })
     public void deletePlaylist(Long playlistId, Long userId) {
-        playlistsBusiness.deletePlaylist(playlistId, userId);
+        playlistsWorkflow.deletePlaylist(playlistId, userId);
     }
 
     @Override
@@ -71,11 +73,8 @@ public class PlaylistsServiceImpl implements PlaylistsService {
         if (userId == null)
             throw new BusinessException(401, "请先登录");
 
-        // 简单查询：直接用 business 的基础 CRUD
-        List<Playlists> list = playlistsBusiness.lambdaQuery()
-                .eq(Playlists::getCreatorId, userId)
-                .orderByDesc(Playlists::getCreatedDate)
-                .list();
+        // Repository 封装查询条件，Service 组装响应。
+        List<Playlists> list = playlistsRepository.findByCreator(userId);
 
         List<PlaylistSummaryVO> playlistVOList = list.stream().map(p -> {
             PlaylistSummaryVO pVO = new PlaylistSummaryVO();
@@ -90,20 +89,20 @@ public class PlaylistsServiceImpl implements PlaylistsService {
 
     @Override
     public PlaylistDetailVO getPlaylistDetail(Long playlistId, Long userId) {
-        playlistsBusiness.assertCanViewPlaylist(playlistId, userId);
+        playlistsWorkflow.assertCanViewPlaylist(playlistId, userId);
         PlaylistContentVO content = playlistCacheService.getPlaylistContent(playlistId);
 
         PlaylistDetailVO vo = new PlaylistDetailVO();
         vo.setPlaylist(content.getPlaylist());
         vo.setSongs(content.getSongs());
-        vo.setLiked(playlistsBusiness.isPlaylistLiked(playlistId, userId));
+        vo.setLiked(playlistsWorkflow.isPlaylistLiked(playlistId, userId));
         return vo;
     }
 
     @Override
     @CacheEvict(cacheNames = "playlist-detail", key = "#playlistId")
     public void toggleLike(Long playlistId, Long userId, boolean isLike) {
-        playlistsBusiness.toggleLike(playlistId, userId, isLike);
+        playlistsWorkflow.toggleLike(playlistId, userId, isLike);
     }
 
     @Override
@@ -112,7 +111,7 @@ public class PlaylistsServiceImpl implements PlaylistsService {
             @CacheEvict(cacheNames = "user-playlists", key = "#userId")
     })
     public AddSongToPlaylistVO addSongToPlaylist(Long playlistId, Long songId, Long userId) {
-        return playlistsBusiness.addSongToPlaylist(playlistId, songId, userId);
+        return playlistsWorkflow.addSongToPlaylist(playlistId, songId, userId);
     }
 
     @Override
@@ -121,6 +120,6 @@ public class PlaylistsServiceImpl implements PlaylistsService {
             @CacheEvict(cacheNames = "user-playlists", key = "#userId")
     })
     public void removeSongFromPlaylist(Long playlistId, Long songId, Long userId) {
-        playlistsBusiness.removeSongFromPlaylist(playlistId, songId, userId);
+        playlistsWorkflow.removeSongFromPlaylist(playlistId, songId, userId);
     }
 }

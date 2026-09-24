@@ -1,35 +1,10 @@
 package com.kyf.mp.server.utils;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.kyf.mp.server.modules.song.entity.Songs;
-import com.kyf.mp.server.modules.user.entity.Users;
-import com.kyf.mp.server.modules.user.mapper.UsersMapper;
-import com.kyf.mp.server.modules.song.mapper.SongsMapper;
-import com.kyf.mp.server.common.file.StoragePathResolver;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import org.jaudiotagger.audio.AudioFile;
-import org.jaudiotagger.audio.AudioFileIO;
-import org.jaudiotagger.audio.AudioHeader;
-import org.jaudiotagger.tag.FieldKey;
-import org.jaudiotagger.tag.Tag;
-import org.jaudiotagger.tag.images.Artwork;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.event.EventListener;
-import org.springframework.context.annotation.Profile;
-import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
-import org.springframework.util.DigestUtils;
-import org.springframework.util.StringUtils;
-
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.FileOutputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -37,6 +12,31 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.images.Artwork;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+import org.springframework.util.DigestUtils;
+import org.springframework.util.StringUtils;
+
+import com.kyf.mp.server.common.file.StoragePathResolver;
+import com.kyf.mp.server.modules.song.entity.Songs;
+import com.kyf.mp.server.modules.song.repository.SongsRepository;
+import com.kyf.mp.server.modules.user.entity.Users;
+import com.kyf.mp.server.modules.user.repository.UsersRepository;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @Profile("!test")
@@ -57,8 +57,8 @@ public class SongScannerTask {
     private Long scannerUploaderId;
     @Value("${song.scanner.remove-missing:false}")
     private boolean removeMissingSongs;
-    private final SongsMapper songsMapper;
-    private final UsersMapper usersMapper;
+    private final SongsRepository songsRepository;
+    private final UsersRepository usersRepository;
 
     @Async // 异步执行，不影响服务器启动速度
     @EventListener(ApplicationReadyEvent.class)
@@ -66,7 +66,7 @@ public class SongScannerTask {
         if (!isScannerConfigured()) {
             return;
         }
-        Users scannerUploader = usersMapper.selectById(scannerUploaderId);
+        Users scannerUploader = usersRepository.getById(scannerUploaderId);
         if (scannerUploader == null) {
             log.error("Song scanner uploader does not exist, userId={}", scannerUploaderId);
             return;
@@ -114,8 +114,7 @@ public class SongScannerTask {
 
     private ScanResult compareWithDatabase(File[] files) {
         Set<String> localUrls = buildLocalUrls(files);
-        List<Songs> dbSongs = songsMapper.selectList(new QueryWrapper<Songs>()
-                .select("song_id", "song_url").eq("uploader_id", scannerUploaderId));
+        List<Songs> dbSongs = songsRepository.findScannerSongs(scannerUploaderId);
         Set<String> dbUrls = dbSongs.stream().map(Songs::getSongUrl).collect(Collectors.toSet());
         List<Long> idsToDelete = dbSongs.stream()
                 .filter(song -> !localUrls.contains(song.getSongUrl()))
@@ -148,7 +147,7 @@ public class SongScannerTask {
         }
         if (removeMissingSongs) {
             log.info("Removing {} missing song records", idsToDelete.size());
-            songsMapper.deleteBatchIds(idsToDelete);
+            songsRepository.deleteBatchIds(idsToDelete);
             return;
         }
         log.warn("Found {} missing song records; removal is disabled", idsToDelete.size());
@@ -202,7 +201,7 @@ public class SongScannerTask {
             // 封面处理
             song.setSongCoverUrl(extractArtwork(tag));
 
-            songsMapper.insert(song);
+            songsRepository.insert(song);
             return true;
         } catch (Exception e) {
             log.error("解析失败: {}", file.getName(), e);

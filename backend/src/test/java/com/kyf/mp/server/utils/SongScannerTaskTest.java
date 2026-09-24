@@ -11,8 +11,8 @@ import java.nio.file.Path;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
@@ -22,8 +22,10 @@ import org.springframework.test.util.ReflectionTestUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.kyf.mp.server.modules.song.entity.Songs;
 import com.kyf.mp.server.modules.song.mapper.SongsMapper;
+import com.kyf.mp.server.modules.song.repository.impl.SongsRepositoryImpl;
 import com.kyf.mp.server.modules.user.entity.Users;
 import com.kyf.mp.server.modules.user.mapper.UsersMapper;
+import com.kyf.mp.server.modules.user.repository.impl.UsersRepositoryImpl;
 
 @ExtendWith(MockitoExtension.class)
 class SongScannerTaskTest {
@@ -41,7 +43,7 @@ class SongScannerTaskTest {
 
     @BeforeEach
     void setUp() {
-        scanner = new SongScannerTask(songsMapper, usersMapper);
+        scanner = new SongScannerTask(new SongsRepositoryImpl(songsMapper), new UsersRepositoryImpl(usersMapper));
         ReflectionTestUtils.setField(scanner, "songPath", songsDirectory.toString());
         ReflectionTestUtils.setField(scanner, "songCoverPath", songsDirectory.resolve("covers").toString());
         ReflectionTestUtils.setField(scanner, "songUrlPrefix", "/static/songs/");

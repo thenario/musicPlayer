@@ -14,7 +14,7 @@ import com.kyf.mp.server.modules.queue.vo.SingleQueueVO;
 
 /**
  * <p>
- * 服务类：业务逻辑层，不再继承 IService（基础 CRUD 由 business 层提供）。
+ * 服务类：业务逻辑层，不再继承 IService（基础 CRUD 由 Repository 层提供）。
  * </p>
  *
  * @author kyf

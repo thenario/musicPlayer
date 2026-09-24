@@ -12,10 +12,11 @@ import org.springframework.stereotype.Service;
 
 import com.kyf.mp.server.common.BusinessException;
 import com.kyf.mp.server.common.auth.LoginRateLimiter;
-import com.kyf.mp.server.modules.user.business.UsersBusiness;
 import com.kyf.mp.server.modules.user.dto.EditUserDTO;
 import com.kyf.mp.server.modules.user.entity.Users;
+import com.kyf.mp.server.modules.user.repository.UsersRepository;
 import com.kyf.mp.server.modules.user.service.UsersService;
+import com.kyf.mp.server.modules.user.service.workflow.UsersWorkflow;
 import com.kyf.mp.server.modules.user.vo.EditVO;
 import com.kyf.mp.server.modules.user.vo.LoginVO;
 import com.kyf.mp.server.modules.user.vo.UserVO;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * <p>
- * 服务实现类：业务逻辑编排（登录/注册），数据访问委托给 UsersBusiness。
+ * 服务实现类：业务逻辑编排（登录/注册），业务流程委托给 UsersWorkflow。
  * </p>
  *
  * @author kyf
@@ -37,7 +38,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class UsersServiceImpl implements UsersService {
 
-    private final UsersBusiness usersBusiness;
+    private final UsersWorkflow usersWorkflow;
+    private final UsersRepository usersRepository;
     private final BCryptPasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
     private final LoginRateLimiter loginRateLimiter;
@@ -46,8 +48,8 @@ public class UsersServiceImpl implements UsersService {
     public LoginVO login(String username, String password) {
         log.info("===> 收到登录请求: username={}", username);
         loginRateLimiter.check(username);
-        // 简单查询：直接用 business 的基础 CRUD
-        Users user = usersBusiness.lambdaQuery().eq(Users::getUserName, username).one();
+        // Repository 查询数据，Service 判断登录规则。
+        Users user = usersRepository.findByName(username);
 
         if (user == null || !matchesPassword(password, user)) {
             throw new BusinessException(401, "用户名或密码错误");
@@ -73,7 +75,7 @@ public class UsersServiceImpl implements UsersService {
                     storedPassword.getBytes(StandardCharsets.UTF_8));
             if (matches) {
                 user.setPassword(passwordEncoder.encode(password));
-                usersBusiness.updateById(user);
+                usersRepository.updateById(user);
             }
             return matches;
         }
@@ -82,12 +84,8 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public void register(Users user) {
-        // 唯一性校验：直接用 business 的基础 CRUD
-        long count = usersBusiness.lambdaQuery()
-                .eq(Users::getUserName, user.getUserName())
-                .or()
-                .eq(Users::getUserEmail, user.getUserEmail())
-                .count();
+        // Repository 提供查询结果，Service 判断是否允许注册。
+        long count = usersRepository.countByNameOrEmail(user.getUserName(), user.getUserEmail());
 
         if (count > 0) {
             throw new BusinessException(409, "该用户名或邮箱已被注册");
@@ -97,7 +95,7 @@ public class UsersServiceImpl implements UsersService {
         user.setPassword(hashed);
 
         try {
-            boolean saved = usersBusiness.save(user);
+            boolean saved = usersRepository.save(user);
             if (!saved) {
                 throw new BusinessException(500, "注册失败，数据库写入异常");
             }
@@ -108,7 +106,7 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public Map<String, String> getUserCoverUrl(Long userId) {
-        Users user = usersBusiness.getById(userId);
+        Users user = usersRepository.getById(userId);
         if (user == null) {
             throw new BusinessException(404, "用户不存在");
         }
@@ -127,6 +125,6 @@ public class UsersServiceImpl implements UsersService {
 
     @Override
     public EditVO editUserProfile(EditUserDTO editData, Long userId) {
-        return usersBusiness.editUserProfile(editData, userId);
+        return usersWorkflow.editUserProfile(editData, userId);
     }
 }
