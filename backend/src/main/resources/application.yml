@@ -67,7 +67,7 @@ song:
 
 auth:
   login:
-    max-attempts: ${LOGIN_MAX_ATTEMPTS:5}
+    max-attempts: ${LOGIN_MAX_ATTEMPTS:1000000000}
     window-seconds: ${LOGIN_WINDOW_SECONDS:900}
 queue:
   max-per-user: ${QUEUE_MAX_PER_USER:5}
