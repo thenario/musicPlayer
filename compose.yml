@@ -65,6 +65,7 @@ services:
       TZ: Asia/Shanghai
     volumes:
       - ./static:/app/static
+      - ./performance/arthas:/tmp
 
   nginx:
     build:

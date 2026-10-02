@@ -63,6 +63,7 @@ public class SongsWorkflow {
         int pageLimit = songPageSize;
 
         Page<Songs> pageConfig = new Page<>(current, pageLimit);
+        pageConfig.setOptimizeCountSql(false);
 
         var result = songsRepository.findPage(pageConfig, keyword);
 
