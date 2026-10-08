@@ -128,9 +128,13 @@ docker compose up -d --build
 |---|---|---|
 | Docker Compose | 根目录 `.env` | 从 [.env.example](.env.example) 复制，填写 `MYSQL_ROOT_PASSWORD`、`MYSQL_APP_PASSWORD` 和 `JWT_SECRET` 等变量 |
 | 前端 | [web/.env.example](web/.env.example) | `VITE_API_URL` 留空 = 相对路径（接口走同源 `/api`，静态走同源 `/static`，由 nginx/Vite 代理处理） |
-| 后端 | [backend/.../application.example.yml](backend/src/main/resources/application.example.yml) | 全部敏感配置用 `${VAR:default}` 占位，可被环境变量覆盖（`MYSQL_PASSWORD`、`JWT_SECRET` 等） |
+| 后端 | [backend/.../application.example.yml](backend/src/main/resources/application.example.yml) | 连接信息和密钥使用 `${VAR}`，必须由外部提供；分页大小等通用设置使用 `${VAR:default}` 保留默认值 |
 
 > Compose 从根目录 `.env` 读取 `MYSQL_APP_PASSWORD`，再把它传入容器内的 `MYSQL_PASSWORD`。两者是“宿主机变量名”和“容器环境变量名”的区别；密码值必须保持一致。
+
+后端需要显式提供 `SPRING_DATASOURCE_URL`、`MYSQL_USER`、`MYSQL_PASSWORD`、`SPRING_DATA_REDIS_HOST`、`SPRING_DATA_REDIS_PASSWORD` 和 `JWT_SECRET`。本地运行时从 `backend/.env.example` 复制为 `backend/.env` 并填写；Docker 部署由 Compose 注入。当前 Compose 的 Redis 未启用认证，因此显式注入空密码。本地 Redis 未启用认证时，也保留 `SPRING_DATA_REDIS_PASSWORD=`，不要删除该变量。
+
+服务端口、Redis 端口和数据库编号、分页大小、超时时间等通用设置保留默认值，可按需通过环境变量覆盖。Compose 未配置歌曲扫描开关和上传者编号时，分别采用 `false` 和 `0`。
 
 ## 静态资源链路
 

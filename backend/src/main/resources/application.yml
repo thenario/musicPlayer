@@ -4,10 +4,10 @@ server:
 spring:
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
-      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
   application:
     name: server
   servlet:
@@ -28,8 +28,8 @@ spring:
     locations: classpath:db/migration
 
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8}
-    username: ${MYSQL_USER:music_app}
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
 

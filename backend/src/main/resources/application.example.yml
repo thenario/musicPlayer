@@ -1,9 +1,9 @@
 # =====================================================================
 #  后端配置示例（application.example.yml）
 #  复制为 application.yml 使用，或仅参照此文件设置环境变量。
-#  所有敏感值均已改为环境变量占位符 ${VAR:default}：
-#  不设环境变量时使用默认值，设置后覆盖默认值（Spring Boot 宽松绑定，
-#  如 SPRING_DATASOURCE_PASSWORD 对应 spring.datasource.password）。
+#  数据库连接、Redis 地址和密码、JWT 密钥必须由外部配置提供，使用 ${VAR}。
+#  Redis 未启用认证时，显式提供空密码。
+#  通用设置使用 ${VAR:default}，未提供变量时采用默认值。
 # =====================================================================
 
 server:
@@ -13,10 +13,10 @@ server:
 spring:
   data:
     redis:
-      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      host: ${SPRING_DATA_REDIS_HOST}
       port: ${SPRING_DATA_REDIS_PORT:6379}
       database: ${SPRING_DATA_REDIS_DATABASE:0}
-      password: ${SPRING_DATA_REDIS_PASSWORD:}
+      password: ${SPRING_DATA_REDIS_PASSWORD}
   application:
     name: server
   servlet:
@@ -38,9 +38,9 @@ spring:
     locations: classpath:db/migration
 
   datasource:
-    # 数据库连接（Docker 内使用服务名 db；本地开发改为 127.0.0.1）
-    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://db:3306/musicPlayer?serverTimezone=GMT%2B8&characterEncoding=utf-8}
-    username: ${MYSQL_USER:music_app}
+    # 在 backend/.env 或 Compose 中提供连接地址和用户名。
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${MYSQL_USER}
     password: ${MYSQL_PASSWORD}   # 必填：仅通过环境变量提供
     driver-class-name: com.mysql.cj.jdbc.Driver
 

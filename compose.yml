@@ -60,8 +60,10 @@ services:
       MYSQL_PASSWORD: "${MYSQL_APP_PASSWORD}"
       JWT_SECRET: "${JWT_SECRET}"
       SPRING_DATA_REDIS_HOST: redis
-      SONG_SCANNER_ENABLED: "${SONG_SCANNER_ENABLED}"
-      SONG_SCANNER_UPLOADER_ID: "${SONG_SCANNER_UPLOADER_ID}"
+      # 当前 Redis 未启用认证，显式传入空密码。
+      SPRING_DATA_REDIS_PASSWORD: ""
+      SONG_SCANNER_ENABLED: "${SONG_SCANNER_ENABLED:-false}"
+      SONG_SCANNER_UPLOADER_ID: "${SONG_SCANNER_UPLOADER_ID:-0}"
       TZ: Asia/Shanghai
     volumes:
       - ./static:/app/static

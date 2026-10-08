@@ -1,4 +1,8 @@
 spring:
+  data:
+    redis:
+      host: localhost
+      password: ""
   flyway:
     enabled: false
   datasource:
