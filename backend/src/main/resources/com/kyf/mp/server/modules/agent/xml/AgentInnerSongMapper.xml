@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kyf.mp.server.modules.agent.AgentMapper$innerSongMapper">
+    <resultMap id="SongVO" type="com.kyf.mp.server.modules.agent.vo.GeySongsVO">
+        <id property="id" column="id" />
+        <result property="songTitle" column="description" />
+        <result property="artist" column="artist" />
+        <result property="bitrate" column="bitrate" />
+    </resultMap>
+    <select id="getSongs" resultMap="SongVO"> select id,s.song_title as songTitle,s.artist as
+        artist, s.bitrate as bitrate from songs as s where s.song_title like "%#{keyword}%" or
+        s.artist like "%#{keyword}%" </select>
+</mapper>
