@@ -1,12 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.kyf.mp.server.modules.agent.AgentMapper$inner">
-    <resultMap id="playlistVO" type="com.kyf.mp.server.modules.agent.vo.GetPlaylistsVO">
-        <id property="id" column="id" />
+<mapper namespace="com.kyf.mp.server.modules.agent.mapper.AgentMapper$InnerPlaylistMapper">
+    <resultMap id="playlistDTO" type="com.kyf.mp.server.modules.agent.dto.GetPlaylistsDTO">
+        <id property="id" column="playlist_id" />
         <result property="description" column="description" />
-        <result property="playlistName" column="playlistName" />
-        <result property="createdDate" column="createdDate" />
+        <result property="playlistName" column="playlist_name" />
+        <result property="createdDate" column="created_date" />
     </resultMap>
-    <select id="" resultMap="playlistVO"> select p.playlist_id as id,p.description as description,
-        p.created_date as createdDate from playlists as p where p.playlist_name like "%#{keyword}%" </select>
+    <select id="getPlaylists" resultMap="playlistDTO">
+        SELECT p.playlist_id, p.description, p.playlist_name, p.created_date
+        FROM playlists p
+        WHERE p.playlist_name LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY p.playlist_id
+    </select>
 </mapper>
