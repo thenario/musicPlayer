@@ -24,17 +24,17 @@ public class AgentServiceImpl implements AgentService {
     }
 
     @Override
-    public IPage<GetPlaylistsDTO> getPlaylists(String keyword, String page) {
-        return playlistMapper.getPlaylists(keyword, new Page<GetPlaylistsDTO>(Long.parseLong(page), 10L));
+    public IPage<GetPlaylistsDTO> getPlaylists(String keyword, Long page) {
+        return playlistMapper.getPlaylists(keyword, new Page<GetPlaylistsDTO>(page, 10L));
     }
 
     @Override
-    public IPage<GetUsersDTO> getUsers(String keyword, String page) {
-        return userMapper.getUsers(keyword, new Page<GetUsersDTO>(Long.parseLong(page), 10L));
+    public IPage<GetUsersDTO> getUsers(String keyword, Long page) {
+        return userMapper.getUsers(keyword, new Page<GetUsersDTO>(page, 10L));
     }
 
     @Override
-    public IPage<GetSongsDTO> geSongs(String keyword, String page) {
-        return songMapper.getSongs(keyword, new Page<GetSongsDTO>(Long.parseLong(page), 10L));
+    public IPage<GetSongsDTO> geSongs(String keyword, Long page) {
+        return songMapper.getSongs(keyword, new Page<GetSongsDTO>(page, 10L));
     }
 }
