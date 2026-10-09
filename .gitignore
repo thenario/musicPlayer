@@ -63,3 +63,5 @@ pytest/
 
 **/*practice*.*
 **/*practice*/
+**/*arthas*/
+**/*jmeter*/
