@@ -1,7 +1,8 @@
 from mcp.server import MCPServer
-from tools.search import searchPlaylists, searchSongs, searchUsers
+from tools.search import searchPlaylists, searchSongs, searchUsers, search_lifespan
 
-server = MCPServer("server")
+# 修改原因：HTTP 连接池跟随 MCP 服务启动/关闭，不在每次工具调用时重复创建。
+server = MCPServer("server", lifespan=search_lifespan)
 
 server.add_tool(
     searchSongs,
