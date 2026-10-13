@@ -64,6 +64,7 @@ services:
       SPRING_DATA_REDIS_PASSWORD: ""
       SONG_SCANNER_ENABLED: "${SONG_SCANNER_ENABLED:-false}"
       SONG_SCANNER_UPLOADER_ID: "${SONG_SCANNER_UPLOADER_ID:-0}"
+      CORS_ALLOWED_ORIGINS: "${CORS_ALLOWED_ORIGINS}"
       TZ: Asia/Shanghai
     volumes:
       - ./static:/app/static
