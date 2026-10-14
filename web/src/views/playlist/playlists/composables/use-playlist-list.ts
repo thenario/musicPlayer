@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 import { playlistApi } from '@/api/playlist-api'
 import { useAsyncTask } from '@/common'
-import type { IPlaylist } from '@/types'
+import type { ActionResult, IPlaylist } from '@/types'
+import { requireSuccess, toActionFailure } from '@/utils/action-result'
 
 export interface CreatePlaylistPayload {
   name: string
@@ -10,25 +11,27 @@ export interface CreatePlaylistPayload {
   creatorId?: number | string
 }
 
-/** 歌单列表：加载 + 新建。错误提示由拦截器统一弹出，这里只吞掉避免未处理拒绝。 */
+/** 歌单列表业务返回结果，由页面决定提示和弹窗状态。 */
 export function usePlaylistList() {
   const playlists = ref<IPlaylist[]>([])
   const loadTask = useAsyncTask()
   const createTask = useAsyncTask()
 
-  const load = async () => {
-    await loadTask.run(async () => {
+  const load = async (): Promise<ActionResult> => {
+    return loadTask.run(async () => {
       try {
         const res = await playlistApi.getMyPlaylists()
         playlists.value = res.playlists
+        return { success: true }
       } catch (err) {
-        console.error(err)
+        return toActionFailure(err, '歌单列表加载失败')
       }
     })
   }
 
-  /** 创建成功返回 true，由调用方决定是否关闭弹窗。 */
-  const create = async (payload: CreatePlaylistPayload): Promise<boolean> => {
+  /** 创建成功且列表刷新成功后，组件才能关闭弹窗。 */
+  const create = async (payload: CreatePlaylistPayload): Promise<ActionResult> => {
+    let created = false
     try {
       await createTask.run(async () => {
         const formData = new FormData()
@@ -37,12 +40,13 @@ export function usePlaylistList() {
         formData.append('creator_id', String(payload.creatorId ?? 0))
         if (payload.coverFile) formData.append('cover_image', payload.coverFile)
         await playlistApi.createPlaylist(formData)
-        await load()
+        created = true
+        requireSuccess(await load(), '歌单已创建，但列表刷新失败，请先刷新列表')
       })
-      return true
+      return { success: true }
     } catch (err) {
-      console.error(err)
-      return false
+      const failure = toActionFailure(err, '创建歌单失败')
+      return created ? { ...failure, completed: true } : failure
     }
   }
 

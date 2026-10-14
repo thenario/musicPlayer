@@ -38,7 +38,9 @@
 
 <script setup lang="ts">
 defineOptions({ name: 'PlaylistDetailPage' })
-import { useRouter } from 'vue-router'
+import { onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { reportError } from '@/utils/feedback'
 import { usePlayerStore } from '@/stores/player'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
@@ -51,6 +53,7 @@ import { usePlaylistDetail } from './composables/use-playlist-detail'
 import type { ISong } from '@/types'
 
 const router = useRouter()
+const route = useRoute()
 const playerStore = usePlayerStore()
 const userStore = useUserStore()
 const { currentSong, isPlaying } = storeToRefs(playerStore)
@@ -63,10 +66,40 @@ const {
   loading,
   showAddSongModal,
   isOwner,
-  toggleLike,
-  handleRemoveSong,
-  addSongToPlaylist,
+  loadPlaylist,
+  toggleLike: toggleLikeAction,
+  handleRemoveSong: removeSongAction,
+  addSongToPlaylist: addSongAction,
 } = usePlaylistDetail()
+
+const load = async () => {
+  const result = await loadPlaylist()
+  if (!result.success) reportError(result)
+}
+onMounted(load)
+watch(() => route.params.id, () => { void load() })
+
+const toggleLike = async () => {
+  const result = await toggleLikeAction()
+  if (!result.success) {
+    reportError(result)
+    if (result.code === 401) await router.push('/login')
+    return
+  }
+  ElMessage.success(result.message || '操作成功')
+}
+
+const handleRemoveSong = async (songId: number | string) => {
+  const result = await removeSongAction(songId)
+  if (!result.success) return reportError(result)
+  ElMessage.success(result.message || '已从歌单移除')
+}
+
+const addSongToPlaylist = async (songId: number | string) => {
+  const result = await addSongAction(songId)
+  if (!result.success) return reportError(result)
+  ElMessage.success(result.message || '添加成功')
+}
 
 const playAll = async () => {
   if (!songs.value.length || !playlist.value) {
@@ -75,30 +108,37 @@ const playAll = async () => {
   }
   const res = await playerStore.playPlaylist(playlist.value.playlist_id)
   if (res.success) ElMessage.success("开始播放歌单")
+  else reportError(res)
 }
 
 const playSong = async (song: ISong) => {
-  await playerStore.playSong(song, "now")
+  const result = await playerStore.playSong(song, 'now')
+  if (!result.success) reportError(result)
 }
 
 const handlePlayNext = async (song: ISong) => {
   const res = await playerStore.addToQueue(song, false)
   if (res.success) ElMessage.success(`《${song.song_title}》已设为下一首播放`)
+  else reportError(res)
 }
 
 const handleAddToQueue = async (song: ISong) => {
   const res = await playerStore.addToQueue(song, false)
   if (res.success) ElMessage.success("已添加到播放队列")
+  else reportError(res)
 }
 
-const confirmDeletePlaylist = () => {
-  ElMessageBox.confirm('确定要永久删除这个歌单吗？此操作不可撤销。', '严重警告', {
-    confirmButtonText: '确定删除',
-    cancelButtonText: '点错了',
-    type: 'warning',
-  }).then(() => {
-    deletePlaylistAction()
-  })
+const confirmDeletePlaylist = async () => {
+  try {
+    await ElMessageBox.confirm('确定要永久删除这个歌单吗？此操作不可撤销。', '严重警告', {
+      confirmButtonText: '确定删除', cancelButtonText: '点错了', type: 'warning',
+    })
+  } catch (error) {
+    // 取消和关闭不提示；确认框自身的其他异常仍记录并提示。
+    reportError(error)
+    return
+  }
+  await deletePlaylistAction()
 }
 
 const deletePlaylistAction = async () => {
@@ -108,8 +148,7 @@ const deletePlaylistAction = async () => {
     ElMessage.success("歌单已删除")
     router.push('/playlists')
   } catch (error) {
-    // 错误已由拦截器统一提示，这里只记录日志
-    console.error('Delete error:', error)
+    reportError(error)
   }
 }
 </script>

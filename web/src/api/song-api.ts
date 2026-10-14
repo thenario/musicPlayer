@@ -43,11 +43,9 @@ const uploadSong = async (
   return { success: true, message: res.message }
 }
 
-/** 获取歌词（silent：失败不集中弹错）。 */
+/** 获取歌词；请求失败向上抛出，由调用方决定展示方式。 */
 const getLyrics = async (songId: SongId) => {
-  const res = await request.get<never, IAxiosRes<LyricsResponse>>(`/songs/${songId}/lyrics`, {
-    silent: true,
-  })
+  const res = await request.get<never, IAxiosRes<LyricsResponse>>(`/songs/${songId}/lyrics`)
   return { success: true, ...res.data }
 }
 

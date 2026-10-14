@@ -52,12 +52,20 @@ defineOptions({ name: 'EditProfilePage' })
 import { useRouter } from 'vue-router';
 import { Camera } from '@element-plus/icons-vue';
 import { useUserProfile } from './composables/use-user-profile';
+import { reportError } from '@/utils/feedback';
 
 const router = useRouter();
-const { formRef, prevCoverUrl, editForm, rules, submitting, handleFileChange, submit } = useUserProfile();
+const { formRef, prevCoverUrl, editForm, rules, submitting, handleFileChange: changeFileAction, submit } = useUserProfile();
+const handleFileChange = (event: Event) => {
+    const result = changeFileAction(event)
+    if (!result.success) reportError(result)
+}
 
 const submitForm = async () => {
-    if (await submit()) router.push('/user-profile');
+    const result = await submit()
+    if (!result.success) return reportError(result)
+    ElMessage.success(result.message || '资料修改成功')
+    await router.push('/user-profile')
 };
 
 const goBack = () => {

@@ -27,12 +27,13 @@ import VolumeControl from './components/VolumeControl.vue'
 import PlayerControl from '@/components/player-control/PlayerControl.vue'
 import SongDetail from '@/components/song-detail/SongDetail.vue'
 import { useKeyboardShortcuts } from './composables/use-keyboard-shortcuts'
+import { reportError } from '@/utils/feedback'
 
 const playerStore = usePlayerStore()
 
 const currentSongCover = computed(() => getImageUrl(playerStore.currentSong?.song_cover_url))
 
-useKeyboardShortcuts()
+useKeyboardShortcuts(reportError)
 </script>
 
 <style scoped>

@@ -1,54 +1,44 @@
 import { songApi } from '@/api/song-api'
 import { ref } from 'vue'
-import type { ISong, PlayhistorySong } from '@/types'
+import type { ActionResult, ISong, PlayhistorySong } from '@/types'
 import { usePlayerStore } from '@/stores/player'
+import { requireSuccess, toActionFailure } from '@/utils/action-result'
+
 export function createSongHistory() {
   const playHistory = ref<PlayhistorySong[]>([])
 
-  const getPlayHistory = async () => {
+  const getPlayHistory = async (): Promise<ActionResult<{ history: PlayhistorySong[] }>> => {
     try {
       const res = await songApi.getPlayHistory()
-      if (!res.success) {
-        return { success: false, history: playHistory.value }
-      }
-
       playHistory.value = [...(res.history ?? [])].sort(
         (a, b) => new Date(b.play_time).getTime() - new Date(a.play_time).getTime(),
       )
       return { success: true, history: playHistory.value }
-    } catch (e: unknown) {
-      console.log(e)
-      return { success: false, history: playHistory.value }
+    } catch (error) {
+      return toActionFailure(error, '历史记录加载失败')
     }
   }
 
-  const syncPlayHistory = async (song: ISong) => {
+  const syncPlayHistory = async (song: ISong): Promise<ActionResult> => {
     try {
       await songApi.syncPlayHistory(song)
-      await getPlayHistory()
-      return true
-    } catch (e: unknown) {
-      console.log(e)
-      return false
+      requireSuccess(await getPlayHistory(), '历史记录已保存，但刷新失败')
+      return { success: true }
+    } catch (error) {
+      return toActionFailure(error, '历史记录同步失败')
     }
   }
-  const playAllHistory = async () => {
+
+  const playAllHistory = async (): Promise<ActionResult> => {
     try {
       const playerStore = usePlayerStore()
-      const historyRes = await songApi.playAllHistory()
-      if (!historyRes.success) {
-        return { success: false }
-      }
-      const currentQueueRes = await playerStore.fetchCurrentQueue()
-      const queuesRes = await playerStore.fetchUserQueues()
-      if (!currentQueueRes.success || !queuesRes.success) {
-        return { success: false }
-      }
-      await playerStore.playAtIndex(0)
+      await songApi.playAllHistory()
+      requireSuccess(await playerStore.fetchCurrentQueue(), '历史播放队列加载失败')
+      requireSuccess(await playerStore.fetchUserQueues(), '队列列表刷新失败')
+      requireSuccess(await playerStore.playAtIndex(0), '历史歌曲播放失败')
       return { success: true }
-    } catch (e: unknown) {
-      console.log(e)
-      return { success: false }
+    } catch (error) {
+      return toActionFailure(error, '播放历史失败')
     }
   }
 

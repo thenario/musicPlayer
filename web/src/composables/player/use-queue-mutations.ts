@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
-import type { IQueue, IQueueItem, ISong } from '@/types'
+import type { ActionResult, IQueue, IQueueItem, ISong } from '@/types'
+import { requireSuccess, toActionFailure } from '@/utils/action-result'
 import { queueApi } from '@/api/queue-api'
 import { sameId } from '@/utils/format'
 
@@ -16,7 +17,7 @@ export interface QueueMutationsContext {
   currentIndex: Ref<number>
   currentSong: Ref<ISong | null>
   /** 从队列移除当前播放歌曲后，切换到下一首 / 停止 */
-  playAtIndex: (index: number) => Promise<unknown>
+  playAtIndex: (index: number) => Promise<ActionResult>
   stopPlayback: () => void
 }
 
@@ -32,21 +33,22 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     })
   }
 
-  const reorderQueueOrder = async () => {
-    if (!ctx.currentQueueId.value) return
+  const reorderQueueOrder = async (): Promise<ActionResult> => {
+    if (!ctx.currentQueueId.value) return { success: false, message: '没有可排序的播放队列' }
     else {
       try {
         const songIds = ctx.currentQueue.value.map((item) => item.song.song_id)
         await queueApi.reorderQueue(songIds, ctx.currentQueueId.value)
         return { success: true }
       } catch (err: unknown) {
-        console.error(err instanceof Error ? err.message : err)
-        return { success: false }
+        return toActionFailure(err, '队列排序失败')
       }
     }
   }
 
-  const updateQueueOrder = async (newQueue: IQueueItem[]) => {
+  const updateQueueOrder = async (newQueue: IQueueItem[]): Promise<ActionResult> => {
+    const previousQueue = [...ctx.currentQueue.value]
+    const previousIndex = ctx.currentIndex.value
     ctx.currentQueue.value = newQueue
     normalizeQueuePositions()
 
@@ -60,7 +62,12 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       }
     }
     const res = await reorderQueueOrder()
-    return res?.success ? { success: true } : { success: false }
+    if (!res.success) {
+      ctx.currentQueue.value = previousQueue
+      ctx.currentIndex.value = previousIndex
+      normalizeQueuePositions()
+    }
+    return res
   }
 
   const handleDuplicateSong = (songId: number | string) => {
@@ -91,27 +98,26 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     }
   }
 
-  const syncRemoveToServer = async (id: number | string) => {
+  const syncRemoveToServer = async (id: number | string): Promise<ActionResult> => {
     if (!ctx.currentQueueId.value) {
-      return { success: false }
+      return { success: false, message: '没有当前播放队列' }
     }
     try {
       await queueApi.removeSongFromQueue(ctx.currentQueueId.value, id)
       return { success: true }
     } catch (err: unknown) {
-      console.error(err instanceof Error ? err.message : err)
-      return { success: false }
+      return toActionFailure(err, '移除歌曲失败')
     }
   }
 
-  const handleStateAfterRemoval = (idx: number) => {
+  const handleStateAfterRemoval = async (idx: number) => {
     const isDeletingCurrent = idx === ctx.currentIndex.value
     ctx.currentQueue.value.splice(idx, 1)
     normalizeQueuePositions()
     if (isDeletingCurrent) {
       if (ctx.currentQueue.value.length > 0) {
         const nextIdx = Math.min(idx, ctx.currentQueue.value.length - 1)
-        ctx.playAtIndex(nextIdx)
+        requireSuccess(await ctx.playAtIndex(nextIdx), '歌曲已移除，但下一首播放失败')
       } else {
         ctx.stopPlayback()
       }
@@ -121,8 +127,8 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
   }
 
   /** mode=true 为立即播放；两种模式都会插入到当前歌曲之后。 */
-  const addToQueue = async (song: ISong, playImmediately = false) => {
-    if (!song?.song_id) return { targetIndex: -1, success: false }
+  const addToQueue = async (song: ISong, playImmediately = false): Promise<ActionResult<{ targetIndex: number }>> => {
+    if (!song?.song_id) return { success: false, message: '歌曲信息无效' }
 
     const previousQueue = [...ctx.currentQueue.value]
     const previousIndex = ctx.currentIndex.value
@@ -147,33 +153,31 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
       finalizeQueueItem(tempId, res.data, oldIdx === -1)
       return { targetIndex, success: true }
     } catch (err: unknown) {
-      console.error(err instanceof Error ? err.message : err)
       ctx.currentQueue.value = previousQueue
       ctx.currentIndex.value = previousIndex
       normalizeQueuePositions()
-      return { targetIndex: -1, success: false }
+      return toActionFailure(err, '添加到队列失败')
     }
   }
 
-  const removeQueueItem = async (itemId: number | string) => {
-    if (!itemId) return { success: false }
+  const removeQueueItem = async (itemId: number | string): Promise<ActionResult> => {
+    if (!itemId) return { success: false, message: '队列项信息无效' }
 
     try {
       const isTempId = typeof itemId === 'string' && itemId.startsWith('temp-')
       if (!isTempId) {
         const res = await syncRemoveToServer(itemId)
-        if (!res.success) return { success: false }
+        requireSuccess(res, '移除歌曲失败')
       }
 
       const targetIdx = ctx.currentQueue.value.findIndex((item) => sameId(item.queue_item_id, itemId))
       if (targetIdx !== -1) {
-        handleStateAfterRemoval(targetIdx)
+        updateQueueCount(-1)
+        await handleStateAfterRemoval(targetIdx)
       }
-      updateQueueCount(-1)
       return { success: true }
     } catch (e) {
-      console.error('移除歌曲失败', e)
-      return { success: false }
+      return toActionFailure(e, '移除歌曲失败')
     }
   }
 
@@ -185,8 +189,8 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     }
   }
 
-  const shuffleQueue = async () => {
-    if (ctx.currentQueue.value.length <= 1) return
+  const shuffleQueue = async (): Promise<ActionResult> => {
+    if (ctx.currentQueue.value.length <= 1) return { success: true }
 
     const currentId = ctx.currentSong.value?.song_id
     let currentItem = null
@@ -216,7 +220,7 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     normalizeQueuePositions()
 
     const res = await reorderQueueOrder()
-    return res?.success ? { success: true } : { success: false }
+    return res
   }
 
   return { reorderQueueOrder, updateQueueOrder, shuffleQueue, addToQueue, removeQueueItem }

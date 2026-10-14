@@ -33,6 +33,7 @@ import { AppPagination } from '@/common'
 import SongTable from './components/SongTable.vue'
 import { useSongList } from './composables/use-song-list'
 import type { ISong } from '@/types'
+import { reportError } from '@/utils/feedback'
 
 const playerStore = usePlayerStore()
 const { currentSong } = storeToRefs(playerStore)
@@ -42,29 +43,36 @@ const { songs, searchKeyword, loading, pagination, changePage, load } = useSongL
 const songTableRef = ref<InstanceType<typeof SongTable> | null>(null)
 
 const handlePlayNow = async (song: ISong) => {
-  await playerStore.playSong(song, "now")
+  const result = await playerStore.playSong(song, 'now')
+  if (!result.success) reportError(result)
 }
 
 const handlePlayNext = async (song: ISong) => {
   const res = await playerStore.playSong(song, "next")
   if (res.success) {
     ElMessage.success(`已将《${song.song_title}》添加到下一首播放`)
+  } else {
+    reportError(res)
   }
 }
 
 const debouncedSearch = debounce(() => {
   pagination.change(1)
-  load()
+  void load().then((result) => { if (!result.success) reportError(result) })
 }, 500)
 
 const handlePageChange = async (page: number, pageSize: number) => {
-  await changePage(page, pageSize)
+  const result = await changePage(page, pageSize)
+  if (!result.success) return reportError(result)
   await nextTick()
 
   songTableRef.value?.scrollToTop()
 }
 
-onMounted(load)
+onMounted(async () => {
+  const result = await load()
+  if (!result.success) reportError(result)
+})
 
 onBeforeUnmount(() => {
   debouncedSearch.cancel()

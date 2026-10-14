@@ -64,6 +64,9 @@ import QueuePreviewList from './components/QueuePreviewList.vue'
 import { useQueueDrawer } from './composables/use-queue-drawer'
 import { sameId } from '@/utils/format'
 import { QUEUE_TABS } from './const'
+import { computed, onMounted } from 'vue'
+import { reportError } from '@/utils/feedback'
+import { logBackgroundFailure } from '@/utils/action-result'
 
 const {
   currentQueue,
@@ -76,17 +79,66 @@ const {
   previewQueueId,
   previewData,
   previewLoading,
-  dragQueue,
+  updateQueueOrder,
+  loadQueues,
   handleTabChange,
   handlePreviewQueue,
-  playFromPreview,
+  playFromPreview: playPreviewAction,
   backToQueueList,
-  playFromQueue,
-  removeFromQueue,
-  confirmClear,
-  handleSwitchQueue,
-  confirmDeleteQueue,
+  playFromQueue: playQueueAction,
+  removeFromQueue: removeAction,
+  clearCurrentQueue,
+  handleSwitchQueue: switchQueueAction,
+  deleteQueue,
 } = useQueueDrawer()
+
+const dragQueue = computed({
+  get: () => currentQueue.value,
+  set: (items) => { void updateQueueOrder(items).then((result) => {
+    if (!result.success) reportError(result)
+  }) },
+})
+const playFromPreview = async (index: number) => {
+  const result = await playPreviewAction(index)
+  if (!result.success) reportError(result)
+}
+const playFromQueue = async (index: number) => {
+  const result = await playQueueAction(index)
+  if (!result.success) reportError(result)
+}
+const removeFromQueue = async (itemId: number | string) => {
+  const result = await removeAction(itemId)
+  if (!result.success) reportError(result)
+}
+const handleSwitchQueue = async (queueId: number | string) => {
+  const result = await switchQueueAction(queueId)
+  if (!result.success) reportError(result)
+}
+const confirmClear = async () => {
+  try {
+    await ElMessageBox.confirm('确定要清空当前播放队列吗？', '提示', {
+      confirmButtonText: '清空', cancelButtonText: '取消', type: 'warning',
+    })
+  } catch (error) {
+    reportError(error)
+    return
+  }
+  const result = await clearCurrentQueue()
+  if (!result.success) reportError(result)
+}
+const confirmDeleteQueue = async (queueId: number | string) => {
+  try {
+    await ElMessageBox.confirm('确定要永久删除这个播放队列吗？', '警告', {
+      confirmButtonText: '删除', cancelButtonText: '取消', type: 'warning',
+    })
+  } catch (error) {
+    reportError(error)
+    return
+  }
+  const result = await deleteQueue(queueId)
+  if (!result.success) reportError(result)
+}
+onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 </script>
 
 <style scoped>

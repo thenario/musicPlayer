@@ -14,9 +14,9 @@ type QueueDeletion = { was_active: boolean; new_queue_id: Id | null }
  * 无请求体时第一泛型传 never，有请求体时借位标注请求体类型。
  */
 
-/** 获取我的队列列表（silent：失败不集中弹错）。 */
+/** 获取我的队列列表。 */
 const getMyQueues = async (): Promise<IGetMyQueues> => {
-  const res = await request.get<never, IAxiosRes<{ queues: IQueue[] }>>('/queues', { silent: true })
+  const res = await request.get<never, IAxiosRes<{ queues: IQueue[] }>>('/queues')
   return { success: true, message: res.message, queues: res.data.queues }
 }
 
@@ -26,9 +26,9 @@ const getQueueById = async (queueId: Id): Promise<{ success: boolean; message: s
   return { success: true, message: res.message, queue: res.data.queue }
 }
 
-/** 获取当前播放队列及其状态（silent：失败不集中弹错）。 */
+/** 获取当前播放队列及其状态。 */
 const getCurrentQueue = async (): Promise<IGetCurrentQueue> => {
-  const res = await request.get<never, IAxiosRes<{ queue: IQueue; queue_state: IQueueState }>>('/queues/current', { silent: true })
+  const res = await request.get<never, IAxiosRes<{ queue: IQueue; queue_state: IQueueState }>>('/queues/current')
   return { success: true, message: res.message, queue: res.data.queue, queue_state: res.data.queue_state }
 }
 

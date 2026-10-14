@@ -84,6 +84,7 @@ import { AppPagination } from '@/common';
 import { useMyUploads } from './composables/use-my-uploads';
 import { Back, EditPen, Mic, Upload } from '@element-plus/icons-vue';
 import { formatDate, getImageUrl } from '@/utils/format';
+import { reportError } from '@/utils/feedback';
 
 const router = useRouter();
 const songStore = useSongStore();
@@ -98,8 +99,8 @@ const goToSongEdit = (song: EditableUploadSong) => {
 };
 
 const handleChangePage = async (page: number, pageSize: number) => {
-    await changePage(page, pageSize)
-    await load()
+    const result = await changePage(page, pageSize)
+    if (!result.success) return reportError(result)
 
     uploadsTabelRef.value?.scrollTo({
         top: 0,
@@ -107,7 +108,10 @@ const handleChangePage = async (page: number, pageSize: number) => {
     })
 }
 
-onMounted(load);
+onMounted(async () => {
+    const result = await load()
+    if (!result.success) reportError(result)
+});
 </script>
 
 <style scoped>

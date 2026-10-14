@@ -1,4 +1,6 @@
 import type { Ref } from 'vue'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 
 export interface AudioEngineContext {
   audioElement: Ref<HTMLAudioElement | null>
@@ -138,24 +140,34 @@ export function createAudioEngine(ctx: AudioEngineContext) {
     if (audio) fadeOut(audio, 800, () => audio.pause())
   }
 
-  const resume = () => {
+  const resume = async (): Promise<ActionResult> => {
     const audio = ctx.audioElement.value
-    if (!audio) return
+    if (!audio) return { success: false, message: '音频播放器尚未就绪' }
     audio.volume = 0
-    audio.play().then(() => fadeIn(audio, 1000)).catch((error) => {
-      console.warn('恢复播放失败', error)
+    try {
+      await audio.play()
+      fadeIn(audio, 1000)
+      return { success: true }
+    } catch (error) {
+      ctx.isPlaying.value = false
       audio.volume = ctx.volume.value / 100
-    })
+      return toActionFailure(error, '恢复播放失败')
+    }
   }
 
-  const replay = () => {
+  const replay = async (): Promise<ActionResult> => {
     const audio = ctx.audioElement.value
-    if (!audio) return
+    if (!audio) return { success: false, message: '音频播放器尚未就绪' }
     audio.currentTime = 0
-    audio.play().then(() => fadeIn(audio, 1500)).catch((error) => {
-      console.warn('单曲循环播放被拦截', error)
+    try {
+      await audio.play()
+      fadeIn(audio, 1500)
+      return { success: true }
+    } catch (error) {
+      ctx.isPlaying.value = false
       audio.volume = ctx.volume.value / 100
-    })
+      return toActionFailure(error, '单曲循环播放失败')
+    }
   }
 
   const seek = (time: number) => {

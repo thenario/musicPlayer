@@ -23,9 +23,9 @@ describe('useSongUpload', () => {
     const valid = new File(['x'], 'Title_Artist.mp3', { type: 'audio/mpeg' })
     const input = (file: File) => ({ target: { files: [file] } }) as unknown as Event
 
-    upload.handleAudioSelect(input(invalid))
+    expect(upload.handleAudioSelect(input(invalid))).toEqual({ success: false, message: '不支持的文件格式' })
     expect(upload.audioFile.value).toBeNull()
-    expect(message.warning).toHaveBeenCalledWith('不支持的文件格式')
+    expect(message.warning).not.toHaveBeenCalled()
 
     upload.handleAudioSelect(input(valid))
     expect(upload.audioFile.value).toBe(valid)
@@ -36,8 +36,8 @@ describe('useSongUpload', () => {
   it('requires files before submitting and resets its state', async () => {
     const upload = useSongUpload()
 
-    await upload.submit()
-    expect(message.warning).toHaveBeenCalledWith('请选择音频文件')
+    await expect(upload.submit()).resolves.toEqual({ success: false, message: '请选择音频文件' })
+    expect(message.warning).not.toHaveBeenCalled()
 
     upload.form.value.title = 'Song'
     upload.reset()
@@ -57,7 +57,7 @@ describe('useEditUpload', () => {
     expect(edit.formData.lyrics).toBe('main')
     expect(edit.formData.t_lyrics).toBe('translation')
     expect(edit.lyricsLoading.value).toBe(false)
-    expect(await edit.save()).toBe(false)
+    expect(await edit.save()).toEqual({ success: false, message: '表单尚未就绪' })
   })
 
   it('submits a valid edit form and clears submitting state', async () => {
@@ -68,9 +68,9 @@ describe('useEditUpload', () => {
     edit.formData.t_lyrics = 'translated'
     editUserUploadSongs.mockResolvedValue({ success: true })
 
-    await expect(edit.save()).resolves.toBe(true)
+    await expect(edit.save()).resolves.toEqual({ success: true, message: '修改成功' })
     expect(editUserUploadSongs).toHaveBeenCalledWith(expect.any(FormData), 1)
-    expect(message.success).toHaveBeenCalledWith('修改成功')
+    expect(message.success).not.toHaveBeenCalled()
     expect(edit.submitting.value).toBe(false)
   })
 })

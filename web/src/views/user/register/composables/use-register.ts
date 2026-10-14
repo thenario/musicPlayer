@@ -1,5 +1,7 @@
 import { reactive, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { USERNAME_MIN_LENGTH, REGISTER_PASSWORD_MIN_LENGTH, EMAIL_PATTERN } from '../../const'
 
 /** 注册表单：状态、校验与提交。 */
@@ -18,11 +20,13 @@ export function useRegister() {
     return isValid
   }
 
-  const register = async () => {
-    if (!validate()) return { success: false }
+  const register = async (): Promise<ActionResult> => {
+    if (!validate()) return { success: false, message: '请检查注册信息', validation: true }
     loading.value = true
     try {
       return await userStore.register(form)
+    } catch (error) {
+      return toActionFailure(error, '注册失败')
     } finally {
       loading.value = false
     }

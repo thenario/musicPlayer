@@ -1,5 +1,7 @@
 import { onBeforeUnmount, reactive, ref } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { songApi } from '@/api/song-api'
 
 /** 编辑上传歌曲：表单状态、歌词加载、封面上传与保存。 */
@@ -27,39 +29,39 @@ export function useEditUpload(songId: number | string) {
     song_name: [{ required: true, message: '歌名是必填项', trigger: 'blur' }],
   })
 
-  const fetchLyrics = async () => {
+  const fetchLyrics = async (): Promise<ActionResult> => {
     lyricsLoading.value = true
     try {
       const res = await songApi.getLyrics(songId)
       formData.lyrics = res.lyrics || ''
       formData.t_lyrics = res.t_lyrics || ''
+      return { success: true }
     } catch (err) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error('获取歌曲详情失败:', err)
+      return toActionFailure(err, '歌词加载失败')
     } finally {
       lyricsLoading.value = false
     }
   }
 
-  const handleFileChange = (e: Event) => {
+  const handleFileChange = (e: Event): ActionResult => {
     const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
+    if (!file) return { success: false, message: '未选择图片', canceled: true }
     if (file.size > 2 * 1024 * 1024) {
-      ElMessage.warning('图片不能超过 2MB')
-      return
+      return { success: false, message: '图片不能超过 2MB' }
     }
     revokePreviewUrl()
     songCoverFile.value = file
     previewUrl.value = URL.createObjectURL(file)
+    return { success: true }
   }
 
-  /** 保存成功返回 true，由调用方决定是否跳转。 */
-  const save = async (): Promise<boolean> => {
-    if (!formRef.value) return false
+  /** 保存结果交给组件；表单校验失败由字段提示，不重复弹窗。 */
+  const save = async (): Promise<ActionResult> => {
+    if (!formRef.value) return { success: false, message: '表单尚未就绪' }
     try {
       await formRef.value.validate()
     } catch {
-      return false // 校验未通过
+      return { success: false, message: '请检查表单内容', validation: true }
     }
 
     submitting.value = true
@@ -70,11 +72,9 @@ export function useEditUpload(songId: number | string) {
       finalData.append('lyrics', formData.lyrics)
       finalData.append('t_lyrics', formData.t_lyrics)
       await songApi.editUserUploadSongs(finalData, songId)
-      ElMessage.success('修改成功')
-      return true
+      return { success: true, message: '修改成功' }
     } catch (err) {
-      console.error(err)
-      return false
+      return toActionFailure(err, '歌曲修改失败')
     } finally {
       submitting.value = false
     }

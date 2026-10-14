@@ -52,7 +52,7 @@
                             <label class="auth-field">
                                 <span>密码</span>
                                 <input v-model="registerForm.password" type="password" autocomplete="new-password"
-                                    placeholder="至少 6 位" />
+                                    placeholder="至少 8 位" />
                                 <small v-if="registerErrors.password">{{ registerErrors.password }}</small>
                             </label>
 
@@ -82,6 +82,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { usePlayerStore } from '@/stores/player'
 import { useLogin } from '@/views/user/login/composables/use-login'
 import { useRegister } from '@/views/user/register/composables/use-register'
+import { reportError } from '@/utils/feedback'
+import { logBackgroundFailure } from '@/utils/action-result'
 
 const route = useRoute()
 const router = useRouter()
@@ -98,12 +100,12 @@ const switchMode = () => {
 const handleLogin = async () => {
     const result = await login()
     if (!result.success) {
-        ElMessage.error("登录失败")
+        reportError(result)
         return
     }
     ElMessage.success('登录成功，欢迎回来！')
-    void playerStore.fetchUserQueues()
-    void playerStore.fetchCurrentQueue()
+    void playerStore.fetchUserQueues().then(logBackgroundFailure)
+    void playerStore.fetchCurrentQueue().then(logBackgroundFailure)
 
     const redirect = route.query.redirect
     router.push(typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/')
@@ -111,7 +113,10 @@ const handleLogin = async () => {
 
 const handleRegister = async () => {
     const result = await register()
-    if (!result.success) return
+    if (!result.success) {
+        reportError(result)
+        return
+    }
 
     ElMessage.success('注册成功，请登录')
     router.replace({ path: '/login', query: route.query })

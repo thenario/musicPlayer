@@ -45,6 +45,6 @@ describe('createPlaybackSync', () => {
     }))
 
     updateCurrentQueueState.mockRejectedValueOnce(new Error('offline'))
-    await expect(sync.sync()).resolves.toEqual({ success: false })
+    await expect(sync.sync()).resolves.toEqual({ success: false, message: 'offline' })
   })
 })

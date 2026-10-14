@@ -1,5 +1,7 @@
 import { reactive, ref } from 'vue'
 import { useUserStore } from '@/stores/user'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { USERNAME_MIN_LENGTH, LOGIN_PASSWORD_MIN_LENGTH } from '../../const'
 
 /** 登录表单：状态、校验与提交。 */
@@ -17,11 +19,13 @@ export function useLogin() {
     return isValid
   }
 
-  const login = async () => {
-    if (!validate()) return { success: false }
+  const login = async (): Promise<ActionResult> => {
+    if (!validate()) return { success: false, message: '请检查登录信息', validation: true }
     loading.value = true
     try {
       return await userStore.login(form.user_name, form.password)
+    } catch (error) {
+      return toActionFailure(error, '登录失败')
     } finally {
       loading.value = false
     }

@@ -1,5 +1,7 @@
 package com.kyf.mp.server.common.auth;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.kyf.mp.server.common.ResultModel;
 import com.kyf.mp.server.utils.JwtUtils;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -8,9 +10,13 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.dao.QueryTimeoutException;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -25,13 +31,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final TokenBlacklistService tokenBlacklistService;
     private final JwtUtils jwtUtils;
+    private final ObjectMapper objectMapper;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String token = bearerToken(request);
         if (token != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            authenticate(request, token);
+            try {
+                authenticate(request, token);
+            } catch (DataAccessResourceFailureException | QueryTimeoutException e) {
+                // 过滤器异常不会自动进入 ControllerAdvice；这里明确返回 503，且不能绕过黑名单。
+                SecurityContextHolder.clearContext();
+                log.error("JWT 黑名单查询不可用", e);
+                response.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
+                response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                objectMapper.writeValue(response.getWriter(), ResultModel.error(
+                        "依赖服务暂不可用，请稍后重试", HttpServletResponse.SC_SERVICE_UNAVAILABLE));
+                return;
+            }
         }
         filterChain.doFilter(request, response);
     }

@@ -2,6 +2,7 @@ import { ref, watch } from 'vue'
 import type { LyricLine } from '@/types'
 import { songApi } from '@/api/song-api'
 import { parseLyrics } from '@/utils/lrc-parser'
+import { toActionFailure } from '@/utils/action-result'
 
 /** Loads lyrics for the current song without allowing an old request to overwrite a newer song. */
 export function createLyricsLoader(getCurrentSongId: () => number | string | undefined) {
@@ -26,8 +27,11 @@ export function createLyricsLoader(getCurrentSongId: () => number | string | und
         : [{ time: 0, content: '未找到歌词' }]
     } catch (error) {
       if (requestId === latestRequest) {
-        console.error('获取歌词发生硬错误:', error)
-        lyrics.value = [{ time: 0, content: '歌词加载失败' }]
+        const failure = toActionFailure(error, '歌词加载失败')
+        if (!failure.canceled) {
+          console.warn('歌词加载失败:', failure.message)
+          lyrics.value = [{ time: 0, content: '歌词加载失败' }]
+        }
       }
     } finally {
       if (requestId === latestRequest) isLoadingLyrics.value = false

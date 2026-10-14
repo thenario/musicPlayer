@@ -109,7 +109,7 @@ describe('songApi', () => {
     await songApi.uploadSong(form)
     await songApi.editUserUploadSongs(form, 1)
 
-    expect(request.get).toHaveBeenCalledWith('/songs/1/lyrics', { silent: true })
+    expect(request.get).toHaveBeenCalledWith('/songs/1/lyrics')
     expect(request.patch).toHaveBeenCalledWith('/songs/my-uploads/1', form, { timeout: 300_000 })
   })
 })

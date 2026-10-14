@@ -36,16 +36,17 @@ describe('createUserAuth', () => {
     expect(ctx.isAuthenticated.value).toBe(true)
 
     await vi.waitFor(() => expect(ctx.userCoverUrl.value).toBe('/cover.jpg'))
-    expect(router.push).toHaveBeenCalledWith({ name: 'login' })
+    expect(router.push).not.toHaveBeenCalled()
+    expect(router.replace).not.toHaveBeenCalled()
   })
 
-  it('returns a stable error result and always clears session on logout', async () => {
+  it('returns a stable error result and preserves session when logout fails', async () => {
     const ctx = context()
     userApi.logout.mockRejectedValue(new Error('offline'))
     const auth = createUserAuth(ctx)
 
     await expect(auth.logout()).resolves.toEqual({ success: false, message: 'offline' })
-    expect(ctx.clearSession).toHaveBeenCalledOnce()
+    expect(ctx.clearSession).not.toHaveBeenCalled()
     expect(router.replace).not.toHaveBeenCalled()
   })
 

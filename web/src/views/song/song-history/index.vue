@@ -28,6 +28,7 @@ import { computed, onActivated, onMounted } from 'vue';
 import { usePlayerStore } from '@/stores/player';
 import { useSongStore } from '@/stores/song';
 import { storeToRefs } from 'pinia';
+import { reportError } from '@/utils/feedback';
 
 const playerStore = usePlayerStore()
 const songStore = useSongStore()
@@ -37,7 +38,7 @@ const { playHistory } = storeToRefs(songStore)
 const handlePlayallSongFromHistory = async () => {
     const res = await songStore.playAllHistory()
     if(!res.success){
-        ElMessage.error("播放失败")
+        reportError(res)
         return
     }
     ElMessage.success("播放成功")
@@ -45,13 +46,16 @@ const handlePlayallSongFromHistory = async () => {
 }
 
 const handlePlayNow = async (song: ISong) => {
-    await playerStore.playSong(song, "now")
+    const result = await playerStore.playSong(song, "now")
+    if (!result.success) reportError(result)
 }
 
 const handlePlayNext = async (song: ISong) => {
     const res = await playerStore.playSong(song, "next")
     if (res.success) {
         ElMessage.success(`已将《${song.song_title}》添加到下一首播放`)
+    } else {
+        reportError(res)
     }
 }
 
@@ -62,7 +66,7 @@ const historySongs = computed(() =>
 const loadHistory = async () => {
     const res = await songStore.getPlayHistory()
     if (!res.success) {
-        ElMessage.error("历史记录获取失败")
+        reportError(res)
     }
 }
 

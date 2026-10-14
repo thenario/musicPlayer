@@ -11,8 +11,7 @@ export function usePlayMode() {
   const togglePlayMode = async () => {
     const currentIdx = PLAY_MODES.indexOf(playerStore.playMode as (typeof PLAY_MODES)[number])
     const next = PLAY_MODES[(currentIdx + 1) % PLAY_MODES.length] ?? PLAY_MODES[0]
-    const res = await playerStore.setPlayMode(next)
-    if (!res.success) console.error('切换失败')
+    return playerStore.setPlayMode(next)
   }
 
   return { playModeTitle, togglePlayMode }

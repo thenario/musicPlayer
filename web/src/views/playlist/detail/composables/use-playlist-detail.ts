@@ -1,14 +1,14 @@
-import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { playlistApi } from '@/api/playlist-api'
 import { sameId } from '@/utils/format'
-import type { IPlaylist, PlaylistSong } from '@/types'
+import type { ActionResult, IPlaylist, PlaylistSong } from '@/types'
+import { requireSuccess, toActionFailure } from '@/utils/action-result'
 
 /** 歌单详情：数据加载、点赞、增删歌；返回状态与操作供页面编排。 */
 export function usePlaylistDetail() {
   const route = useRoute()
-  const router = useRouter()
   const userStore = useUserStore()
 
   const playlist = ref<IPlaylist | null>(null)
@@ -22,11 +22,11 @@ export function usePlaylistDetail() {
     return String(userStore.user.user_id) === String(playlist.value.creator_id)
   })
 
-  const loadPlaylist = async () => {
+  const loadPlaylist = async (): Promise<ActionResult> => {
     const idParam = route.params.id as string
     if (!idParam || Number.isNaN(Number(idParam))) {
       loading.value = false
-      return
+      return { success: false, message: '歌单编号无效' }
     }
 
     loading.value = true
@@ -37,21 +37,19 @@ export function usePlaylistDetail() {
         ? res.songs.sort((a, b) => a.song_playlist_position - b.song_playlist_position)
         : []
       isLiked.value = res.is_liked
+      return { success: true }
     } catch (error) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error(error)
-      router.push('/playlists')
+      return toActionFailure(error, '歌单加载失败')
     } finally {
       loading.value = false
     }
   }
 
-  const toggleLike = async () => {
+  const toggleLike = async (): Promise<ActionResult> => {
     if (!userStore.isAuthenticated) {
-      router.push('/login')
-      return
+      return { success: false, message: '请先登录', code: 401 }
     }
-    if (!playlist.value) return
+    if (!playlist.value) return { success: false, message: '歌单尚未加载' }
 
     try {
       const res = isLiked.value
@@ -61,44 +59,35 @@ export function usePlaylistDetail() {
       if (res.success) {
         isLiked.value = !isLiked.value
         playlist.value.like_count += isLiked.value ? 1 : -1
-        ElMessage.success(isLiked.value ? "已点赞" : "取消点赞成功")
       }
+      return { success: true, message: isLiked.value ? '已点赞' : '取消点赞成功' }
     } catch (err) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error(err)
+      return toActionFailure(err, '收藏操作失败')
     }
   }
 
-  const handleRemoveSong = async (songId: number | string) => {
-    if (!playlist.value) return
+  const handleRemoveSong = async (songId: number | string): Promise<ActionResult> => {
+    if (!playlist.value) return { success: false, message: '歌单尚未加载' }
     try {
       await playlistApi.removeSongFromPlaylist(playlist.value.playlist_id, songId)
-      ElMessage.success("已从歌单移除")
       songs.value = songs.value.filter((s) => !sameId(s.song_id, songId))
       playlist.value.song_count--
+      return { success: true, message: '已从歌单移除' }
     } catch (error) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error('Remove error:', error)
+      return toActionFailure(error, '移除歌曲失败')
     }
   }
 
-  const addSongToPlaylist = async (songId: number | string) => {
-    if (!playlist.value) return
+  const addSongToPlaylist = async (songId: number | string): Promise<ActionResult> => {
+    if (!playlist.value) return { success: false, message: '歌单尚未加载' }
     try {
       await playlistApi.addSongToPlaylist(playlist.value.playlist_id, songId)
-      ElMessage.success("添加成功")
-      await loadPlaylist()
+      requireSuccess(await loadPlaylist(), '歌曲已添加，但歌单刷新失败')
+      return { success: true, message: '添加成功' }
     } catch (error: unknown) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error(error instanceof Error ? error.message : error)
+      return toActionFailure(error, '添加歌曲失败')
     }
   }
-
-  watch(() => route.params.id, (newId) => {
-    if (newId) loadPlaylist()
-  })
-
-  onMounted(loadPlaylist)
 
   return {
     playlist,

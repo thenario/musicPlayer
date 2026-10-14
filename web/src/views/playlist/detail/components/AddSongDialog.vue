@@ -25,6 +25,7 @@ import { debounce } from 'lodash-es'
 import { Search } from '@element-plus/icons-vue'
 import type { ISong } from '@/types'
 import { songApi } from '@/api/song-api'
+import { reportError } from '@/utils/feedback'
 
 const props = defineProps<{ open: boolean }>()
 const emit = defineEmits<{
@@ -44,8 +45,7 @@ const searchSongs = async () => {
     const res = await songApi.getSongs(1, songSearchQuery.value)
     searchResults.value = res.songs || []
   } catch (err) {
-    // 错误已由拦截器统一提示，这里只记录日志
-    console.error(err)
+    reportError(err)
   }
 }
 

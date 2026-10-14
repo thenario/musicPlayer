@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
-import type { ISong } from '@/types'
+import type { ActionResult, ISong } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { queueApi } from '@/api/queue-api'
 
 export interface PlaybackSyncContext {
@@ -13,7 +14,7 @@ export interface PlaybackSyncContext {
 
 /** Persists the playback position and mode without owning player state. */
 export function createPlaybackSync(ctx: PlaybackSyncContext) {
-  const sync = async () => {
+  const sync = async (): Promise<ActionResult> => {
     if (!ctx.currentSong.value || !ctx.currentQueueId.value) return { success: true }
 
     try {
@@ -28,8 +29,7 @@ export function createPlaybackSync(ctx: PlaybackSyncContext) {
       })
       return { success: true }
     } catch (error: unknown) {
-      console.error(error instanceof Error ? error.message : '请求失败')
-      return { success: false }
+      return toActionFailure(error, '播放状态同步失败')
     }
   }
 

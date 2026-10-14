@@ -1,5 +1,7 @@
 import { onBeforeUnmount, ref } from 'vue'
 import type { UploadFile } from 'element-plus'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { playlistApi } from '@/api/playlist-api'
 import { getImageUrl } from '@/utils/format'
 import { PLAYLIST_COVER_TYPES } from '../const'
@@ -18,7 +20,7 @@ export function useEditPlaylist(playlistId: string) {
     }
   }
 
-  const load = async () => {
+  const load = async (): Promise<ActionResult> => {
     try {
       const res = await playlistApi.getPlaylistById(playlistId)
       if (res.playlist) {
@@ -27,26 +29,26 @@ export function useEditPlaylist(playlistId: string) {
         revokePreviewUrl()
         previewImage.value = getImageUrl(res.playlist.playlist_cover_url)
       }
+      return { success: true }
     } catch (err: unknown) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error(err instanceof Error ? err.message : err)
+      return toActionFailure(err, '歌单详情加载失败')
     }
   }
 
-  const handleFileChange = (uploadFile: UploadFile) => {
+  const handleFileChange = (uploadFile: UploadFile): ActionResult => {
     const file = uploadFile.raw
-    if (!file) return
+    if (!file) return { success: false, message: '未选择图片', canceled: true }
     if (!PLAYLIST_COVER_TYPES.includes(file.type)) {
-      ElMessage.error('只能上传 JPG/PNG 格式!')
-      return
+      return { success: false, message: '只能上传 JPG/PNG 格式!' }
     }
     revokePreviewUrl()
     selectedFile.value = file
     previewImage.value = URL.createObjectURL(file)
+    return { success: true }
   }
 
-  /** 保存成功返回 true，由调用方决定跳转。 */
-  const submit = async (): Promise<boolean> => {
+  /** 保存结果交给组件决定提示和跳转。 */
+  const submit = async (): Promise<ActionResult> => {
     submitting.value = true
     try {
       const formData = new FormData()
@@ -56,12 +58,9 @@ export function useEditPlaylist(playlistId: string) {
       if (selectedFile.value) formData.append('cover_image', selectedFile.value)
 
       await playlistApi.editPlaylistDetails(formData)
-      ElMessage.success('更新成功')
-      return true
+      return { success: true, message: '更新成功' }
     } catch (err: unknown) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error('更新失败:', err instanceof Error ? err.message : err)
-      return false
+      return toActionFailure(err, '更新歌单失败')
     } finally {
       submitting.value = false
     }

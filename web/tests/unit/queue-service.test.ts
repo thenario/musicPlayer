@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { ref } from 'vue'
-import type { IQueue, IQueueItem, ISong } from '@/types'
+import type { ActionResult, IQueue, IQueueItem, ISong } from '@/types'
 
 const queueApi = vi.hoisted(() => ({
   getCurrentQueue: vi.fn(),
@@ -35,7 +35,7 @@ const createContext = () => ({
   currentIndex: ref(-1),
   currentSong: ref<ISong | null>(null),
   playMode: ref('sequential'),
-  playAtIndex: vi.fn().mockResolvedValue({ success: true }),
+  playAtIndex: vi.fn<() => Promise<ActionResult>>().mockResolvedValue({ success: true }),
   pauseSong: vi.fn(),
   prepareAudioSource: vi.fn(),
 })
@@ -101,5 +101,29 @@ describe('createQueueService', () => {
 
     await expect(service.playPlaylist(7, 20)).resolves.toEqual({ success: true })
     expect(ctx.playAtIndex).toHaveBeenCalledWith(1)
+  })
+
+  it('stops a playlist operation when fetching its new queue fails', async () => {
+    const ctx = createContext()
+    ctx.currentQueue.value = [item(99, 1)]
+    queueApi.createQueueFromPlaylist.mockResolvedValue({ success: true })
+    queueApi.getCurrentQueue.mockRejectedValue(new Error('offline'))
+    const service = createQueueService(ctx)
+
+    await expect(service.playPlaylist(7)).resolves.toMatchObject({ success: false })
+    expect(ctx.playAtIndex).not.toHaveBeenCalled()
+    expect(ctx.currentQueue.value).toEqual([])
+    expect(queueApi.getMyQueues).not.toHaveBeenCalled()
+  })
+
+  it('does not report success when audio playback fails', async () => {
+    const ctx = createContext()
+    ctx.currentQueueId.value = 4
+    ctx.playAtIndex.mockResolvedValue({ success: false, message: 'play blocked' })
+    const service = createQueueService(ctx)
+
+    await expect(service.playSongInQueue(4, 0)).resolves.toMatchObject({
+      success: false, message: expect.stringContaining('play blocked'),
+    })
   })
 })

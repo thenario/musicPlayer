@@ -1,8 +1,10 @@
-import { ref, computed, watch, nextTick, onBeforeUnmount, onMounted } from 'vue'
+import { ref, watch, nextTick, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
 import { usePlayerStore } from '@/stores/player'
 import { sameId } from '@/utils/format'
-import type { IQueue } from '@/types'
+import type { ActionResult, IQueue } from '@/types'
+import { requireSuccess, toActionFailure } from '@/utils/action-result'
+import { tokenStorage } from '@/utils/storage'
 
 /** 队列抽屉：标签切换、预览、清空/删除/切换队列、拖拽排序与滚动定位。 */
 export function useQueueDrawer() {
@@ -31,10 +33,12 @@ export function useQueueDrawer() {
   }
 
   const playFromPreview = async (index: number) => {
-    if (previewQueueId.value === -1) return
-    await playerStore.playSongInQueue(previewQueueId.value, index)
+    if (previewQueueId.value === -1) return { success: false, message: '尚未选择队列' }
+    const result = await playerStore.playSongInQueue(previewQueueId.value, index)
+    if (!result.success) return result
     activeTab.value = 'queue'
     previewQueueId.value = -1
+    return { success: true }
   }
 
   const backToQueueList = () => {
@@ -42,53 +46,27 @@ export function useQueueDrawer() {
     previewData.value = null
   }
 
-  const dragQueue = computed({
-    get: () => currentQueue.value,
-    set: (newVal) => playerStore.updateQueueOrder(newVal),
-  })
-
   const playFromQueue = async (index: number) => {
-    await playerStore.playAtIndex(index)
+    return playerStore.playAtIndex(index)
   }
 
   const removeFromQueue = async (itemId: number | string) => {
-    await playerStore.removeQueueItem(itemId)
+    return playerStore.removeQueueItem(itemId)
   }
 
-  const confirmClear = () => {
-    ElMessageBox.confirm('确定要清空当前播放队列吗？', '提示', {
-      confirmButtonText: '清空',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }).then(async () => {
-      if (currentQueueId.value) {
-        await playerStore.clearQueue(currentQueueId.value)
-      }
-    }).catch(() => { })
+  const clearCurrentQueue = async (): Promise<ActionResult> => {
+    if (!currentQueueId.value) return { success: false, message: '没有当前播放队列' }
+    return playerStore.clearQueue(currentQueueId.value)
   }
 
   const handleSwitchQueue = async (queueId: number | string) => {
     if (sameId(queueId, currentQueueId.value)) {
       activeTab.value = 'queue'
-      return
+      return { success: true }
     }
-    try {
-      await playerStore.switchQueue(queueId)
-      activeTab.value = 'queue'
-    } catch (err: unknown) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error(err instanceof Error ? err.message : err)
-    }
-  }
-
-  const confirmDeleteQueue = (queueId: number | string) => {
-    ElMessageBox.confirm('确定要永久删除这个播放队列吗？', '警告', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning',
-    }).then(async () => {
-      await playerStore.deleteQueue(queueId)
-    }).catch(() => { })
+    const result = await playerStore.switchQueue(queueId)
+    if (result.success) activeTab.value = 'queue'
+    return result
   }
 
   const scrollToCurrent = async () => {
@@ -114,10 +92,16 @@ export function useQueueDrawer() {
     }
   })
 
-  onMounted(() => {
-    playerStore.fetchCurrentQueue()
-    playerStore.fetchUserQueues()
-  })
+  const loadQueues = async (): Promise<ActionResult> => {
+    if (!tokenStorage.get()) return { success: true }
+    try {
+      requireSuccess(await playerStore.fetchCurrentQueue(), '当前队列加载失败')
+      requireSuccess(await playerStore.fetchUserQueues(), '队列列表加载失败')
+      return { success: true }
+    } catch (error) {
+      return toActionFailure(error, '队列初始化失败')
+    }
+  }
 
   onBeforeUnmount(() => {
     if (scrollTimerId !== undefined) window.clearTimeout(scrollTimerId)
@@ -134,15 +118,16 @@ export function useQueueDrawer() {
     previewQueueId,
     previewData,
     previewLoading,
-    dragQueue,
+    updateQueueOrder: playerStore.updateQueueOrder,
+    loadQueues,
     handleTabChange,
     handlePreviewQueue,
     playFromPreview,
     backToQueueList,
     playFromQueue,
     removeFromQueue,
-    confirmClear,
+    clearCurrentQueue,
     handleSwitchQueue,
-    confirmDeleteQueue,
+    deleteQueue: playerStore.deleteQueue,
   }
 }

@@ -128,6 +128,7 @@
 import { ref } from 'vue';
 import { Clock, Document, Expand, Fold, House, List, Lock, SwitchButton, User } from '@element-plus/icons-vue';
 import { useUserStore } from '@/stores/user';
+import { reportError } from '@/utils/feedback';
 import { usePlayerStore } from '@/stores/player'
 import { storeToRefs } from 'pinia';
 import { useRoute, useRouter } from 'vue-router';
@@ -164,9 +165,10 @@ const handleCommand = async (command: string) => {
             const res = await userStore.logout()
             if (res.success) {
                 ElMessage.success("登出成功")
+                await router.replace('/login')
             }
             else {
-                ElMessage.error("登出失败，请稍后重试")
+                reportError(res)
             }
             return
         }

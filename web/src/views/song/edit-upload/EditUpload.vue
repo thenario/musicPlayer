@@ -102,6 +102,7 @@ import { Back, Camera, Mic } from '@element-plus/icons-vue';
 import { getImageUrl, sameId } from '@/utils/format';
 import { songApi } from '@/api/song-api';
 import { useEditUpload } from './composables/use-edit-upload';
+import { reportError } from '@/utils/feedback';
 
 const route = useRoute();
 const router = useRouter();
@@ -118,9 +119,14 @@ const {
     formData,
     rules,
     fetchLyrics,
-    handleFileChange,
+    handleFileChange: changeFileAction,
     save,
 } = useEditUpload(song_id);
+
+const handleFileChange = (event: Event) => {
+    const result = changeFileAction(event)
+    if (!result.success) reportError(result)
+}
 
 const getCoverUrl = (url: string) => getImageUrl(url);
 
@@ -134,22 +140,27 @@ onMounted(async () => {
             const { song } = await songApi.getUserUploadSong(song_id)
             formData.song_name = song.song_title || ''
             previewUrl.value = getCoverUrl(song.song_cover_url || '')
-        } catch {
-            router.replace('/user-uploads')
+        } catch (error) {
+            reportError(error)
+            await router.replace('/user-uploads')
             return
         }
     }
 
     // 无论是否有缓存，都去获取歌词数据
     if (song_id) {
-        fetchLyrics();
+        const result = await fetchLyrics()
+        if (!result.success) reportError(result)
     } else {
         ElMessage.error("参数错误：未获取到歌曲ID");
     }
 });
 
 const submitForm = async () => {
-    if (await save()) router.push('/user-uploads');
+    const result = await save()
+    if (!result.success) return reportError(result)
+    ElMessage.success(result.message || '修改成功')
+    await router.push('/user-uploads')
 };
 </script>
 

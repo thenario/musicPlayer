@@ -1,6 +1,8 @@
 import { onBeforeUnmount, reactive, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import type { FormInstance, FormRules } from 'element-plus'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { useUserStore } from '@/stores/user'
 import { userApi } from '@/api/user-api'
 
@@ -33,25 +35,25 @@ export function useUserProfile() {
     ],
   })
 
-  const handleFileChange = (e: Event) => {
+  const handleFileChange = (e: Event): ActionResult => {
     const file = (e.target as HTMLInputElement).files?.[0]
-    if (!file) return
+    if (!file) return { success: false, message: '未选择图片', canceled: true }
     if (file.size > 2 * 1024 * 1024) {
-      ElMessage.warning('图片大小不能超过 2MB')
-      return
+      return { success: false, message: '图片大小不能超过 2MB' }
     }
     revokePreviewUrl()
     coverFile.value = file
     prevCoverUrl.value = URL.createObjectURL(file)
+    return { success: true }
   }
 
-  /** 保存成功返回 true，由调用方决定跳转。 */
-  const submit = async (): Promise<boolean> => {
-    if (!formRef.value) return false
+  /** 保存结果交给页面；字段校验失败不再额外弹窗。 */
+  const submit = async (): Promise<ActionResult> => {
+    if (!formRef.value) return { success: false, message: '表单尚未就绪' }
     try {
       await formRef.value.validate()
     } catch {
-      return false
+      return { success: false, message: '请检查表单内容', validation: true }
     }
 
     submitting.value = true
@@ -61,17 +63,15 @@ export function useUserProfile() {
       if (coverFile.value) formdata.append('user_cover', coverFile.value)
 
       const res = await userApi.editUserProfile(formdata)
-      ElMessage.success('资料修改成功！')
       if (user.value) {
         user.value.user_name = res.user_name
         userCoverUrl.value = res.user_cover_url
         revokePreviewUrl()
         prevCoverUrl.value = res.user_cover_url
       }
-      return true
+      return { success: true, message: '资料修改成功！' }
     } catch (err) {
-      console.error(err)
-      return false
+      return toActionFailure(err, '资料修改失败')
     } finally {
       submitting.value = false
     }

@@ -94,6 +94,7 @@ import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { Edit, Camera, Plus } from '@element-plus/icons-vue'
 import { useEditPlaylist } from './composables/use-edit-playlist'
+import { reportError } from '@/utils/feedback'
 
 const route = useRoute()
 const router = useRouter()
@@ -101,12 +102,22 @@ const userStore = useUserStore()
 const { user } = storeToRefs(userStore)
 
 const playlistId = route.params.id as string
-const { form, previewImage, submitting, load, handleFileChange, submit } = useEditPlaylist(playlistId)
+const { form, previewImage, submitting, load, handleFileChange: changeFileAction, submit } = useEditPlaylist(playlistId)
+const handleFileChange = (file: Parameters<typeof changeFileAction>[0]) => {
+    const result = changeFileAction(file)
+    if (!result.success) reportError(result)
+}
 
-onMounted(load)
+onMounted(async () => {
+    const result = await load()
+    if (!result.success) reportError(result)
+})
 
 const submitForm = async () => {
-    if (await submit()) router.push(`/playlists/${playlistId}`)
+    const result = await submit()
+    if (!result.success) return reportError(result)
+    ElMessage.success(result.message || '更新成功')
+    await router.push(`/playlists/${playlistId}`)
 }
 </script>
 

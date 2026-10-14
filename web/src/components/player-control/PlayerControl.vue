@@ -1,7 +1,7 @@
 <template>
   <div class="player-control" :style="{ width: 'var(--width-control, 40%)' }">
     <div class="player-control__buttons">
-      <button @click="togglePlayMode" class="ctrl-btn" :title="playModeTitle">
+      <button @click="runAction(togglePlayMode)" class="ctrl-btn" :title="playModeTitle">
         <svg class="player-control__icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path v-if="playerStore.playMode === 'repeat_one'" stroke-linecap="round" stroke-linejoin="round"
             stroke-width="2"
@@ -11,14 +11,14 @@
         </svg>
       </button>
 
-      <button @click="playerStore.previousSong" :disabled="!playerStore.hasPrevious" class="ctrl-btn ctrl-btn--skip">
+      <button @click="runAction(playerStore.previousSong)" :disabled="!playerStore.hasPrevious" class="ctrl-btn ctrl-btn--skip">
         <svg class="player-control__icon--lg" fill="currentColor" viewBox="0 0 20 20">
           <path
             d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z" />
         </svg>
       </button>
 
-      <button @click="playerStore.togglePlay"
+      <button @click="runAction(playerStore.togglePlay)"
         class="player-control__play-btn">
         <svg v-if="playerStore.isPlaying" class="player-control__icon--lg" fill="currentColor" viewBox="0 0 20 20">
           <path fill-rule="evenodd"
@@ -32,7 +32,7 @@
         </svg>
       </button>
 
-      <button @click="() => playerStore.nextSong()" :disabled="!playerStore.hasNext" class="ctrl-btn ctrl-btn--skip">
+      <button @click="runAction(() => playerStore.nextSong())" :disabled="!playerStore.hasNext" class="ctrl-btn ctrl-btn--skip">
         <svg class="player-control__icon--lg" fill="currentColor" viewBox="0 0 20 20">
           <path
             d="M4.555 5.168A1 1 0 003 6v8a1 1 0 001.555.832L10 11.202V14a1 1 0 001.555.832l6-4a1 1 0 000-1.664l-6-4A1 1 0 0010 6v2.798L4.555 5.168z" />
@@ -56,9 +56,15 @@ defineOptions({ name: 'PlayerControl' })
 import { usePlayerStore } from '@/stores/player'
 import ProgressBar from './components/ProgressBar.vue'
 import { usePlayMode } from './composables/use-play-mode'
+import type { ActionResult } from '@/types'
+import { reportError } from '@/utils/feedback'
 
 const playerStore = usePlayerStore()
 const { playModeTitle, togglePlayMode } = usePlayMode()
+const runAction = async (action: () => ActionResult | Promise<ActionResult>) => {
+  const result = await action()
+  if (!result.success) reportError(result)
+}
 </script>
 
 <style scoped>

@@ -58,16 +58,16 @@ describe('useClipboard', () => {
     Object.defineProperty(globalThis, 'window', { configurable: true, value: globalThis })
 
     const clipboard = useClipboard(100)
-    await expect(clipboard.copy('hello')).resolves.toBe(true)
+    await expect(clipboard.copy('hello')).resolves.toEqual({ success: true })
     expect(writeText).toHaveBeenCalledWith('hello')
     expect(clipboard.copied.value).toBe(true)
     vi.advanceTimersByTime(100)
     expect(clipboard.copied.value).toBe(false)
-    expect(await clipboard.copy('')).toBe(false)
+    expect(await clipboard.copy('')).toEqual({ success: false, message: '没有可复制的内容' })
     vi.useRealTimers()
   })
 
-  it('returns false when the browser clipboard rejects', async () => {
+  it('returns a failure result when the browser clipboard rejects', async () => {
     Object.defineProperty(globalThis, 'navigator', {
       configurable: true,
       value: { clipboard: { writeText: vi.fn().mockRejectedValue(new Error('denied')) } },
@@ -75,7 +75,7 @@ describe('useClipboard', () => {
     Object.defineProperty(globalThis, 'window', { configurable: true, value: globalThis })
     const clipboard = useClipboard()
 
-    await expect(clipboard.copy('hello')).resolves.toBe(false)
+    await expect(clipboard.copy('hello')).resolves.toEqual({ success: false, message: 'denied' })
     expect(clipboard.copied.value).toBe(false)
   })
 })

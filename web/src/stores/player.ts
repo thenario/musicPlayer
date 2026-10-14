@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import type { IQueue, IQueueItem, ISong } from '@/types'
+import type { ActionResult, IQueue, IQueueItem, ISong } from '@/types'
+import { logBackgroundFailure, requireSuccess, toActionFailure } from '@/utils/action-result'
 import { queueApi } from '@/api/queue-api'
 import { getImageUrl, sameId } from '@/utils/format'
 import { createAudioEngine } from '@/composables/player/use-audio-engine'
@@ -12,7 +13,6 @@ import { createQueueMutations } from '@/composables/player/use-queue-mutations'
 import { createQueueService } from '@/composables/player/use-queue-service'
 
 import { useSongStore } from './song'
-const errorMessage = (error: unknown) => error instanceof Error ? error.message : '请求失败'
 
 export const usePlayerStore = defineStore('player', () => {
   // ================= 状态 =================
@@ -43,14 +43,14 @@ export const usePlayerStore = defineStore('player', () => {
     isPlaying,
     playMode,
   })
-  const syncPlayStateToBackend = () => playbackSync.sync()
+  const syncPlayStateToBackend = () => { void playbackSync.sync().then(logBackgroundFailure) }
 
   const mediaSession = createMediaSession({
     currentSong,
-    onPlay: () => resumeSong(),
+    onPlay: () => { void resumeSong().then(logBackgroundFailure) },
     onPause: () => pauseSong(),
-    onPrevious: () => previousSong(),
-    onNext: () => nextSong(),
+    onPrevious: () => { void previousSong().then(logBackgroundFailure) },
+    onNext: () => { void nextSong().then(logBackgroundFailure) },
   })
 
   // ================= 音频引擎（audio 元素 + 淡入淡出） =================
@@ -95,42 +95,37 @@ export const usePlayerStore = defineStore('player', () => {
 
   const onAudioEnded = () => {
     if (playMode.value === 'repeat_one') {
-      audio.replay()
+      void audio.replay().then(logBackgroundFailure)
     } else {
-      nextSong(true)
+      void nextSong(true).then(logBackgroundFailure)
     }
   }
 
   const updateMediaSession = () => mediaSession.update()
 
-  const playAtIndex = async (index: number) => {
-    if (index < 0 || index >= currentQueue.value.length) return { success: false }
+  const playAtIndex = async (index: number): Promise<ActionResult> => {
+    if (index < 0 || index >= currentQueue.value.length) return { success: false, message: '没有可播放的歌曲' }
     try {
       const item = currentQueue.value[index]
       const song = item!.song
       currentIndex.value = index
       currentSong.value = song
+      const element = audioElement.value
+      if (!element) throw new Error('音频播放器尚未就绪')
+      element.src = getImageUrl(song.song_url)
+      await element.play()
+      // 快速切歌时，旧请求的播放完成不能覆盖新选择。
+      if (currentSong.value !== song) return { success: false, message: '播放已取消', canceled: true }
       isPlaying.value = true
-      if (audioElement.value) {
-        audioElement.value.src = getImageUrl(currentSong.value.song_url)
-        audioElement.value
-          .play()
-          .then(() => {
-            audio.fadeIn(audioElement.value!, 1500)
-          })
-          .catch((e) => {
-            console.warn('自动播放被拦截', e)
-            audioElement.value!.volume = 1
-          })
-      }
+      audio.fadeIn(element, 1500)
       updateMediaSession()
       syncPlayStateToBackend()
       // 只能在 Pinia 激活后、动作执行时获取 store，不能在模块加载时获取。
-      void useSongStore().syncPlayHistory(song)
+      void useSongStore().syncPlayHistory(song).then(logBackgroundFailure)
       return { success: true }
     } catch (err: unknown) {
-      console.error(errorMessage(err))
-      return { success: false }
+      if (currentIndex.value === index) isPlaying.value = false
+      return toActionFailure(err, '歌曲播放失败')
     }
   }
 
@@ -140,12 +135,14 @@ export const usePlayerStore = defineStore('player', () => {
     if (currentSong.value && audioElement.value) {
       audio.pause()
     }
+    return { success: true as const }
   }
 
-  const resumeSong = () => {
+  const resumeSong = async (): Promise<ActionResult> => {
     if (currentSong.value && audioElement.value) {
-      audio.resume()
+      return audio.resume()
     }
+    return { success: false, message: '没有可播放的歌曲' }
   }
 
   const seek = (time: number) => {
@@ -155,38 +152,38 @@ export const usePlayerStore = defineStore('player', () => {
 
   const setVolume = (val: number) => audio.setVolume(val)
 
-  const nextSong = (isAuto = false) => {
-    if (currentQueue.value.length === 0) return
+  const nextSong = async (isAuto = false): Promise<ActionResult> => {
+    if (currentQueue.value.length === 0) return { success: false, message: '播放队列为空' }
     let nextIndex = currentIndex.value + 1
 
     if (nextIndex >= currentQueue.value.length) {
       if (playMode.value === 'repeat_all' || isAuto) {
         if (playMode.value === 'sequential' && isAuto) {
           isPlaying.value = false
-          return
+          return { success: true }
         }
         nextIndex = 0
       } else {
         nextIndex = 0
       }
     }
-    playAtIndex(nextIndex)
+    return playAtIndex(nextIndex)
   }
 
-  const previousSong = () => {
-    if (currentQueue.value.length === 0) return
+  const previousSong = async (): Promise<ActionResult> => {
+    if (currentQueue.value.length === 0) return { success: false, message: '播放队列为空' }
 
     if (audioElement.value && audioElement.value.currentTime > 3) {
       audioElement.value.currentTime = 0
-      return
+      return { success: true }
     }
 
     let prevIndex = currentIndex.value - 1
     if (prevIndex < 0) prevIndex = currentQueue.value.length - 1
-    playAtIndex(prevIndex)
+    return playAtIndex(prevIndex)
   }
 
-  const setPlayMode = async (mode: string) => {
+  const setPlayMode = async (mode: string): Promise<ActionResult> => {
     const previousMode = playMode.value
     const previousQueue = [...currentQueue.value]
     const previousIndex = currentIndex.value
@@ -195,7 +192,7 @@ export const usePlayerStore = defineStore('player', () => {
     try {
       if (mode === 'shuffle') {
         const shuffled = await queueMutations.shuffleQueue()
-        if (shuffled && !shuffled.success) throw new Error('队列随机排序失败')
+        requireSuccess(shuffled, '队列随机排序失败')
       }
       await queueApi.setPlayMode(currentQueueId.value ?? -1, mode)
       return { success: true }
@@ -203,8 +200,7 @@ export const usePlayerStore = defineStore('player', () => {
       playMode.value = previousMode
       currentQueue.value = previousQueue
       currentIndex.value = previousIndex
-      console.error(errorMessage(err))
-      return { success: false }
+      return toActionFailure(err, '播放模式切换失败')
     }
   }
 
@@ -246,23 +242,22 @@ export const usePlayerStore = defineStore('player', () => {
     prepareAudioSource,
   })
 
-  const playSong = async (song: ISong, mode: 'now' | 'next') => {
+  const playSong = async (song: ISong, mode: 'now' | 'next'): Promise<ActionResult> => {
     if (mode === 'now' && sameId(currentSong.value?.song_id, song.song_id)) {
-      togglePlay()
-      return { success: true }
+      return togglePlay()
     }
 
     const playImmediately = mode === 'now'
 
     const res = await queueMutations.addToQueue(song, playImmediately)
     if (!res.success) {
-      return { success: false }
+      return res
     }
 
     const newIndex = res.targetIndex
 
     if (mode === 'now' && newIndex !== -1) {
-      playAtIndex(newIndex)
+      return playAtIndex(newIndex)
     }
     return { success: true }
   }

@@ -1,5 +1,7 @@
 import { onBeforeUnmount, ref } from 'vue'
 import type { AxiosProgressEvent } from 'axios'
+import type { ActionResult } from '@/types'
+import { toActionFailure } from '@/utils/action-result'
 import { songApi } from '@/api/song-api'
 import { AUDIO_EXTENSIONS } from '../const'
 
@@ -28,11 +30,10 @@ export function useSongUpload() {
     }
   }
 
-  const validateAndSetAudio = (file: File) => {
+  const validateAndSetAudio = (file: File): ActionResult => {
     const isAudio = AUDIO_EXTENSIONS.some((ext) => file.name.toLowerCase().endsWith(ext))
     if (!isAudio) {
-      ElMessage.warning('不支持的文件格式')
-      return
+      return { success: false, message: '不支持的文件格式' }
     }
     audioFile.value = file
 
@@ -44,32 +45,37 @@ export function useSongUpload() {
     } else if (!form.value.title) {
       form.value.title = file.name.split('.')[0]!
     }
+    return { success: true }
   }
 
-  const handleAudioSelect = (e: Event) => {
+  const handleAudioSelect = (e: Event): ActionResult => {
     const files = (e.target as HTMLInputElement).files
-    if (files && files[0]) validateAndSetAudio(files[0])
+    return files?.[0] ? validateAndSetAudio(files[0])
+      : { success: false, message: '未选择音频', canceled: true }
   }
 
-  const handleAudioDrop = (e: DragEvent) => {
+  const handleAudioDrop = (e: DragEvent): ActionResult => {
     isDragging.value = false
     const files = e.dataTransfer?.files
-    if (files && files[0]) validateAndSetAudio(files[0])
+    return files?.[0] ? validateAndSetAudio(files[0])
+      : { success: false, message: '未选择音频', canceled: true }
   }
 
-  const handleCoverSelect = (e: Event) => {
+  const handleCoverSelect = (e: Event): ActionResult => {
     const files = (e.target as HTMLInputElement).files
     if (files && files[0]) {
       revokeCoverPreview()
       coverFile.value = files[0]
       coverPreview.value = URL.createObjectURL(files[0])
+      return { success: true }
     }
+    return { success: false, message: '未选择封面', canceled: true }
   }
 
-  const submit = async () => {
-    if (!audioFile.value) return ElMessage.warning('请选择音频文件')
-    if (!coverFile.value) return ElMessage.warning('请选择封面图片')
-    if (!form.value.title) return ElMessage.warning('请输入歌曲标题')
+  const submit = async (): Promise<ActionResult> => {
+    if (!audioFile.value) return { success: false, message: '请选择音频文件' }
+    if (!coverFile.value) return { success: false, message: '请选择封面图片' }
+    if (!form.value.title) return { success: false, message: '请输入歌曲标题' }
 
     uploading.value = true
     uploadProgress.value = 0
@@ -89,11 +95,10 @@ export function useSongUpload() {
         }
       })
 
-      ElMessage.success('歌曲上传成功！')
       reset()
+      return { success: true, message: '歌曲上传成功！' }
     } catch (error: unknown) {
-      // 错误已由拦截器统一提示，这里只记录日志
-      console.error('Upload Error:', error instanceof Error ? error.message : error)
+      return toActionFailure(error, '歌曲上传失败')
     } finally {
       uploading.value = false
     }

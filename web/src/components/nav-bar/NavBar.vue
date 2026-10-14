@@ -43,11 +43,18 @@ import { useRoute, useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/user'
 import { NAV_ITEMS } from './const'
 import { useNavBar } from './composables/use-nav-bar'
+import { reportError } from '@/utils/feedback'
 
 const userStore = useUserStore()
 const route = useRoute()
 const router = useRouter()
-const { logout } = useNavBar()
+const { logout: logoutAction } = useNavBar()
+const logout = async () => {
+  const result = await logoutAction()
+  if (!result.success) return reportError(result)
+  ElMessage.success(result.message || '登出成功')
+  await router.replace('/login')
+}
 </script>
 
 <style scoped>

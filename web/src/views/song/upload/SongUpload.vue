@@ -81,6 +81,7 @@
 <script setup lang="ts">
 defineOptions({ name: 'UploadPage' })
 import { useSongUpload } from './composables/use-song-upload'
+import { reportError } from '@/utils/feedback'
 
 const {
   audioInput,
@@ -90,13 +91,30 @@ const {
   uploading,
   uploadProgress,
   form,
-  handleAudioSelect,
-  handleAudioDrop,
-  handleCoverSelect,
+  handleAudioSelect: selectAudioAction,
+  handleAudioDrop: dropAudioAction,
+  handleCoverSelect: selectCoverAction,
   submit,
 } = useSongUpload()
 
-const submitUpload = () => submit()
+const handleAudioSelect = (event: Event) => {
+  const result = selectAudioAction(event)
+  if (!result.success) reportError(result)
+}
+const handleAudioDrop = (event: DragEvent) => {
+  const result = dropAudioAction(event)
+  if (!result.success) reportError(result)
+}
+const handleCoverSelect = (event: Event) => {
+  const result = selectCoverAction(event)
+  if (!result.success) reportError(result)
+}
+
+const submitUpload = async () => {
+  const result = await submit()
+  if (!result.success) return reportError(result)
+  ElMessage.success(result.message || '歌曲上传成功！')
+}
 </script>
 
 <style scoped>

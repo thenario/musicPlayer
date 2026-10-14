@@ -55,11 +55,9 @@ async function logout() {
   return { success: true, message: res.message }
 }
 
-/** 获取当前用户头像地址（silent：失败不集中弹错，由调用方处理）。 */
+/** 获取当前用户头像地址；请求失败向上抛出，由业务层处理。 */
 async function getUserCover() {
-  const res = await request.get<never, IAxiosRes<UserCoverResponse>>('/users/cover', {
-    silent: true,
-  })
+  const res = await request.get<never, IAxiosRes<UserCoverResponse>>('/users/cover')
   return { success: res.success, user_cover_url: res.data.user_cover_url }
 }
 

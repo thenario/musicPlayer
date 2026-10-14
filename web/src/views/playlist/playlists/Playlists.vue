@@ -25,17 +25,26 @@ import { useUserStore } from '@/stores/user'
 import PlaylistCard from './components/PlaylistCard.vue'
 import CreatePlaylistModal from './components/CreatePlaylistModal.vue'
 import { usePlaylistList } from './composables/use-playlist-list'
+import { reportError } from '@/utils/feedback'
 
 const userStore = useUserStore()
 const showModal = ref(false)
 const { playlists, creating, load, create } = usePlaylistList()
 
 const handleCreate = async (payload: { name: string; description: string; coverFile: File | null }) => {
-  const ok = await create({ ...payload, creatorId: userStore.user?.user_id })
-  if (ok) showModal.value = false
+  const result = await create({ ...payload, creatorId: userStore.user?.user_id })
+  if (!result.success) {
+    if (result.completed) showModal.value = false
+    return reportError(result)
+  }
+  showModal.value = false
+  ElMessage.success(result.message || '歌单创建成功')
 }
 
-onMounted(load)
+onMounted(async () => {
+  const result = await load()
+  if (!result.success) reportError(result)
+})
 </script>
 
 <style scoped>

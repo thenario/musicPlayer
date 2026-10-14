@@ -12,6 +12,21 @@ export interface IUser {
   user_cover_url?: string
 }
 
+/** API 失败仍然抛异常；业务动作在对外边界转换成这个结果。 */
+export interface ActionFailure {
+  success: false
+  message: string
+  code?: number
+  canceled?: boolean
+  validation?: boolean
+  /** 写入已成功、后续刷新失败时，避免组件重复提交。 */
+  completed?: boolean
+}
+
+export type ActionResult<T extends object = Record<never, never>> =
+  | ({ success: true; message?: string } & T)
+  | ActionFailure
+
 export interface ISong {
   song_id: number | string
   song_title: string
