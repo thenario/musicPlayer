@@ -3,6 +3,7 @@ package com.kyf.mp.server.modules.song.service.workflow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -15,6 +16,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -77,22 +81,27 @@ class SongsWorkflowTest {
         assertThat(exception.getCode()).isEqualTo(404);
     }
 
-    @Test
-    @DisplayName("分页查询歌曲时返回歌曲和分页信息")
-    void returnsSongsPage() {
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {10, 50})
+    @DisplayName("歌曲分页使用传入条数，未传时使用配置值")
+    void returnsSongsPage(Integer size) {
+        int expectedSize = size == null ? 15 : size;
         Songs song = new Songs();
         song.setSongId(8L);
-        Page<Songs> page = new Page<>(2, 15);
-        page.setTotal(16);
+        Page<Songs> page = new Page<>(2, expectedSize);
+        page.setTotal(80);
         page.setRecords(List.of(song));
         when(songsMapper.selectPage(any(Page.class), any(Wrapper.class))).thenReturn(page);
 
-        GetSongsVO result = songsWorkflow.getSongsPage(2, "hello");
+        GetSongsVO result = songsWorkflow.getSongsPage(2, "hello", size);
 
+        verify(songsMapper).selectPage(argThat((Page<Songs> query) ->
+                query.getCurrent() == 2 && query.getSize() == expectedSize), any(Wrapper.class));
         assertThat(result.getSongs()).containsExactly(song);
-        assertThat(result.getPagination().getTotalItems()).isEqualTo(16);
+        assertThat(result.getPagination().getTotalItems()).isEqualTo(80);
         assertThat(result.getPagination().getCurrentPage()).isEqualTo(2);
-        assertThat(result.getPagination().getPageLimit()).isEqualTo(15);
+        assertThat(result.getPagination().getPageLimit()).isEqualTo(expectedSize);
     }
 
     @Test

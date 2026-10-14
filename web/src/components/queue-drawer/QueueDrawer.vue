@@ -148,7 +148,7 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
   height: 100%;
   color: #20232d;
   font-family: inherit;
-  background: #f7f8fa;
+  background: var(--music-canvas);
 }
 
 .queue-drawer__header {
@@ -160,7 +160,7 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
   gap: 16px;
   padding: 0 20px;
   background: #ffffff;
-  border-bottom: 1px solid #e8eaef;
+  border-bottom: 1px solid var(--music-border);
 }
 
 .queue-drawer__header-actions {
@@ -176,13 +176,16 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 }
 
 .queue-drawer__count {
-  color: #8b91a0;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #8b82a4;
+  background: #f6f3fd;
   font-size: 12px;
   letter-spacing: -.01em;
 }
 
 .queue-drawer__body {
-  flex: 1; overflow-y: auto;
+  flex: 1; min-height: 0; overflow-y: auto;
 }
 
 .queue-drawer__content {
@@ -217,10 +220,25 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 }
 
 .custom-segmented {
-  --el-segmented-bg-color: #f1f3f7;
-  --el-segmented-item-selected-bg-color: #6256c5;
+  --el-segmented-bg-color: #f3f0fa;
+  --el-segmented-item-selected-bg-color: var(--music-primary);
   --el-segmented-item-selected-color: #fff;
   --el-segmented-item-color: #717784;
+}
+
+@media (max-width: 480px) {
+  .queue-drawer__header {
+    gap: 8px;
+    padding-inline: 12px;
+  }
+
+  .queue-drawer__header-tools {
+    gap: 6px;
+  }
+
+  .queue-drawer__content {
+    padding: 12px 8px;
+  }
 }
 
 :deep(.queue-drawer-container .el-drawer__header) {

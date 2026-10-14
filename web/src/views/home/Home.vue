@@ -1,5 +1,6 @@
 <template>
   <div class="home-page">
+    <p class="home-page__eyebrow">LISTEN · YOUR MUSIC SPACE</p>
     <h1 class="home-page__title">欢迎使用音乐播放器</h1>
     <p class="home-page__subtitle">发现和播放您喜爱的音乐</p>
 
@@ -46,23 +47,31 @@ defineOptions({ name: 'HomePage' })
   box-sizing: border-box;
   height: 100%;
   overflow: auto;
-  padding: 56px 24px;
+  padding: clamp(40px, 8vh, 80px) 32px;
   color: #20232d;
   text-align: center;
-  background: #f7f8fa;
+  background: radial-gradient(ellipse at 50% 0%, #f0edfc 0%, transparent 55%), var(--music-canvas);
+}
+
+.home-page__eyebrow {
+  margin: 0 0 16px;
+  color: #9a91bb;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.2em;
 }
 
 .home-page__title {
   margin: 0;
-  font-size: clamp(28px, 4vw, 40px);
+  font-size: clamp(26px, 3.3vw, 38px);
   font-weight: 700;
   letter-spacing: -0.03em;
 }
 
 .home-page__subtitle {
-  margin: 14px 0 40px;
-  color: #777e8c;
-  font-size: 16px;
+  margin: 14px 0 44px;
+  color: #8d879e;
+  font-size: 14px;
 }
 
 .home-page__grid {
@@ -74,42 +83,48 @@ defineOptions({ name: 'HomePage' })
 }
 
 .home-page__card {
-  padding: 28px 24px;
-  border: 1px solid #e8eaef;
-  border-radius: 12px;
+  padding: 32px 24px;
+  border: 1px solid var(--music-border);
+  border-radius: 18px;
   background: #fff;
-  box-shadow: 0 2px 8px rgb(31 35 45 / 4%);
+  box-shadow: 0 4px 16px rgb(39 35 76 / 3%);
   transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
 }
 
 .home-page__card:hover {
-  transform: translateY(-3px);
-  border-color: #d9dcef;
-  box-shadow: 0 10px 24px rgb(31 35 45 / 9%);
+  transform: translateY(-4px);
+  border-color: #d8d1f2;
+  box-shadow: 0 12px 28px rgb(66 49 121 / 8%);
 }
 
 .home-page__icon {
-  width: 48px;
-  height: 48px;
+  box-sizing: content-box;
+  width: 28px;
+  height: 28px;
+  padding: 16px;
+  border-radius: 18px;
   margin: 0 auto 18px;
 }
 
 .home-page__icon--blue {
   color: #4d78d6;
+  background: #edf3fe;
 }
 
 .home-page__icon--green {
   color: #3a9a77;
+  background: #eaf6f0;
 }
 
 .home-page__icon--purple {
   color: #7a68c7;
+  background: #f1edfc;
 }
 
 .home-page__card-title {
   margin: 0 0 8px;
   color: #303542;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 650;
 }
 

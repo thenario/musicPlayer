@@ -51,8 +51,8 @@ public class SongsServiceImpl implements SongsService {
     }
 
     @Override
-    public GetSongsVO getSongsPage(Integer page, String keyword) {
-        return songsWorkflow.getSongsPage(page, keyword);
+    public GetSongsVO getSongsPage(Integer page, String keyword, Integer size) {
+        return songsWorkflow.getSongsPage(page, keyword, size);
     }
 
     @Override

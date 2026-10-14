@@ -102,7 +102,8 @@ describe('songApi', () => {
     request.patch.mockResolvedValue(response())
     const form = new FormData()
 
-    expect((await songApi.getSongs(1, 'test')).songs).toEqual([])
+    expect((await songApi.getSongs(1, 'test', 50)).songs).toEqual([])
+    expect(request.get).toHaveBeenCalledWith('/songs', { params: { page: 1, keyword: 'test', size: 50 } })
     expect((await songApi.getLyrics(1)).lyrics).toBe('lrc')
     expect((await songApi.getUserUploadSongs(1, 10)).total).toBe(0)
     expect((await songApi.getUserUploadSong(1)).song).toEqual({ song_id: 1 })

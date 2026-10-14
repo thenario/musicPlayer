@@ -86,12 +86,12 @@ class PersistenceLayerIntegrationTest {
 
     @Test
     void searchPreservesFilteringOrderingPaginationAndExcludedLyrics() {
-        var first = songsService.getSongsPage(1, "match");
+        var first = songsService.getSongsPage(1, "match", null);
         assertThat(first.getPagination().getTotalItems()).isEqualTo(2);
         assertThat(first.getSongs()).extracting(Songs::getSongId).containsExactly(2L);
         assertThat(first.getSongs().get(0).getLyrics()).isNull();
         assertThat(first.getSongs().get(0).getTLyrics()).isNull();
-        assertThat(songsService.getSongsPage(2, "match").getSongs())
+        assertThat(songsService.getSongsPage(2, "match", null).getSongs())
                 .extracting(Songs::getSongId).containsExactly(1L);
     }
 

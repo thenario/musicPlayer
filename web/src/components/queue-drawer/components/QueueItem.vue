@@ -67,6 +67,7 @@ const emit = defineEmits<{
 
 .queue-item__icon-col {
   width: 48px; padding: 12px 0; text-align: center;
+  border-radius: 10px 0 0 10px;
 }
 
 .queue-item__icon-wrap {
@@ -115,14 +116,22 @@ const emit = defineEmits<{
 
 .queue-item__action-col {
   padding-right: 16px; text-align: right;
+  border-radius: 0 10px 10px 0;
 }
 
 .queue-item__remove {
-  opacity: 0; transition: opacity .2s ease;
+  opacity: 0.45; transition: opacity .2s ease;
 }
 
 .queue-item:hover .queue-item__remove {
   opacity: 1;
+}
+
+@media (hover: none) {
+  .queue-item__handle,
+  .queue-item__remove {
+    opacity: 1;
+  }
 }
 
 .playing-bar-animation {
@@ -131,5 +140,12 @@ const emit = defineEmits<{
   height: 12px;
   background: #6256c5;
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='3' height='15' x='1' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='10.5' y='4.5'%3E%3Canimate attributeName='y' values='1;4.5;1' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='22;15;22' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='20' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playing-bar-animation {
+    mask: none;
+    background: repeating-linear-gradient(to right, #6256c5 0 3px, transparent 3px 5px);
+  }
 }
 </style>

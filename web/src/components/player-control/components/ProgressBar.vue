@@ -31,7 +31,7 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
 }
 
 .progress-bar__time {
-  width: 40px; color: #909399; font-family: monospace; font-size: 10px;
+  width: 40px; color: #928ca5; font-family: inherit; font-size: 11px; font-variant-numeric: tabular-nums;
 }
 
 .progress-bar__time--current {
@@ -43,15 +43,15 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
 }
 
 .progress-bar__track {
-  position: absolute; width: 100%; height: 4px; background: #dcdfe6; border-radius: 999px;
+  position: absolute; width: 100%; height: 4px; background: #e9e5f2; border-radius: 999px;
 }
 
 .progress-bar__buffer {
-  position: absolute; height: 4px; background: #c0c4cc; border-radius: 999px; transition: width .3s ease;
+  position: absolute; height: 4px; background: #cfc6ea; border-radius: 999px; transition: width .3s ease;
 }
 
 .progress-bar__played {
-  position: absolute; height: 4px; background: #409eff; border-radius: 999px;
+  position: absolute; height: 4px; background: var(--music-primary); border-radius: 999px;
 }
 
 .custom-range {
@@ -72,15 +72,29 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
   height: 12px;
   width: 12px;
   border-radius: 50%;
-  background: #409eff;
+  background: var(--music-primary);
   cursor: pointer;
   margin-top: -4px;
-  box-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 2px 6px rgb(109 91 208 / 25%);
   opacity: 0;
   transition: opacity 0.2s;
 }
 
-.progress-bar:hover .custom-range::-webkit-slider-thumb {
+.progress-bar:hover .custom-range::-webkit-slider-thumb,
+.custom-range:focus-visible::-webkit-slider-thumb {
   opacity: 1;
+}
+
+.custom-range::-moz-range-track {
+  height: 4px;
+  background: transparent;
+}
+
+.custom-range::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--music-primary);
 }
 </style>

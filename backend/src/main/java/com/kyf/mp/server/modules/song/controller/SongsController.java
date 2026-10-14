@@ -56,8 +56,10 @@ public class SongsController {
             @Parameter(description = "页码，从 1 开始", example = "1")
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "请输入正确页码") Integer page,
             @Parameter(description = "搜索关键词", example = "周杰伦")
-            @RequestParam(required = false) String keyword) {
-        return ResultModel.success(songsService.getSongsPage(page, keyword));
+            @RequestParam(required = false) String keyword,
+            @Parameter(description = "每页数量，最大 100；未传时使用配置值", example = "15")
+            @RequestParam(required = false) @Min(value = 1, message = "每页条数不正确") @Max(value = 100, message = "每页条数过大") Integer size) {
+        return ResultModel.success(songsService.getSongsPage(page, keyword, size));
     }
 
     @GetMapping("/{song_id}/lyrics")

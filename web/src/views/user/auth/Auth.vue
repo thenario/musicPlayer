@@ -134,7 +134,8 @@ const handleRegister = async () => {
     place-items: center;
     padding: 24px;
     color: #1f2937;
-    background: #f4f5f8;
+    background: radial-gradient(ellipse at 15% 10%, #eeebfb, transparent 50%),
+        radial-gradient(ellipse at 90% 90%, #edf2fc, transparent 45%), #f6f7fb;
 }
 
 .auth-card {
@@ -143,19 +144,35 @@ const handleRegister = async () => {
     display: grid;
     grid-template-columns: 0.9fr 1.1fr;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
+    border: 1px solid rgb(255 255 255 / 90%);
     border-radius: 24px;
     background: #fff;
-    box-shadow: 0 22px 60px rgb(15 23 42 / 12%);
+    box-shadow: 0 24px 72px rgb(53 41 91 / 10%);
 }
 
 .auth-intro {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
     padding: 48px;
     color: #fff;
-    background: linear-gradient(145deg, #3830a3, #7568d8 58%, #b7b0ff);
+    background: linear-gradient(145deg, #4d3a92, #7967c5 65%, #a99cdb);
+}
+
+.auth-intro::before {
+    position: absolute;
+    z-index: -1;
+    top: -130px;
+    right: -160px;
+    width: 460px;
+    height: 460px;
+    border: 1px solid rgb(255 255 255 / 15%);
+    border-radius: 50%;
+    box-shadow: 0 0 0 44px rgb(255 255 255 / 4%), 0 0 0 88px rgb(255 255 255 / 3%);
+    content: '';
 }
 
 .auth-intro__eyebrow,
@@ -224,8 +241,8 @@ const handleRegister = async () => {
     width: 100%;
     box-sizing: border-box;
     border: 1px solid #d9dce5;
-    border-radius: 10px;
-    padding: 12px 14px;
+    border-radius: 11px;
+    padding: 13px 14px;
     color: #202431;
     font: inherit;
     font-weight: 400;
@@ -250,15 +267,17 @@ const handleRegister = async () => {
     border: 0;
     border-radius: 10px;
     color: #fff;
-    background: #5145b8;
+    background: var(--music-primary);
+    box-shadow: 0 5px 12px rgb(109 91 208 / 16%);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
-    transition: background 160ms ease, transform 160ms ease;
+    transition: background 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
 .auth-submit:hover:not(:disabled) {
-    background: #40359d;
+    background: #5b49b6;
+    box-shadow: 0 7px 18px rgb(109 91 208 / 24%);
 }
 
 .auth-submit:active:not(:disabled) {
@@ -285,6 +304,11 @@ const handleRegister = async () => {
     font: inherit;
     font-weight: 700;
     cursor: pointer;
+    text-underline-offset: 4px;
+}
+
+.auth-switch button:hover {
+    text-decoration: underline;
 }
 
 .auth-form-enter-active,
@@ -328,6 +352,11 @@ const handleRegister = async () => {
 
     .auth-panel {
         padding: 36px 28px;
+    }
+
+    .auth-form-stage {
+        height: auto;
+        min-height: 260px;
     }
 }
 </style>

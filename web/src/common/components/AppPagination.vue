@@ -29,32 +29,54 @@ const handleSizeChange = (size: number) => {
 }
 </script>
 <style scoped>
-:deep(.app-pagination) {
-  --el-pagination-bg-color: #ec0f0f;
-  --el-pagination-text-color: #606266;
-  --el-pagination-button-color: #606266;
-  --el-pagination-button-bg-color: #ffffff;
-  --el-pagination-hover-color: #d90843;
+.app-pagination {
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  --el-pagination-text-color: #827b95;
+  --el-pagination-button-color: #827b95;
+  --el-pagination-button-bg-color: #fff;
+  --el-pagination-hover-color: var(--music-primary);
 }
 
-:deep(.app-pagination .btn-prev),
-:deep(.app-pagination .btn-next),
-:deep(.app-pagination .el-pager li) {
+:deep(.btn-prev),
+:deep(.btn-next),
+:deep(.el-pager li) {
   border: 1px solid #e7e9ef;
   border-radius: 8px;
   background: #fff;
 }
 
-:deep(.app-pagination .el-pager li.is-active) {
-  border-color: #6256c5;
-  background: #6256c5;
+:deep(.el-pager li.is-active) {
+  border-color: var(--music-primary);
+  background: var(--music-primary);
   color: #fff;
 }
 
-:deep(.app-pagination .el-pager li:hover),
-:deep(.app-pagination .btn-prev:hover),
-:deep(.app-pagination .btn-next:hover) {
+:deep(.el-pager li:not(.is-active):hover),
+:deep(.btn-prev:not(:disabled):hover),
+:deep(.btn-next:not(:disabled):hover) {
   border-color: #8d84dc;
-  color: #6256c5;
+  color: var(--music-primary);
+}
+
+@media (max-width: 600px) {
+  .app-pagination {
+    gap: 4px;
+    --el-pagination-button-width: 28px;
+  }
+
+  :deep(.el-pagination__total),
+  :deep(.el-pagination__sizes) {
+    margin: 0;
+  }
+
+  :deep(.el-pagination__sizes .el-select) {
+    width: 102px;
+  }
+
+  :deep(.el-pager li) {
+    min-width: 28px;
+  }
 }
 </style>

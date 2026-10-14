@@ -27,10 +27,10 @@ defineProps<{ playlist: IPlaylist }>()
   aspect-ratio: 1;
   overflow: hidden;
   border: 1px solid #e8eaef;
-  border-radius: 12px;
+  border-radius: 16px;
   background: #eef0f4;
-  box-shadow: 0 2px 6px rgb(31 35 45 / 5%);
-  transition: border-color 160ms ease, box-shadow 160ms ease;
+  box-shadow: 0 4px 12px rgb(31 35 45 / 6%);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
 }
 
 .playlist-card__img {
@@ -43,6 +43,7 @@ defineProps<{ playlist: IPlaylist }>()
 
 .playlist-card:hover .playlist-card__cover {
   border-color: #c9c3ea;
+  transform: translateY(-3px);
   box-shadow: 0 8px 18px rgb(31 35 45 / 10%);
 }
 
@@ -51,7 +52,7 @@ defineProps<{ playlist: IPlaylist }>()
 }
 
 .playlist-card__name {
-  margin: 10px 2px 0;
+  margin: 12px 3px 0;
   overflow: hidden;
   color: #434957;
   font-size: 14px;

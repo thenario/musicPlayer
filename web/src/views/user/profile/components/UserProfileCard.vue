@@ -86,13 +86,13 @@ const goToMyUploadSongs = () => {
   box-sizing: border-box;
   min-height: 100%;
   overflow: auto;
-  background: #f7f8fa;
+  background: var(--music-canvas);
 }
 
 .profile-page__banner {
-  height: 36px;
+  height: 128px;
   color: #fff;
-  background: linear-gradient(125deg, #6256c5, #8176d1);
+  background: linear-gradient(125deg, #6256a9, #9b8cce);
 }
 
 .profile-page__banner-content {
@@ -103,20 +103,25 @@ const goToMyUploadSongs = () => {
   display: flex;
   flex-direction: row;
   align-items: center;
-  padding-left: 6px;
+  padding: 0 28px 30px;
+  box-sizing: border-box;
 }
 
 .profile-page__content {
   width: 100%;
   max-width: 1040px;
-  margin: 0 auto;
+  margin: -30px auto 0;
   display: flex;
   flex-direction: column;
+  position: relative;
+  gap: 18px;
+  padding: 0 24px 32px;
+  box-sizing: border-box;
 }
 
 .profile-page__eyebrow {
-  color: rgb(255 255 255 / 76%);
-  font-size: 13px;
+  color: rgb(255 255 255 / 92%);
+  font-size: 20px;
   font-weight: 600;
   letter-spacing: 0.08em;
 }
@@ -137,6 +142,9 @@ const goToMyUploadSongs = () => {
 .profile-page__identity,
 .profile-page__section {
   background: #fff;
+  border: 1px solid var(--music-border);
+  border-radius: 16px;
+  box-shadow: var(--music-shadow);
 }
 
 .profile-page__identity {
@@ -287,8 +295,7 @@ const goToMyUploadSongs = () => {
 
 @media (max-width: 640px) {
   .profile-page__banner {
-    min-height: 156px;
-    padding: 32px 20px;
+    min-height: 120px;
   }
 
   .profile-page__page-title {
@@ -297,7 +304,7 @@ const goToMyUploadSongs = () => {
 
   .profile-page__content {
     gap: 16px;
-    padding: 20px 16px 36px;
+    padding: 0 16px 24px;
   }
 
   .profile-page__identity,

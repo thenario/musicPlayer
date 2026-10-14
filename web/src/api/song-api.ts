@@ -20,11 +20,11 @@ type UploadPageResponse = { records: UploadedSong[]; total: number }
  */
 
 /** 分页搜索歌曲（keyword 匹配歌名/歌手）。 */
-const getSongs = async (page: number, keyword: string) => {
+const getSongs = async (page: number, keyword: string, size?: number) => {
   const res = await request.get<never, IAxiosRes<{ songs: ISong[]; pagination: IPagination }>>(
     '/songs',
     {
-      params: { page, keyword },
+      params: { page, keyword, size },
     },
   )
   return { success: true, message: res.message, ...res.data }

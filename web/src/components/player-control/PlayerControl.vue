@@ -104,14 +104,20 @@ const runAction = async (action: () => ActionResult | Promise<ActionResult>) => 
   align-items: center;
   justify-content: center;
   color: #fff;
-  background: #409eff;
+  background: var(--music-primary);
   border-radius: 50%;
-  box-shadow: 0 5px 12px rgb(64 158 255 / 25%);
-  transition: transform .2s ease;
+  box-shadow: 0 5px 14px rgb(109 91 208 / 23%);
+  transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
 .player-control__play-btn:hover {
-  transform: scale(1.1);
+  transform: translateY(-2px) scale(1.03);
+  background: #5c49bd;
+  box-shadow: 0 7px 18px rgb(109 91 208 / 30%);
+}
+
+.player-control__play-btn:active {
+  transform: scale(0.96);
 }
 
 .player-control__play-btn:active {
@@ -123,22 +129,25 @@ const runAction = async (action: () => ActionResult | Promise<ActionResult>) => 
 }
 
 .ctrl-btn.is-active {
-  color: #409eff;
+  color: var(--music-primary);
+  background: var(--music-primary-soft);
 }
 
 .ctrl-btn {
-  padding: 4px;
+  padding: 7px;
   color: #606266;
   cursor: pointer;
   background: transparent;
   border: 0;
-  transition: color .2s ease, transform .2s ease;
+  border-radius: 9px;
+  transition: color .2s ease, transform .2s ease, background .2s ease;
   display: flex;
   align-items: center;
 }
 
 .ctrl-btn:hover {
-  color: #409eff;
+  color: var(--music-primary);
+  background: var(--music-primary-soft);
 }
 
 .ctrl-btn:disabled {

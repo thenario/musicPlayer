@@ -46,18 +46,37 @@ useKeyboardShortcuts(reportError)
   height: 88px;
   align-items: center;
   justify-content: space-between;
-  padding: 0 32px;
+  padding: 0 28px;
   user-select: none;
   background: rgb(255 255 255 / 94%);
-  border-top: 1px solid #e5e7eb;
-  box-shadow: 0 -6px 20px rgb(15 23 42 / 6%);
+  border-top: 1px solid var(--music-border);
+  box-shadow: 0 -8px 32px rgb(47 38 80 / 5%);
   backdrop-filter: blur(14px);
 }
 
 @media (max-width: 768px) {
   .player-bar {
-    height: 76px;
-    padding: 0 16px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px 12px;
+    height: auto;
+    min-height: 116px;
+    padding: 12px 16px;
+  }
+
+  .player-bar :deep(.player-control) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .player-bar :deep(.volume-control) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .player-bar :deep(.song-info) {
+    width: 100%;
   }
 }
 </style>

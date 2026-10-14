@@ -40,11 +40,14 @@ const handleVolumeInput = (event: Event) => {
 }
 
 .volume-control__mute-btn {
-  color: #606266; transition: color .2s ease;
+  display: grid; width: 32px; height: 32px; flex-shrink: 0; place-items: center;
+  border: 0; border-radius: 9px; background: transparent; cursor: pointer;
+  color: #7c778f; transition: color .2s ease, background .2s ease;
 }
 
 .volume-control__mute-btn:hover {
-  color: #409eff;
+  color: var(--music-primary);
+  background: var(--music-primary-soft);
 }
 
 .volume-control__icon {
@@ -52,12 +55,17 @@ const handleVolumeInput = (event: Event) => {
 }
 
 .volume-range {
-  width: 100%; height: 4px; cursor: pointer; appearance: none; accent-color: #409eff; background-color: #dcdfe6; border-radius: 999px;
-  background-image: linear-gradient(to right, #409eff var(--progress), transparent var(--progress));
+  width: 100%; height: 4px; cursor: pointer; appearance: none; accent-color: var(--music-primary); background-color: #e5e1f1; border-radius: 999px;
+  background-image: linear-gradient(to right, var(--music-primary) var(--progress), transparent var(--progress));
 }
 
 .volume-range::-webkit-slider-thumb {
-  width: 10px; height: 10px; appearance: none; background: #409eff; border-radius: 50%;
+  width: 10px; height: 10px; appearance: none; background: var(--music-primary); border-radius: 50%;
+  box-shadow: 0 2px 5px rgb(109 91 208 / 20%);
+}
+
+.volume-range::-moz-range-thumb {
+  width: 10px; height: 10px; border: 0; background: var(--music-primary); border-radius: 50%;
 }
 
 @media (max-width: 768px) {

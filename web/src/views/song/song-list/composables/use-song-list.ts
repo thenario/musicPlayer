@@ -16,11 +16,12 @@ export function useSongList(defaultPageSize = SONG_PAGE_SIZE) {
   const load = async (): Promise<ActionResult> => {
     const requestId = ++latestRequest
     const page = pagination.state.current
+    const pageSize = pagination.state.pageSize
     const keyword = searchKeyword.value
 
     return task.run(async () => {
       try {
-        const res = await songApi.getSongs(page, keyword)
+        const res = await songApi.getSongs(page, keyword, pageSize)
         if (requestId !== latestRequest) return { success: false, message: '搜索已被更新', canceled: true }
         songs.value = res.songs || []
         pagination.setTotal(res.pagination?.total_items || songs.value.length)

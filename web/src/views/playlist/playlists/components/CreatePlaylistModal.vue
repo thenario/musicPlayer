@@ -85,24 +85,29 @@ const handleSubmit = () => {
 <style scoped>
 .create-playlist-modal {
   position: fixed;
-  z-index: 50;
+  z-index: 2000;
   inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgb(31 35 45 / 38%);
-  backdrop-filter: blur(3px);
+  box-sizing: border-box;
+  background: rgb(31 26 55 / 30%);
+  backdrop-filter: blur(5px);
 }
 
 .create-playlist-modal__dialog {
+  box-sizing: border-box;
   width: 100%;
   max-width: 480px;
   padding: 28px;
   border: 1px solid #e4e6ed;
-  border-radius: 14px;
+  border-radius: 18px;
   background: #fff;
-  box-shadow: 0 16px 40px rgb(31 35 45 / 18%);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+  box-shadow: 0 24px 72px rgb(39 30 76 / 18%);
+  animation: modal-appear 180ms ease-out;
 }
 
 .create-playlist-modal__title {
@@ -166,7 +171,7 @@ const handleSubmit = () => {
   width: 100%;
   padding: 10px 12px;
   border: 1px solid #dfe2e9;
-  border-radius: 8px;
+  border-radius: 10px;
   outline: none;
   color: #343a47;
   font: inherit;
@@ -189,6 +194,8 @@ const handleSubmit = () => {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 26px;
+  padding-top: 18px;
+  border-top: 1px solid var(--music-border);
 }
 
 .create-playlist-modal__cancel {
@@ -214,7 +221,7 @@ const handleSubmit = () => {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
-  background: #6256c5;
+  background: var(--music-primary);
   transition: background 160ms ease;
 }
 
@@ -225,6 +232,11 @@ const handleSubmit = () => {
 .create-playlist-modal__submit:disabled {
   cursor: not-allowed;
   opacity: 0.5;
+}
+
+@keyframes modal-appear {
+  from { opacity: 0; transform: translateY(8px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @media (max-width: 640px) {

@@ -44,7 +44,7 @@ const emit = defineEmits<{
 <style scoped>
 .song-info {
   display: flex;
-  gap: 16px;
+  gap: 12px;
   align-items: center;
   width: 30%;
   min-width: 0;
@@ -61,13 +61,14 @@ const emit = defineEmits<{
   height: 64px;
   overflow: hidden;
   background: #eef2f6;
-  border-radius: 8px;
+  border: 1px solid rgb(109 91 208 / 8%);
+  border-radius: 12px;
   box-shadow: 0 4px 12px rgb(15 23 42 / 12%);
   transition: transform .2s ease;
 }
 
 .song-info__cover-wrap:hover .song-info__cover {
-  transform: scale(1.05);
+  transform: translateY(-2px);
 }
 
 .song-info__cover-img {
@@ -84,7 +85,7 @@ const emit = defineEmits<{
 
 .song-info__cover-overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  color: #fff; opacity: 0; background: rgb(0 0 0 / 40%); border-radius: 8px; transition: opacity .2s ease;
+  color: #fff; opacity: 0; background: rgb(35 25 70 / 40%); border-radius: 12px; transition: opacity .2s ease;
 }
 
 .song-info__cover-wrap:hover .song-info__cover-overlay {

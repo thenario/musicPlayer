@@ -2,7 +2,10 @@
   <div class="page">
     <!-- 顶部搜索栏 -->
     <div class="page__header">
-      <h1 class="page__title">歌曲库</h1>
+      <div class="page__heading">
+        <h1 class="page__title">歌曲库</h1>
+        <p class="page__subtitle">找到喜欢的旋律，双击歌曲即可播放</p>
+      </div>
       <div class="page__search">
         <el-input v-model="searchKeyword" placeholder="搜索歌名、歌手或专辑..." :prefix-icon="Search" clearable
           class="custom-search-input" @input="debouncedSearch" />
@@ -85,9 +88,9 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: 24px;
+  padding: clamp(20px, 2.8vw, 36px);
   color: #20232d;
-  background: #f7f8fa;
+  background: var(--music-canvas);
 }
 
 .page__header {
@@ -96,7 +99,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.page__subtitle {
+  margin: 7px 0 0;
+  color: var(--music-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .page__title {
@@ -110,13 +120,27 @@ onBeforeUnmount(() => {
   width: min(360px, 100%);
 }
 
+.custom-search-input :deep(.el-input__wrapper) {
+  min-height: 42px;
+  padding-inline: 14px;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 0 0 1px var(--music-border) inset, 0 3px 12px rgb(39 35 76 / 3%);
+  transition: box-shadow 160ms ease;
+}
+
+.custom-search-input :deep(.el-input__wrapper.is-focus) {
+  box-shadow: 0 0 0 1px var(--music-primary) inset, 0 0 0 4px rgb(109 91 208 / 8%);
+}
+
 .page__table {
   flex: 1;
   min-height: 0;
-  overflow: auto;
-  border: 1px solid #e8eaef;
-  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--music-border);
+  border-radius: 16px;
   background: #ffffff;
+  box-shadow: var(--music-shadow);
 }
 
 .page__pagination {

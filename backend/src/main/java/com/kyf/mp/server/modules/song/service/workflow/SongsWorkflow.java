@@ -58,9 +58,9 @@ public class SongsWorkflow {
     @Value("${song.page-size:15}")
     private int songPageSize;
 
-    public GetSongsVO getSongsPage(Integer page, String keyword) {
+    public GetSongsVO getSongsPage(Integer page, String keyword, Integer size) {
         int current = (page == null || page < 1) ? 1 : page;
-        int pageLimit = songPageSize;
+        int pageLimit = size == null ? songPageSize : size;
 
         Page<Songs> pageConfig = new Page<>(current, pageLimit);
         pageConfig.setOptimizeCountSql(false);

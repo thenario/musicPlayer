@@ -39,14 +39,14 @@
                             </el-tooltip>
                         </div>
                     </div>
-                    <el-menu-item class="sidebar-menu-item" index="/songs">
+                    <el-menu-item class="sidebar-menu-item" index="/songs" aria-label="歌曲库">
                         <el-icon class="el-menu-item-icon">
                             <House />
                         </el-icon>
                         <template #title>主页</template>
                     </el-menu-item>
 
-                    <el-menu-item class="sidebar-menu-item" index="/playlists">
+                    <el-menu-item class="sidebar-menu-item" index="/playlists" aria-label="歌单">
                         <el-icon>
                             <List />
                         </el-icon>
@@ -54,7 +54,7 @@
 
                     </el-menu-item>
 
-                    <el-menu-item class="sidebar-menu-item" index="/history">
+                    <el-menu-item class="sidebar-menu-item" index="/history" aria-label="播放历史">
                         <el-icon>
                             <Clock />
                         </el-icon>
@@ -189,7 +189,9 @@ const handleCommand = async (command: string) => {
 <style scoped>
 .default-layout {
     height: 100%;
-    background-color: aliceblue;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--music-canvas);
 }
 
 .sidebar {
@@ -197,14 +199,22 @@ const handleCommand = async (command: string) => {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: rgb(225, 229, 232);
-    transition: width 0.3s ease-in-out
+    flex-shrink: 0;
+    overflow: hidden;
+    border-right: 1px solid var(--music-border);
+    background: #fff;
+    transition: width 0.3s ease-in-out;
 }
 
 .sidebar-header {
     width: 100%;
-    height: 48px;
-    padding: 2px 0 2px 6px;
+    min-height: 88px;
+    height: 88px;
+    gap: 8px;
+    padding: 16px 12px;
+    box-sizing: border-box;
+    border-bottom: 1px solid #f1f0f7;
+    margin-bottom: 16px;
 }
 
 .sidebar-brand {
@@ -212,7 +222,7 @@ const handleCommand = async (command: string) => {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    padding: 6px 4px;
+    padding: 6px 8px;
 }
 
 .brand-fade-enter-active {
@@ -243,8 +253,8 @@ const handleCommand = async (command: string) => {
 }
 
 .sidebar-title {
-    color: #30245c;
-    font-size: 17px;
+    color: #4a3b86;
+    font-size: 21px;
     font-weight: 700;
     letter-spacing: 0.12em;
     line-height: 1.2;
@@ -252,7 +262,7 @@ const handleCommand = async (command: string) => {
 
 .current-song-title {
     overflow: hidden;
-    color: #8b86a0;
+    color: #9591a8;
     font-size: 12px;
     line-height: 1.4;
     text-overflow: ellipsis;
@@ -276,11 +286,17 @@ const handleCommand = async (command: string) => {
 }
 
 .collapse-button:hover {
-    transform: scale(0.9);
+    color: var(--music-primary);
+    background: var(--music-primary-soft);
 }
 
 .collapse-button {
-    transform: tranform 0.2s ease-in out;
+    flex-shrink: 0;
+    width: 28px;
+    height: 30px;
+    color: #8b879e;
+    border-radius: 8px;
+    transition: color 160ms ease, background 160ms ease;
 }
 
 .sidebar-menu-container {
@@ -288,6 +304,7 @@ const handleCommand = async (command: string) => {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    min-height: 0;
 }
 
 .sidebar-menu {
@@ -296,6 +313,12 @@ const handleCommand = async (command: string) => {
     flex: 1;
     flex-direction: column;
     justify-content: flex-start;
+    border-right: 0;
+    background: transparent;
+    --el-menu-item-height: 46px;
+    --el-menu-text-color: #777388;
+    --el-menu-active-color: var(--music-primary);
+    --el-menu-hover-bg-color: #f7f5fd;
 }
 
 :deep(.el-menu--collapse) {
@@ -304,17 +327,64 @@ const handleCommand = async (command: string) => {
 }
 
 .sidebar-menu-item {
+    position: relative;
+    width: calc(100% - 20px);
+    margin: 4px 10px;
+    padding: 0 14px !important;
+    gap: 4px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 500;
+    transition: background 160ms ease, color 160ms ease;
+}
+
+.sidebar-menu-item.is-active {
+    color: var(--music-primary);
+    background: var(--music-primary-soft);
+    font-weight: 650;
+}
+
+.sidebar-menu-item.is-active::before {
+    position: absolute;
+    top: 15px;
+    bottom: 15px;
+    left: -10px;
+    width: 3px;
+    border-radius: 0 3px 3px 0;
+    background: var(--music-primary);
+    content: '';
+}
+
+:deep(.sidebar-menu.el-menu--collapse .el-menu-item) {
+    width: calc(100% - 12px);
+    margin-inline: 6px;
+    padding: 0 !important;
+    justify-content: center;
+}
+
+/* 折叠菜单多一层 tooltip 触发容器，需要同时清除其默认的 20px 内边距。 */
+:deep(.sidebar-menu.el-menu--collapse .el-menu-tooltip__trigger) {
     padding: 0;
-    margin: 0px auto 0px -10px;
-    width: 100%;
+    justify-content: center;
+}
+
+:deep(.sidebar-menu.el-menu--collapse .el-menu-item .el-icon) {
+    margin: 0;
+}
+
+:deep(.sidebar-menu.el-menu--collapse .sidebar-header) {
+    justify-content: center !important;
+    padding-inline: 8px;
 }
 
 .user-dropdown {
     width: 100%;
-    height: 20px;
+    min-height: 64px;
     display: block;
     outline: none;
     cursor: pointer;
+    border-top: 1px solid var(--music-border);
+    background: #fcfbff;
 }
 
 .el-dropdown-trigger {
@@ -323,6 +393,15 @@ const handleCommand = async (command: string) => {
     flex-direction: row;
     justify-content: center;
     align-items: center;
+    min-height: 64px;
+    gap: 10px;
+    color: #6f6889;
+    font-size: 13px;
+    transition: background 160ms ease;
+}
+
+.el-dropdown-trigger:hover {
+    background: var(--music-primary-soft);
 }
 
 .el-main-content {
@@ -330,8 +409,62 @@ const handleCommand = async (command: string) => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  min-width: 0;
   min-height: 0;
   padding: 0;
-  overflow: auto;
+  overflow: hidden;
+}
+
+.el-main-content > :first-child {
+  flex: 1 1 0%;
+  min-height: 0;
+  min-width: 0;
+}
+
+@media (max-width: 600px) {
+  /* 不改变折叠状态，只用 CSS 将导航收成窄栏。 */
+  .sidebar {
+    width: 64px !important;
+  }
+
+  .sidebar-header {
+    height: 72px;
+    min-height: 72px;
+    justify-content: center !important;
+    padding-inline: 8px;
+  }
+
+  .sidebar-header::before {
+    display: grid;
+    width: 34px;
+    height: 34px;
+    place-items: center;
+    border-radius: 11px;
+    color: var(--music-primary);
+    background: var(--music-primary-soft);
+    font-size: 19px;
+    font-weight: 700;
+    content: '聆';
+  }
+
+  .sidebar-brand,
+  .collapse-button,
+  .sidebar-menu-item :deep(span),
+  .el-dropdown-trigger > span {
+    display: none;
+  }
+
+  .sidebar-menu-item {
+    width: 44px;
+    margin-inline: 10px;
+    padding: 0 !important;
+    justify-content: center;
+    font-size: 0;
+  }
+
+  .sidebar-menu-item :deep(.el-icon) {
+    margin: 0;
+    font-size: 19px;
+  }
 }
 </style>

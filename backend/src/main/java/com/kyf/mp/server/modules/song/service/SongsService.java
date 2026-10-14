@@ -12,7 +12,7 @@ import com.kyf.mp.server.modules.song.vo.PlayHistoryVO;
 import com.kyf.mp.server.modules.song.vo.UploadsVO;
 
 public interface SongsService {
-    GetSongsVO getSongsPage(Integer page, String keyword);
+    GetSongsVO getSongsPage(Integer page, String keyword, Integer size);
 
     LyricsVO getLyrics(Long songId);
 

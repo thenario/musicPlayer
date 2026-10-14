@@ -1,7 +1,10 @@
 <template>
   <div class="playlists-page">
     <div class="playlists-page__header">
-      <h1 class="playlists-page__title">我的歌单</h1>
+      <div>
+        <h1 class="playlists-page__title">我的歌单</h1>
+        <p class="playlists-page__subtitle">把喜欢的声音，整理成自己的收藏</p>
+      </div>
     </div>
 
     <div class="playlists-page__grid">
@@ -52,9 +55,9 @@ onMounted(async () => {
   box-sizing: border-box;
   min-height: 100%;
   overflow: auto;
-  padding: 24px;
+  padding: clamp(20px, 2.8vw, 36px);
   color: #20232d;
-  background: #f7f8fa;
+  background: var(--music-canvas);
 }
 
 .playlists-page__header {
@@ -62,7 +65,14 @@ onMounted(async () => {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 20px;
+  margin-bottom: 24px;
+}
+
+.playlists-page__subtitle {
+  margin: 7px 0 0;
+  color: var(--music-muted);
+  font-size: 12px;
+  line-height: 1.6;
 }
 
 .playlists-page__title {
@@ -87,20 +97,28 @@ onMounted(async () => {
   align-items: center;
   justify-content: center;
   border: 1px dashed #c9cdd7;
-  border-radius: 12px;
+  border-radius: 16px;
   color: #7c8493;
   cursor: pointer;
-  background: #fff;
-  transition: border-color 160ms ease, background 160ms ease, color 160ms ease;
+  background: linear-gradient(145deg, #fff, #f8f6ff);
+  transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .playlists-page__create:hover {
   border-color: #8176d1;
   color: #6256c5;
   background: #faf9ff;
+  transform: translateY(-3px);
 }
 
 .playlists-page__create-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border-radius: 16px;
+  background: var(--music-primary-soft);
+  color: var(--music-primary);
   margin-bottom: 8px;
   font-size: 34px;
   font-weight: 300;

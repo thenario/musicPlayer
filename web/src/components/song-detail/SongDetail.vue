@@ -71,7 +71,7 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   flex-direction: column;
   overflow: hidden;
   color: #303133;
-  background: #f6f8fb;
+  background: radial-gradient(ellipse at 20% 25%, #eeebf8, transparent 55%), var(--music-canvas);
 }
 
 .detail-header {
@@ -82,17 +82,23 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   padding: 0 32px;
   flex-shrink: 0;
   background: rgb(255 255 255 / 90%);
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid var(--music-border);
+  backdrop-filter: blur(16px);
 }
 
 .song-meta-center {
   text-align: center;
+  min-width: 0;
+  padding-inline: 12px;
 }
 
 .main-title {
   margin: 0 0 4px;
   font-size: 22px;
   font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .meta-sub {
@@ -105,7 +111,7 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .sub-artist {
-  color: #409eff;
+  color: var(--music-primary);
 }
 
 .detail-content {
@@ -134,9 +140,9 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   min-height: 0;
   padding: 12px 28px;
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
+  border: 1px solid var(--music-border);
+  border-radius: 24px;
+  box-shadow: var(--music-shadow);
 }
 
 .detail-footer {
@@ -154,13 +160,13 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .player-control-container :deep(.ctrl-btn:hover) {
-  color: #409eff;
+  color: var(--music-primary);
 }
 
 .player-control-container :deep(.player-control__play-btn) {
   color: #fff;
-  background: #409eff;
-  box-shadow: 0 5px 12px rgb(64 158 255 / 25%);
+  background: var(--music-primary);
+  box-shadow: 0 5px 12px rgb(109 91 208 / 25%);
 }
 
 .player-control-container :deep(.progress-bar__track) {
@@ -172,7 +178,7 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .player-control-container :deep(.progress-bar__played) {
-  background: #409eff;
+  background: var(--music-primary);
 }
 
 .player-control-container :deep(.progress-bar__time) {
@@ -204,8 +210,8 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .action-btn:hover {
-  color: #409eff;
-  background: #ecf5ff;
+  color: var(--music-primary);
+  background: var(--music-primary-soft);
   transform: translateY(-1px);
 }
 
