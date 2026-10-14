@@ -42,7 +42,7 @@ const handleVolumeInput = (event: Event) => {
 .volume-control__mute-btn {
   display: grid; width: 32px; height: 32px; flex-shrink: 0; place-items: center;
   border: 0; border-radius: 9px; background: transparent; cursor: pointer;
-  color: #7c778f; transition: color .2s ease, background .2s ease;
+  color: var(--music-secondary); transition: color .2s ease, background .2s ease;
 }
 
 .volume-control__mute-btn:hover {
@@ -55,13 +55,13 @@ const handleVolumeInput = (event: Event) => {
 }
 
 .volume-range {
-  width: 100%; height: 4px; cursor: pointer; appearance: none; accent-color: var(--music-primary); background-color: #e5e1f1; border-radius: 999px;
+  width: 100%; height: 4px; cursor: pointer; appearance: none; accent-color: var(--music-primary); background-color: var(--music-raised); border-radius: 999px;
   background-image: linear-gradient(to right, var(--music-primary) var(--progress), transparent var(--progress));
 }
 
 .volume-range::-webkit-slider-thumb {
   width: 10px; height: 10px; appearance: none; background: var(--music-primary); border-radius: 50%;
-  box-shadow: 0 2px 5px rgb(109 91 208 / 20%);
+  box-shadow: 0 2px 5px rgb(var(--music-primary-rgb) / 20%);
 }
 
 .volume-range::-moz-range-thumb {

@@ -22,7 +22,7 @@
 
         <div class="page__table">
             <el-table v-loading="loading" :data="songs" height="100%" class="uploads-table"
-                element-loading-background="rgba(255, 255, 255, 0.72)" ref="uploadsTabelRef">
+                element-loading-background="rgba(23, 22, 21, 0.8)" ref="uploadsTabelRef">
                 <el-table-column label="歌曲" min-width="36%" show-overflow-tooltip>
                     <template #default="{ row }">
                         <div class="uploads-table__song">
@@ -123,8 +123,8 @@ onMounted(async () => {
     min-height: 0;
     overflow: hidden;
     padding: 24px;
-    color: #20232d;
-    background: #f7f8fa;
+    color: var(--music-text);
+    background: var(--music-canvas);
 }
 
 .page__header {
@@ -159,17 +159,17 @@ onMounted(async () => {
 .page__table {
     min-height: 0;
     overflow: hidden;
-    border: 1px solid #e8eaef;
+    border: 1px solid var(--music-border);
     border-radius: 12px;
-    background: #fff;
+    background: var(--music-surface);
 }
 
 .uploads-table {
-    --el-table-border-color: #eef0f4;
-    --el-table-header-bg-color: #fafbfc;
-    --el-table-header-text-color: #7b8190;
-    --el-table-row-hover-bg-color: #f6f5ff;
-    --el-table-text-color: #4f5563;
+    --el-table-border-color: var(--music-raised);
+    --el-table-header-bg-color: var(--music-hover);
+    --el-table-header-text-color: var(--music-muted);
+    --el-table-row-hover-bg-color: var(--music-hover);
+    --el-table-text-color: var(--music-secondary);
 }
 
 :deep(.uploads-table .el-table__header-wrapper th.el-table__cell) {
@@ -180,7 +180,7 @@ onMounted(async () => {
 
 :deep(.uploads-table .el-table__body-wrapper td.el-table__cell) {
     height: 64px;
-    border-bottom-color: #f0f1f4;
+    border-bottom-color: var(--music-border);
 }
 
 .uploads-table__song {
@@ -195,20 +195,20 @@ onMounted(async () => {
     height: 40px;
     flex: 0 0 auto;
     overflow: hidden;
-    border: 1px solid #eceef3;
+    border: 1px solid var(--music-border);
     border-radius: 8px;
 }
 
 .uploads-table__cover--fallback {
     display: grid;
     place-items: center;
-    color: #969cab;
-    background: #f2f3f6;
+    color: var(--music-muted);
+    background: var(--music-raised);
 }
 
 .uploads-table__title {
     overflow: hidden;
-    color: #303542;
+    color: var(--music-text);
     font-size: 14px;
     font-weight: 600;
     text-overflow: ellipsis;
@@ -216,7 +216,7 @@ onMounted(async () => {
 }
 
 .uploads-table__date {
-    color: #9097a7;
+    color: var(--music-muted);
     font-size: 13px;
 }
 
@@ -236,12 +236,12 @@ onMounted(async () => {
     border: 0;
     border-radius: 8px;
     height: 40px;
-    background: #6256c5;
+    background: var(--music-primary);
     font-weight: 600;
 }
 
 .upload-btn:hover {
-    background: #5549b7;
+    background: var(--music-primary-hover);
 }
 
 @media (max-width: 640px) {

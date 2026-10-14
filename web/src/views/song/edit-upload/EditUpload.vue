@@ -170,7 +170,7 @@ const submitForm = async () => {
     flex-direction: column;
     height: 100%;
     min-height: 0;
-    background: #f6f8fb;
+    background: var(--music-canvas);
 }
 
 .page__scroll {
@@ -191,7 +191,7 @@ const submitForm = async () => {
     max-width: 960px;
     margin: 0 auto 40px;
     overflow: hidden;
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--music-border);
     border-radius: 16px;
     box-shadow: 0 10px 30px rgb(15 23 42 / 7%);
 }
@@ -202,7 +202,7 @@ const submitForm = async () => {
     align-items: center;
     min-height: 88px;
     padding: 0 28px;
-    background: linear-gradient(120deg, #409eff, #6a8df5);
+    background: linear-gradient(120deg, var(--music-primary), var(--music-primary-soft));
 }
 
 .edit-card__back {
@@ -248,7 +248,7 @@ const submitForm = async () => {
     height: 192px;
     overflow: hidden;
     cursor: pointer;
-    border: 4px solid #fff;
+    border: 4px solid var(--music-raised);
     border-radius: 14px;
     box-shadow: 0 8px 20px rgb(15 23 42 / 16%);
 }
@@ -265,8 +265,8 @@ const submitForm = async () => {
     height: 100%;
     align-items: center;
     justify-content: center;
-    color: #c0c4cc;
-    background: #f8fafc;
+    color: var(--music-muted);
+    background: var(--music-canvas);
 }
 
 .cover-field__overlay {
@@ -306,7 +306,7 @@ const submitForm = async () => {
     margin-top: 8px;
     padding: 2px 8px;
     font-size: 10px;
-    background: #67c23a;
+    background: var(--music-primary);
     border-radius: 4px;
 }
 
@@ -329,14 +329,14 @@ const submitForm = async () => {
 .form__notice {
     margin-top: 16px;
     padding: 14px;
-    background: #ecf5ff;
-    border: 1px solid #d9ecff;
+    background: var(--music-primary-soft);
+    border: 1px solid var(--music-primary-soft);
     border-radius: 10px;
 }
 
 .form__notice-text {
     margin: 0;
-    color: #337ecc;
+    color: var(--music-primary-hover);
     font-size: 12px;
 }
 
@@ -374,7 +374,7 @@ const submitForm = async () => {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: #e5e7eb;
+    background-color: var(--music-border);
     border-radius: 10px;
 }
 
@@ -397,22 +397,22 @@ const submitForm = async () => {
 
 :deep(.lyrics-input .el-textarea__inner) {
     border-radius: 12px;
-    background-color: #f9fafb;
+    background-color: var(--music-canvas);
     font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', monospace;
     font-size: 13px;
     padding: 12px;
-    border-color: #e5e7eb;
+    border-color: var(--music-border);
     /* 解决部分浏览器无法滚动的关键：允许 textarea 内部滚动 */
     overflow-y: auto;
 }
 
 :deep(.custom-input .el-input__wrapper) {
     border-radius: 12px;
-    box-shadow: 0 0 0 1px #e5e7eb inset;
+    box-shadow: 0 0 0 1px var(--music-border) inset;
 }
 
 .save-btn {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    background: var(--music-primary);
     border: none;
     border-radius: 12px;
     font-weight: 600;

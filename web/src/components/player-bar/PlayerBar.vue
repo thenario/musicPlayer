@@ -43,14 +43,14 @@ useKeyboardShortcuts(reportError)
   display: flex;
   flex-shrink: 0;
   width: 100%;
-  height: 88px;
+  height: 100px;
   align-items: center;
   justify-content: space-between;
   padding: 0 28px;
   user-select: none;
-  background: rgb(255 255 255 / 94%);
+  background: var(--music-inset);
   border-top: 1px solid var(--music-border);
-  box-shadow: 0 -8px 32px rgb(47 38 80 / 5%);
+  box-shadow: 0 -8px 32px rgb(0 0 0 / 15%);
   backdrop-filter: blur(14px);
 }
 

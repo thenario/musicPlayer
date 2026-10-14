@@ -123,8 +123,8 @@ const submitUpload = async () => {
   height: 100%;
   overflow-y: auto;
   padding: 32px 24px 64px;
-  background: #f6f8fb;
-  color: #1f2937;
+  background: var(--music-canvas);
+  color: var(--music-text);
 }
 
 .page__inner {
@@ -140,8 +140,8 @@ const submitUpload = async () => {
 
 .upload-card {
   padding: 28px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--music-surface);
+  border: 1px solid var(--music-border);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
 }
@@ -154,7 +154,7 @@ const submitUpload = async () => {
 .form-grid__label {
   display: block;
   margin-bottom: 8px;
-  color: #4b5563;
+  color: var(--music-secondary);
   font-size: 14px;
   font-weight: 600;
 }
@@ -164,28 +164,28 @@ const submitUpload = async () => {
   padding: 36px 24px;
   text-align: center;
   cursor: pointer;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--music-border);
   border-radius: 12px;
   transition: border-color .2s ease, background-color .2s ease;
 }
 
 .upload-card__dropzone.is-idle {
-  border-color: #cbd5e1;
+  border-color: var(--music-border);
 }
 
 .upload-card__dropzone.is-idle:hover {
   border-color: #8aa4c8;
-  background: #f8fbff;
+  background: var(--music-primary-soft);
 }
 
 .upload-card__dropzone.is-dragging {
-  border-color: #409eff;
-  background: #ecf5ff;
+  border-color: var(--music-primary);
+  background: var(--music-primary-soft);
 }
 
 .upload-card__dropzone.is-selected {
-  border-color: #67c23a;
-  background: #f0f9eb;
+  border-color: var(--music-primary);
+  background: var(--music-primary-soft);
 }
 
 .upload-card__audio-input {
@@ -208,13 +208,13 @@ const submitUpload = async () => {
 }
 
 .upload-card__hint-accent {
-  color: #409eff;
+  color: var(--music-primary);
   font-weight: 600;
 }
 
 .upload-card__sub-hint {
   margin: 6px 0 0;
-  color: #9ca3af;
+  color: var(--music-muted);
   font-size: 12px;
 }
 
@@ -223,7 +223,7 @@ const submitUpload = async () => {
   align-items: center;
   justify-content: center;
   gap: 12px;
-  color: #529b2e;
+  color: var(--music-primary-hover);
 }
 
 .upload-card__file-check {
@@ -241,7 +241,7 @@ const submitUpload = async () => {
 
 .upload-card__file-remove {
   padding: 4px 7px;
-  color: #6b7280;
+  color: var(--music-secondary);
   cursor: pointer;
   background: transparent;
   border: 0;
@@ -249,7 +249,7 @@ const submitUpload = async () => {
 }
 
 .upload-card__file-remove:hover {
-  background: #e5e7eb;
+  background: var(--music-border);
 }
 
 .form-grid {
@@ -272,8 +272,8 @@ const submitUpload = async () => {
   justify-content: center;
   overflow: hidden;
   cursor: pointer;
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
+  background: var(--music-canvas);
+  border: 2px dashed var(--music-border);
   border-radius: 12px;
   transition: border-color .2s ease;
 }
@@ -297,13 +297,13 @@ const submitUpload = async () => {
 }
 
 .cover-field__plus {
-  color: #94a3b8;
+  color: var(--music-muted);
   font-size: 32px;
 }
 
 .cover-field__hint {
   margin: 4px 0 0;
-  color: #94a3b8;
+  color: var(--music-muted);
   font-size: 12px;
 }
 
@@ -331,30 +331,30 @@ const submitUpload = async () => {
 }
 
 .upload-progress__label {
-  color: #409eff;
+  color: var(--music-primary);
   font-size: 12px;
   font-weight: 600;
 }
 
 .upload-progress__percent {
-  color: #909399;
+  color: var(--music-muted);
   font-size: 12px;
 }
 
 .submit-btn {
   width: 100%;
   padding: 13px 20px;
-  color: #fff;
+  color: var(--music-on-primary);
   font-weight: 600;
   cursor: pointer;
-  background: #409eff;
+  background: var(--music-primary);
   border: 0;
   border-radius: 10px;
   transition: background-color .2s ease, transform .2s ease;
 }
 
 .submit-btn:hover {
-  background: #337ecc;
+  background: var(--music-primary-hover);
 }
 
 .submit-btn:disabled {
@@ -366,10 +366,10 @@ const submitUpload = async () => {
   box-sizing: border-box;
   width: 100%;
   padding: 11px 12px;
-  color: #303133;
+  color: var(--music-text);
   font: inherit;
-  background: #fff;
-  border: 1px solid #dcdfe6;
+  background: var(--music-surface);
+  border: 1px solid var(--music-border);
   border-radius: 8px;
   outline: none;
   transition: border-color .2s ease, box-shadow .2s ease;
@@ -380,8 +380,8 @@ const submitUpload = async () => {
 }
 
 .input-style:focus {
-  border-color: #409eff;
-  box-shadow: 0 0 0 3px rgb(64 158 255 / 12%);
+  border-color: var(--music-primary);
+  box-shadow: 0 0 0 3px rgb(var(--music-primary-rgb) / 12%);
 }
 
 .el-fade-in-enter-active,

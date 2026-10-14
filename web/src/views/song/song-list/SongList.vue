@@ -3,6 +3,7 @@
     <!-- 顶部搜索栏 -->
     <div class="page__header">
       <div class="page__heading">
+        <p class="page__eyebrow">THE MUSIC LIBRARY / 音乐典藏</p>
         <h1 class="page__title">歌曲库</h1>
         <p class="page__subtitle">找到喜欢的旋律，双击歌曲即可播放</p>
       </div>
@@ -88,8 +89,8 @@ onBeforeUnmount(() => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  padding: clamp(20px, 2.8vw, 36px);
-  color: #20232d;
+  padding: clamp(20px, 3.6vw, 48px);
+  color: var(--music-text);
   background: var(--music-canvas);
 }
 
@@ -99,7 +100,14 @@ onBeforeUnmount(() => {
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  margin-bottom: 24px;
+  margin-bottom: 32px;
+}
+
+.page__eyebrow {
+  margin: 0 0 14px;
+  color: var(--music-primary);
+  font-size: 9px;
+  letter-spacing: 0.18em;
 }
 
 .page__subtitle {
@@ -111,8 +119,8 @@ onBeforeUnmount(() => {
 
 .page__title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
@@ -121,26 +129,26 @@ onBeforeUnmount(() => {
 }
 
 .custom-search-input :deep(.el-input__wrapper) {
-  min-height: 42px;
+  min-height: 44px;
   padding-inline: 14px;
-  border-radius: 12px;
-  background: #fff;
+  border-radius: 6px;
+  background: var(--music-surface);
   box-shadow: 0 0 0 1px var(--music-border) inset, 0 3px 12px rgb(39 35 76 / 3%);
   transition: box-shadow 160ms ease;
 }
 
 .custom-search-input :deep(.el-input__wrapper.is-focus) {
-  box-shadow: 0 0 0 1px var(--music-primary) inset, 0 0 0 4px rgb(109 91 208 / 8%);
+  box-shadow: 0 0 0 1px var(--music-primary) inset, 0 0 0 4px rgb(var(--music-primary-rgb) / 8%);
 }
 
 .page__table {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  border: 1px solid var(--music-border);
-  border-radius: 16px;
-  background: #ffffff;
-  box-shadow: var(--music-shadow);
+  border-top: 1px solid var(--music-border);
+  border-radius: 0;
+  background: var(--music-surface);
+  box-shadow: none;
 }
 
 .page__pagination {

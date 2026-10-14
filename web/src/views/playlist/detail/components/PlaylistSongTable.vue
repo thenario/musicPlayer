@@ -89,12 +89,12 @@ const onRowDblClick = (row: ISong) => emit('play-song', row)
 }
 
 .playlist-song-table__title.is-current {
-  color: #67c23a;
+  color: var(--music-primary);
   font-weight: 700;
 }
 
 .playlist-song-table__playing {
-  color: #67c23a;
+  color: var(--music-primary);
   animation: playlist-song-table-bounce 1s infinite;
 }
 
@@ -113,39 +113,39 @@ const onRowDblClick = (row: ISong) => emit('play-song', row)
 }
 
 .playlist-song-table__action-play {
-  color: #409eff;
+  color: var(--music-primary);
   cursor: pointer;
 }
 
 .playlist-song-table__action-play:hover {
-  color: #337ecc;
+  color: var(--music-primary-hover);
 }
 
 .playlist-song-table__action-next {
-  color: #909399;
+  color: var(--music-muted);
   cursor: pointer;
 }
 
 .playlist-song-table__action-next:hover {
-  color: #303133;
+  color: var(--music-text);
 }
 
 .playlist-song-table__action-queue {
-  color: #909399;
+  color: var(--music-muted);
   cursor: pointer;
 }
 
 .playlist-song-table__action-queue:hover {
-  color: #303133;
+  color: var(--music-text);
 }
 
 .playlist-song-table__action-remove {
-  color: #909399;
+  color: var(--music-muted);
   cursor: pointer;
 }
 
 .playlist-song-table__action-remove:hover {
-  color: #f56c6c;
+  color: var(--el-color-danger);
 }
 
 @keyframes playlist-song-table-bounce {

@@ -1,29 +1,71 @@
 html:root {
   font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  color: #252837;
-  background: #f6f7fb;
+  color: #eee8df;
+  background: #171615;
+  color-scheme: dark;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
-  --music-primary: #6d5bd0;
-  --music-primary-soft: #f0edfc;
-  --music-text: #252837;
-  --music-muted: #85899c;
-  --music-border: #e9e9f2;
-  --music-surface: #ffffff;
-  --music-canvas: #f6f7fb;
-  --music-shadow: 0 8px 28px rgb(39 35 76 / 5%);
-  --el-color-primary: #6d5bd0;
-  --el-color-primary-light-3: #998cde;
-  --el-color-primary-light-5: #b6ade8;
-  --el-color-primary-light-7: #d3cef1;
-  --el-color-primary-light-8: #e2def6;
-  --el-color-primary-light-9: #f0edfc;
-  --el-color-primary-dark-2: #5749a6;
-  --el-border-radius-base: 10px;
-  --el-border-color: #e4e4ef;
-  --el-text-color-primary: #252837;
-  --el-text-color-regular: #555a70;
+  --music-primary: #dba272;
+  --music-primary-hover: #edb98d;
+  --music-primary-rgb: 219 162 114;
+  --music-primary-soft: #34291f;
+  --music-on-primary: #21170f;
+  --music-text: #eee8df;
+  --music-secondary: #c0b7ac;
+  --music-muted: #a49a8e;
+  --music-border: #36312c;
+  --music-surface: #201e1b;
+  --music-raised: #292622;
+  --music-hover: #302b25;
+  --music-canvas: #171615;
+  --music-inset: #121110;
+  --music-shadow: 0 16px 40px rgb(0 0 0 / 16%);
+  --el-color-primary: var(--music-primary);
+  --el-color-primary-light-3: #e7b68e;
+  --el-color-primary-light-5: #805f44;
+  --el-color-primary-light-7: #59432f;
+  --el-color-primary-light-8: #423326;
+  --el-color-primary-light-9: var(--music-primary-soft);
+  --el-color-primary-dark-2: #edb98d;
+  --el-color-success: #91b58b;
+  --el-color-success-light-9: #263026;
+  --el-color-warning: #d5b477;
+  --el-color-warning-light-9: #332c20;
+  --el-color-danger: #e38d83;
+  --el-color-danger-light-9: #382622;
+  --el-color-error: #e38d83;
+  --el-color-error-light-9: #382622;
+  --el-color-info: #b0a699;
+  --el-color-info-light-9: #302c27;
+  --el-border-radius-base: 8px;
+  --el-border-radius-small: 5px;
+  --el-bg-color: var(--music-surface);
+  --el-bg-color-page: var(--music-canvas);
+  --el-bg-color-overlay: var(--music-raised);
+  --el-fill-color: #332f29;
+  --el-fill-color-light: #2a2622;
+  --el-fill-color-lighter: #25221e;
+  --el-fill-color-extra-light: #211e1b;
+  --el-fill-color-dark: #403a32;
+  --el-fill-color-darker: #4e463c;
+  --el-fill-color-blank: var(--music-surface);
+  --el-border-color: var(--music-border);
+  --el-border-color-light: #302c27;
+  --el-border-color-lighter: #2c2824;
+  --el-border-color-extra-light: #27231f;
+  --el-border-color-dark: #4d453c;
+  --el-text-color-primary: var(--music-text);
+  --el-text-color-regular: var(--music-secondary);
+  --el-text-color-secondary: var(--music-muted);
+  --el-text-color-placeholder: #8a8176;
+  --el-text-color-disabled: #736b61;
+  --el-disabled-bg-color: #24211e;
+  --el-disabled-text-color: #736b61;
+  --el-disabled-border-color: #302b26;
+  --el-mask-color: rgb(18 17 16 / 85%);
+  --el-mask-color-extra-light: rgb(18 17 16 / 55%);
+  --el-box-shadow-light: 0 12px 36px rgb(0 0 0 / 28%);
   --el-font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
 }
 
@@ -54,13 +96,13 @@ textarea,
 }
 
 :where(button, a, input, textarea, [tabindex]):focus-visible {
-  outline: 3px solid rgb(109 91 208 / 40%);
+  outline: 2px solid rgb(var(--music-primary-rgb) / 65%);
   outline-offset: 4px;
 }
 
 ::selection {
-  color: #44358d;
-  background: #e7e1ff;
+  color: var(--music-on-primary);
+  background: var(--music-primary);
 }
 
 /* Teleport 到 body 的浮层在全局统一外观，组件自身的布局仍留在 scoped 中。 */
@@ -68,17 +110,18 @@ textarea,
 .el-message-box {
   --el-dialog-border-radius: 18px;
   --el-messagebox-border-radius: 16px;
-  box-shadow: 0 24px 80px rgb(34 29 65 / 16%);
+  border: 1px solid var(--music-border);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 45%);
 }
 
 .el-overlay {
-  --el-overlay-color-lighter: rgb(31 26 55 / 30%);
+  --el-overlay-color-lighter: rgb(9 8 7 / 72%);
 }
 
 .el-dropdown__popper,
 .el-select__popper {
-  --el-box-shadow-light: 0 12px 36px rgb(39 35 76 / 12%);
-  border-radius: 12px;
+  --el-box-shadow-light: 0 12px 36px rgb(0 0 0 / 32%);
+  border-radius: 8px;
 }
 
 .el-dropdown-menu__item {
@@ -115,14 +158,48 @@ textarea,
 }
 
 .el-button--primary:not(.is-link):not(.is-text):not(.is-disabled):hover {
-  box-shadow: 0 4px 12px rgb(109 91 208 / 18%);
+  box-shadow: 0 4px 18px rgb(var(--music-primary-rgb) / 12%);
+}
+
+.el-button--primary:not(.is-link):not(.is-text):not(.is-plain) {
+  --el-button-text-color: var(--music-on-primary);
+  --el-button-hover-text-color: var(--music-on-primary);
+  --el-button-active-text-color: var(--music-on-primary);
+}
+
+.el-table {
+  --el-table-bg-color: var(--music-surface);
+  --el-table-tr-bg-color: var(--music-surface);
+  --el-table-header-bg-color: var(--music-surface);
+  --el-table-row-hover-bg-color: var(--music-hover);
+  --el-table-border-color: var(--music-border);
+  --el-table-text-color: var(--music-secondary);
+  --el-table-header-text-color: var(--music-muted);
+  --el-table-current-row-bg-color: var(--music-primary-soft);
+}
+
+html .el-empty {
+  --el-empty-fill-color-0: #29251f;
+  --el-empty-fill-color-1: #3e372e;
+  --el-empty-fill-color-2: #342e27;
+  --el-empty-fill-color-3: #494034;
+  --el-empty-fill-color-4: #29251f;
+  --el-empty-fill-color-5: #3b332a;
+  --el-empty-fill-color-6: #514636;
+  --el-empty-fill-color-7: #302a23;
+  --el-empty-fill-color-8: #40372b;
+  --el-empty-fill-color-9: #5a4a37;
+}
+
+.el-loading-mask {
+  background-color: rgb(23 22 21 / 80%);
 }
 
 /* 抽屉的宽度来自现有组件参数，只限制其不超出视口。 */
 .el-drawer.queue-drawer-container {
   max-width: 100vw;
   border-left: 1px solid var(--music-border);
-  box-shadow: -16px 0 60px rgb(39 35 76 / 10%);
+  box-shadow: -16px 0 60px rgb(0 0 0 / 32%);
 }
 
 .queue-drawer-container .el-drawer__body {
@@ -146,11 +223,11 @@ textarea,
 }
 
 .custom-scrollbar:hover::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
+  background-color: #655a4d;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:active {
-  background-color: #6b7280;
+  background-color: #8a7763;
 }
 
 .custom-scrollbar {
@@ -158,7 +235,7 @@ textarea,
   scrollbar-color: transparent transparent;
 }
 .custom-scrollbar:hover {
-  scrollbar-color: #4b5563 transparent;
+  scrollbar-color: #655a4d transparent;
 }
 
 @media (prefers-reduced-motion: reduce) {

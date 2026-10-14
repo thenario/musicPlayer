@@ -25,12 +25,14 @@ defineProps<{
 }
 
 .record-vinyl {
+  box-sizing: border-box;
   width: 100%;
   height: 100%;
   border-radius: 50%;
-  background: radial-gradient(circle, #64748b 0%, #334155 28%, #1e293b 74%, #0f172a 100%);
-  padding: 13px;
-  box-shadow: 0 14px 32px rgb(15 23 42 / 20%);
+  background: repeating-radial-gradient(circle, #151412 0 2px, #343029 3px, #1d1b18 4px 5px);
+  padding: 36px;
+  border: 1px solid #494034;
+  box-shadow: 0 24px 56px rgb(0 0 0 / 38%);
   animation: rotate-record 25s linear infinite;
   animation-play-state: paused;
   will-change: transform;
@@ -54,9 +56,13 @@ defineProps<{
   transform: translate(-50%, -50%);
   width: 40px;
   height: 40px;
-  background: #334155;
+  background: #291f17;
   border-radius: 50%;
-  border: 2px solid rgb(255 255 255 / 30%);
+  border: 2px solid var(--music-primary);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .record-vinyl { animation: none; }
 }
 
 @media (max-width: 768px) {

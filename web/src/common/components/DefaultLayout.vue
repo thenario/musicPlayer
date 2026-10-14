@@ -1,19 +1,18 @@
 <template>
     <el-container class="default-layout">
         <!-- 侧边栏，几个页面跳转，下面是用户，写一个dropdown，有logout和个人主页等 -->
-        <el-aside class="sidebar" :width="isCollapse ? '48px' : '196px'" @transitionend="handleSidebarTransitionEnd">
+        <el-aside class="sidebar" :width="isCollapse ? '64px' : '224px'" @transitionend="handleSidebarTransitionEnd">
             <el-container class="sidebar-menu-container">
                 <el-menu class="sidebar-menu" :collapse="isCollapse" router :default-active="route.path"
                     :collapse-transition="false">
-                    <div class="sidebar-header"
-                        style="width: 100%; display: flex; flex-direction: row; justify-content:space-between; align-items: center;">
+                    <div class="sidebar-header">
                         <Transition name="brand-fade">
-                            <div v-if="showBrand" class="sidebar-brand">
+                            <router-link v-if="showBrand" to="/home" class="sidebar-brand">
                                 <span class="sidebar-title">聆听</span>
                                 <span class="current-song-title">
                                     {{ playerStore.currentSong?.song_title || '暂未播放' }}
                                 </span>
-                            </div>
+                            </router-link>
                         </Transition>
                         <!-- <div class="music-bars">
                                 <span class="music-bar" v-for="(bar, index) in visualizerBars" :key="index"
@@ -22,7 +21,7 @@
 
                         <div v-if="isCollapse">
                             <el-tooltip content="展开" placement="right">
-                                <el-button class="collapse-button" @click="toggleSidebar" link>
+                                <el-button class="collapse-button" aria-label="展开侧栏" @click="toggleSidebar" link>
                                     <el-icon size="18px">
                                         <Expand />
                                     </el-icon>
@@ -31,7 +30,7 @@
                         </div>
                         <div v-else-if="!isCollapse">
                             <el-tooltip content="折叠" placement="right">
-                                <el-button class="collapse-button" v-if="!isCollapse" @click="toggleSidebar" link>
+                                <el-button class="collapse-button" aria-label="折叠侧栏" v-if="!isCollapse" @click="toggleSidebar" link>
                                     <el-icon size="18px">
                                         <Fold />
                                     </el-icon>
@@ -39,11 +38,12 @@
                             </el-tooltip>
                         </div>
                     </div>
+                    <div class="sidebar-section-label" aria-hidden="true">音乐空间 <span>LIBRARY</span></div>
                     <el-menu-item class="sidebar-menu-item" index="/songs" aria-label="歌曲库">
                         <el-icon class="el-menu-item-icon">
                             <House />
                         </el-icon>
-                        <template #title>主页</template>
+                        <template #title>歌曲库</template>
                     </el-menu-item>
 
                     <el-menu-item class="sidebar-menu-item" index="/playlists" aria-label="歌单">
@@ -67,7 +67,7 @@
                         <el-icon size="16px">
                             <User />
                         </el-icon>
-                        <span v-if="!isCollapse" style="color:black;">{{ user ? user.user_name : "未登录" }}</span>
+                        <span v-if="!isCollapse">{{ user ? user.user_name : "未登录" }}</span>
                     </div>
                     <template #dropdown>
                         <el-dropdown-menu>
@@ -202,19 +202,22 @@ const handleCommand = async (command: string) => {
     flex-shrink: 0;
     overflow: hidden;
     border-right: 1px solid var(--music-border);
-    background: #fff;
+    background: var(--music-inset);
     transition: width 0.3s ease-in-out;
 }
 
 .sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     width: 100%;
-    min-height: 88px;
-    height: 88px;
+    min-height: 112px;
+    height: 112px;
     gap: 8px;
-    padding: 16px 12px;
+    padding: 24px 18px;
     box-sizing: border-box;
-    border-bottom: 1px solid #f1f0f7;
-    margin-bottom: 16px;
+    border-bottom: 1px solid var(--music-border);
+    margin-bottom: 24px;
 }
 
 .sidebar-brand {
@@ -223,6 +226,7 @@ const handleCommand = async (command: string) => {
     flex-direction: column;
     gap: 2px;
     padding: 6px 8px;
+    text-decoration: none;
 }
 
 .brand-fade-enter-active {
@@ -253,17 +257,19 @@ const handleCommand = async (command: string) => {
 }
 
 .sidebar-title {
-    color: #4a3b86;
-    font-size: 21px;
-    font-weight: 700;
-    letter-spacing: 0.12em;
+    color: var(--music-primary);
+    font-family: 'Songti SC', SimSun, serif;
+    font-size: 29px;
+    font-weight: 400;
+    letter-spacing: 0.18em;
     line-height: 1.2;
 }
 
 .current-song-title {
     overflow: hidden;
-    color: #9591a8;
-    font-size: 12px;
+    color: var(--music-muted);
+    max-width: 120px;
+    font-size: 10px;
     line-height: 1.4;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -281,7 +287,7 @@ const handleCommand = async (command: string) => {
     width: 3px;
     min-height: 4px;
     border-radius: 999px;
-    background: #7c5ce0;
+    background: var(--music-primary);
     transition: height 80ms linear;
 }
 
@@ -294,7 +300,7 @@ const handleCommand = async (command: string) => {
     flex-shrink: 0;
     width: 28px;
     height: 30px;
-    color: #8b879e;
+    color: var(--music-muted);
     border-radius: 8px;
     transition: color 160ms ease, background 160ms ease;
 }
@@ -315,10 +321,31 @@ const handleCommand = async (command: string) => {
     justify-content: flex-start;
     border-right: 0;
     background: transparent;
-    --el-menu-item-height: 46px;
-    --el-menu-text-color: #777388;
+    --el-menu-item-height: 48px;
+    --el-menu-text-color: var(--music-secondary);
     --el-menu-active-color: var(--music-primary);
-    --el-menu-hover-bg-color: #f7f5fd;
+    --el-menu-hover-bg-color: var(--music-hover);
+}
+
+.sidebar-section-label {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 26px 14px;
+    color: var(--music-muted);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+}
+
+.sidebar-section-label span {
+    font-size: 8px;
+    opacity: 0.65;
+}
+
+:deep(.sidebar-menu.el-menu--collapse .sidebar-section-label) {
+    height: 14px;
+    padding: 0;
+    visibility: hidden;
 }
 
 :deep(.el-menu--collapse) {
@@ -328,11 +355,11 @@ const handleCommand = async (command: string) => {
 
 .sidebar-menu-item {
     position: relative;
-    width: calc(100% - 20px);
-    margin: 4px 10px;
+    width: calc(100% - 28px);
+    margin: 4px 14px;
     padding: 0 14px !important;
-    gap: 4px;
-    border-radius: 10px;
+    gap: 8px;
+    border-radius: 6px;
     font-size: 13px;
     font-weight: 500;
     transition: background 160ms ease, color 160ms ease;
@@ -356,8 +383,8 @@ const handleCommand = async (command: string) => {
 }
 
 :deep(.sidebar-menu.el-menu--collapse .el-menu-item) {
-    width: calc(100% - 12px);
-    margin-inline: 6px;
+    width: calc(100% - 20px);
+    margin-inline: 10px;
     padding: 0 !important;
     justify-content: center;
 }
@@ -384,7 +411,7 @@ const handleCommand = async (command: string) => {
     outline: none;
     cursor: pointer;
     border-top: 1px solid var(--music-border);
-    background: #fcfbff;
+    background: var(--music-inset);
 }
 
 .el-dropdown-trigger {
@@ -395,7 +422,7 @@ const handleCommand = async (command: string) => {
     align-items: center;
     min-height: 64px;
     gap: 10px;
-    color: #6f6889;
+    color: var(--music-secondary);
     font-size: 13px;
     transition: background 160ms ease;
 }
@@ -430,6 +457,7 @@ const handleCommand = async (command: string) => {
   .sidebar-header {
     height: 72px;
     min-height: 72px;
+    gap: 0;
     justify-content: center !important;
     padding-inline: 8px;
   }
@@ -448,6 +476,7 @@ const handleCommand = async (command: string) => {
   }
 
   .sidebar-brand,
+  .sidebar-section-label,
   .collapse-button,
   .sidebar-menu-item :deep(span),
   .el-dropdown-trigger > span {

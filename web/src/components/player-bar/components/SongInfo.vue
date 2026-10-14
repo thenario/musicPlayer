@@ -57,12 +57,12 @@ const emit = defineEmits<{
 }
 
 .song-info__cover {
-  width: 64px;
-  height: 64px;
+  width: 60px;
+  height: 60px;
   overflow: hidden;
-  background: #eef2f6;
-  border: 1px solid rgb(109 91 208 / 8%);
-  border-radius: 12px;
+  background: var(--music-raised);
+  border: 1px solid rgb(var(--music-primary-rgb) / 8%);
+  border-radius: 5px;
   box-shadow: 0 4px 12px rgb(15 23 42 / 12%);
   transition: transform .2s ease;
 }
@@ -80,12 +80,12 @@ const emit = defineEmits<{
 }
 
 .song-info__cover-icon {
-  width: 24px; height: 24px; color: #909399;
+  width: 24px; height: 24px; color: var(--music-muted);
 }
 
 .song-info__cover-overlay {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-  color: #fff; opacity: 0; background: rgb(35 25 70 / 40%); border-radius: 12px; transition: opacity .2s ease;
+  color: #fff; opacity: 0; background: rgb(12 10 8 / 50%); border-radius: 5px; transition: opacity .2s ease;
 }
 
 .song-info__cover-wrap:hover .song-info__cover-overlay {
@@ -98,11 +98,11 @@ const emit = defineEmits<{
 
 .song-info__title {
   margin: 0;
-  overflow: hidden; color: #303133; font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; color: var(--music-text); font-size: 15px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .song-info__artist {
-  margin: 4px 0 0; overflow: hidden; color: #909399; font-size: 12px; text-overflow: ellipsis; white-space: nowrap;
+  margin: 4px 0 0; overflow: hidden; color: var(--music-muted); font-size: 12px; text-overflow: ellipsis; white-space: nowrap;
 }
 
 @media (max-width: 768px) {

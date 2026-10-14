@@ -33,30 +33,30 @@ const handleSizeChange = (size: number) => {
   flex-wrap: wrap;
   justify-content: center;
   gap: 8px;
-  --el-pagination-text-color: #827b95;
-  --el-pagination-button-color: #827b95;
-  --el-pagination-button-bg-color: #fff;
+  --el-pagination-text-color: var(--music-muted);
+  --el-pagination-button-color: var(--music-muted);
+  --el-pagination-button-bg-color: var(--music-surface);
   --el-pagination-hover-color: var(--music-primary);
 }
 
 :deep(.btn-prev),
 :deep(.btn-next),
 :deep(.el-pager li) {
-  border: 1px solid #e7e9ef;
+  border: 1px solid var(--music-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--music-surface);
 }
 
 :deep(.el-pager li.is-active) {
   border-color: var(--music-primary);
   background: var(--music-primary);
-  color: #fff;
+  color: var(--music-on-primary);
 }
 
 :deep(.el-pager li:not(.is-active):hover),
 :deep(.btn-prev:not(:disabled):hover),
 :deep(.btn-next:not(:disabled):hover) {
-  border-color: #8d84dc;
+  border-color: var(--music-primary);
   color: var(--music-primary);
 }
 

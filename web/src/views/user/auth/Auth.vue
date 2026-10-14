@@ -129,13 +129,13 @@ const handleRegister = async () => {
 }
 
 .auth-page {
+    box-sizing: border-box;
     min-height: 100vh;
     display: grid;
     place-items: center;
     padding: 24px;
-    color: #1f2937;
-    background: radial-gradient(ellipse at 15% 10%, #eeebfb, transparent 50%),
-        radial-gradient(ellipse at 90% 90%, #edf2fc, transparent 45%), #f6f7fb;
+    color: var(--music-text);
+    background: var(--music-canvas);
 }
 
 .auth-card {
@@ -144,10 +144,10 @@ const handleRegister = async () => {
     display: grid;
     grid-template-columns: 0.9fr 1.1fr;
     overflow: hidden;
-    border: 1px solid rgb(255 255 255 / 90%);
-    border-radius: 24px;
-    background: #fff;
-    box-shadow: 0 24px 72px rgb(53 41 91 / 10%);
+    border: 1px solid var(--music-border);
+    border-radius: 12px;
+    background: var(--music-surface);
+    box-shadow: 0 24px 72px rgb(0 0 0 / 28%);
 }
 
 .auth-intro {
@@ -158,20 +158,21 @@ const handleRegister = async () => {
     flex-direction: column;
     justify-content: flex-end;
     padding: 48px;
-    color: #fff;
-    background: linear-gradient(145deg, #4d3a92, #7967c5 65%, #a99cdb);
+    color: #261e17;
+    background: #b58c66;
 }
 
 .auth-intro::before {
     position: absolute;
     z-index: -1;
-    top: -130px;
-    right: -160px;
-    width: 460px;
-    height: 460px;
-    border: 1px solid rgb(255 255 255 / 15%);
+    top: 36px;
+    right: -140px;
+    width: 360px;
+    height: 360px;
+    border: 1px solid #554635;
     border-radius: 50%;
-    box-shadow: 0 0 0 44px rgb(255 255 255 / 4%), 0 0 0 88px rgb(255 255 255 / 3%);
+    background: repeating-radial-gradient(circle, #1c1a18 0 2px, #302a23 3px, #171513 4px 5px);
+    box-shadow: 0 12px 24px rgb(0 0 0 / 24%);
     content: '';
 }
 
@@ -185,14 +186,16 @@ const handleRegister = async () => {
 
 .auth-intro h1 {
     margin: 0;
+    font-family: 'Songti SC', SimSun, serif;
     font-size: clamp(30px, 4vw, 42px);
-    line-height: 1.18;
+    font-weight: 400;
+    line-height: 1.5;
 }
 
 .auth-intro>p:last-child {
     max-width: 250px;
     margin: 18px 0 0;
-    color: rgb(255 255 255 / 78%);
+    color: #463628;
     line-height: 1.7;
 }
 
@@ -209,7 +212,7 @@ const handleRegister = async () => {
 }
 
 .auth-panel__eyebrow {
-    color: #6d61c9;
+    color: var(--music-primary);
 }
 
 .auth-panel h2 {
@@ -220,7 +223,7 @@ const handleRegister = async () => {
 
 .auth-panel__header>p:last-child {
     margin: 10px 0 0;
-    color: #7b8190;
+    color: var(--music-muted);
     font-size: 14px;
 }
 
@@ -232,7 +235,7 @@ const handleRegister = async () => {
 .auth-field {
     display: grid;
     gap: 7px;
-    color: #4b5563;
+    color: var(--music-secondary);
     font-size: 13px;
     font-weight: 600;
 }
@@ -240,10 +243,11 @@ const handleRegister = async () => {
 .auth-field input {
     width: 100%;
     box-sizing: border-box;
-    border: 1px solid #d9dce5;
+    border: 1px solid var(--music-border);
     border-radius: 11px;
     padding: 13px 14px;
-    color: #202431;
+    color: var(--music-text);
+    background: var(--music-inset);
     font: inherit;
     font-weight: 400;
     outline: none;
@@ -251,12 +255,12 @@ const handleRegister = async () => {
 }
 
 .auth-field input:focus {
-    border-color: #7367d5;
-    box-shadow: 0 0 0 3px rgb(115 103 213 / 14%);
+    border-color: var(--music-primary);
+    box-shadow: 0 0 0 3px rgb(var(--music-primary-rgb) / 14%);
 }
 
 .auth-field small {
-    color: #d1495b;
+    color: var(--el-color-danger);
     font-size: 12px;
     font-weight: 400;
 }
@@ -266,9 +270,9 @@ const handleRegister = async () => {
     margin-top: 6px;
     border: 0;
     border-radius: 10px;
-    color: #fff;
+    color: var(--music-on-primary);
     background: var(--music-primary);
-    box-shadow: 0 5px 12px rgb(109 91 208 / 16%);
+    box-shadow: 0 5px 12px rgb(var(--music-primary-rgb) / 16%);
     font: inherit;
     font-weight: 700;
     cursor: pointer;
@@ -276,8 +280,8 @@ const handleRegister = async () => {
 }
 
 .auth-submit:hover:not(:disabled) {
-    background: #5b49b6;
-    box-shadow: 0 7px 18px rgb(109 91 208 / 24%);
+    background: var(--music-primary-hover);
+    box-shadow: 0 7px 18px rgb(var(--music-primary-rgb) / 24%);
 }
 
 .auth-submit:active:not(:disabled) {
@@ -291,7 +295,7 @@ const handleRegister = async () => {
 
 .auth-switch {
     margin: 24px 0 0;
-    color: #7b8190;
+    color: var(--music-muted);
     font-size: 13px;
     text-align: center;
 }
@@ -299,7 +303,7 @@ const handleRegister = async () => {
 .auth-switch button {
     border: 0;
     padding: 0;
-    color: #5145b8;
+    color: var(--music-primary);
     background: transparent;
     font: inherit;
     font-weight: 700;
@@ -340,6 +344,15 @@ const handleRegister = async () => {
     .auth-intro {
         min-height: 160px;
         padding: 28px;
+    }
+
+    .auth-intro::before {
+        width: 180px;
+        height: 180px;
+        top: -90px;
+        right: -30px;
+        opacity: 0.18;
+        box-shadow: none;
     }
 
     .auth-intro h1 {

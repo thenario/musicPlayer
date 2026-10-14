@@ -2,6 +2,7 @@
   <div class="playlists-page">
     <div class="playlists-page__header">
       <div>
+        <p class="playlists-page__eyebrow">YOUR PERSONAL COLLECTION / 私人收藏</p>
         <h1 class="playlists-page__title">我的歌单</h1>
         <p class="playlists-page__subtitle">把喜欢的声音，整理成自己的收藏</p>
       </div>
@@ -55,8 +56,8 @@ onMounted(async () => {
   box-sizing: border-box;
   min-height: 100%;
   overflow: auto;
-  padding: clamp(20px, 2.8vw, 36px);
-  color: #20232d;
+  padding: clamp(20px, 3.6vw, 48px);
+  color: var(--music-text);
   background: var(--music-canvas);
 }
 
@@ -75,17 +76,24 @@ onMounted(async () => {
   line-height: 1.6;
 }
 
+.playlists-page__eyebrow {
+  margin: 0 0 14px;
+  color: var(--music-primary);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+}
+
 .playlists-page__title {
   margin: 0;
-  font-size: 24px;
-  font-weight: 700;
+  font-size: clamp(28px, 3vw, 38px);
+  font-weight: 600;
   letter-spacing: -0.02em;
 }
 
 .playlists-page__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(156px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 32px 24px;
   width: 100%;
   max-width: 1200px;
 }
@@ -96,18 +104,18 @@ onMounted(async () => {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 1px dashed #c9cdd7;
-  border-radius: 16px;
-  color: #7c8493;
+  border: 1px dashed var(--music-border);
+  border-radius: 6px;
+  color: var(--music-muted);
   cursor: pointer;
-  background: linear-gradient(145deg, #fff, #f8f6ff);
+  background: var(--music-surface);
   transition: border-color 160ms ease, background 160ms ease, color 160ms ease, transform 160ms ease;
 }
 
 .playlists-page__create:hover {
-  border-color: #8176d1;
-  color: #6256c5;
-  background: #faf9ff;
+  border-color: var(--music-primary);
+  color: var(--music-primary);
+  background: var(--music-hover);
   transform: translateY(-3px);
 }
 

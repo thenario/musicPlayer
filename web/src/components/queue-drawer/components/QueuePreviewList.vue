@@ -39,15 +39,15 @@ const emit = defineEmits<{
 
 <style scoped>
 .queue-preview-list__header {
-  display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 16px; margin-bottom: 8px; border-bottom: 1px solid #e8eaef;
+  display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 16px; margin-bottom: 8px; border-bottom: 1px solid var(--music-border);
 }
 
 .queue-preview-list__title {
-  margin: 0; color: #20232d; font-size: 18px; font-weight: 700;
+  margin: 0; color: var(--music-text); font-size: 18px; font-weight: 700;
 }
 
 .queue-preview-list__count {
-  color: #8b91a0; font-size: 12px;
+  color: var(--music-muted); font-size: 12px;
 }
 
 .queue-preview-list__table {
@@ -59,7 +59,7 @@ const emit = defineEmits<{
 }
 
 .queue-preview-list__row:hover {
-  background: #f4f3ff;
+  background: var(--music-hover);
 }
 
 .queue-preview-list__icon-col {
@@ -67,11 +67,11 @@ const emit = defineEmits<{
 }
 
 .queue-preview-list__play-icon {
-  color: #969cab;
+  color: var(--music-muted);
 }
 
 .queue-preview-list__row:hover .queue-preview-list__play-icon {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .queue-preview-list__info-col {
@@ -79,14 +79,14 @@ const emit = defineEmits<{
 }
 
 .queue-preview-list__song {
-  color: #353a46; font-size: 14px; font-weight: 600;
+  color: var(--music-text); font-size: 14px; font-weight: 600;
 }
 
 .queue-preview-list__row:hover .queue-preview-list__song {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .queue-preview-list__artist {
-  color: #969cab; font-size: 11px;
+  color: var(--music-muted); font-size: 11px;
 }
 </style>

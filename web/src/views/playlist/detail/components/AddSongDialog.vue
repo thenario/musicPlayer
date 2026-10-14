@@ -83,7 +83,7 @@ onBeforeUnmount(() => {
 }
 
 .add-song-dialog__song:hover {
-  background: #f5f7fa;
+  background: var(--music-canvas);
 }
 
 .add-song-dialog__song-info {
@@ -93,20 +93,20 @@ onBeforeUnmount(() => {
 
 .add-song-dialog__song-title {
   margin: 0;
-  color: #303133;
+  color: var(--music-text);
   font-size: 14px;
   font-weight: 600;
 }
 
 .add-song-dialog__song-artist {
   margin: 4px 0 0;
-  color: #909399;
+  color: var(--music-muted);
   font-size: 12px;
 }
 
 .add-song-dialog__empty {
   padding: 16px 0;
-  color: #909399;
+  color: var(--music-muted);
   text-align: center;
 }
 </style>

@@ -126,7 +126,7 @@ const submitForm = async () => {
   box-sizing: border-box;
   min-height: 100%;
   padding: 32px 24px;
-  background: #f6f8fb;
+  background: var(--music-canvas);
 }
 
 .playlist-edit__layout {
@@ -140,8 +140,8 @@ const submitForm = async () => {
 
 .playlist-edit__form-card {
   padding: 28px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--music-surface);
+  border: 1px solid var(--music-border);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgb(15 23 42 / 6%);
 }
@@ -151,7 +151,7 @@ const submitForm = async () => {
   gap: 8px;
   align-items: center;
   margin: 0 0 24px;
-  color: #303133;
+  color: var(--music-text);
   font-size: 22px;
 }
 
@@ -166,7 +166,7 @@ const submitForm = async () => {
   width: 128px;
   height: 128px;
   overflow: hidden;
-  border: 2px dashed #cbd5e1;
+  border: 2px dashed var(--music-border);
   border-radius: 10px;
 }
 
@@ -199,14 +199,14 @@ const submitForm = async () => {
   height: 128px;
   align-items: center;
   justify-content: center;
-  color: #909399;
-  border: 2px dashed #cbd5e1;
+  color: var(--music-muted);
+  border: 2px dashed var(--music-border);
   border-radius: 10px;
   transition: border-color .2s ease;
 }
 
 .playlist-edit__upload-placeholder:hover {
-  border-color: #409eff;
+  border-color: var(--music-primary);
 }
 
 .playlist-edit__upload-hint {
@@ -215,7 +215,7 @@ const submitForm = async () => {
 }
 
 .playlist-edit__cover-hint {
-  color: #909399;
+  color: var(--music-muted);
   font-size: 12px;
   line-height: 1.7;
 }
@@ -238,7 +238,7 @@ const submitForm = async () => {
 
 .playlist-edit__preview-label {
   margin: 0;
-  color: #909399;
+  color: var(--music-muted);
   font-size: 13px;
   font-weight: 700;
   letter-spacing: .08em;
@@ -251,8 +251,8 @@ const submitForm = async () => {
 
 .playlist-edit__preview-card {
   overflow: hidden;
-  background: #fff;
-  border: 1px solid #e5e7eb;
+  background: var(--music-surface);
+  border: 1px solid var(--music-border);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgb(15 23 42 / 8%);
 }
@@ -312,7 +312,7 @@ const submitForm = async () => {
   align-items: center;
   justify-content: space-between;
   padding: 14px 16px;
-  background: #fff;
+  background: var(--music-surface);
 }
 
 .playlist-edit__preview-user {
@@ -322,16 +322,17 @@ const submitForm = async () => {
 }
 
 .playlist-edit__preview-avatar {
-  background: #409eff;
+  color: var(--music-on-primary);
+  background: var(--music-primary);
 }
 
 .playlist-edit__preview-username {
-  color: #606266;
+  color: var(--music-secondary);
   font-size: 12px;
 }
 
 .playlist-edit__preview-badge {
-  color: #909399;
+  color: var(--music-muted);
   font-size: 11px;
 }
 

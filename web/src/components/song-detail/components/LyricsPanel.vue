@@ -37,19 +37,19 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
 }
 
 .lyric-line {
-  font-size: 17px;
+  font-size: 19px;
   font-weight: 500;
   line-height: 1.6;
-  color: #a8abb2;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  color: var(--music-muted);
+  transition: color 240ms ease, transform 240ms ease;
   text-align: left;
-  padding: 12px 0;
+  padding: 16px 0;
   max-width: 100%;
 }
 
 .lyric-line.active {
-  color: #303133;
-  font-size: 22px;
+  color: var(--music-text);
+  font-size: 24px;
   font-weight: 700;
   opacity: 1;
   transform: translateX(10px);
@@ -58,7 +58,7 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
 .translation {
   font-size: 16px;
   margin-top: 4px;
-  color: #909399;
+  color: var(--music-muted);
 }
 
 .lyrics-empty {
@@ -67,7 +67,7 @@ const { lyrics, lyricsContainer, lyricRefs, currentLineIndex } = useLyricsScroll
   justify-content: center;
   align-items: center;
   font-size: 18px;
-  color: #909399;
+  color: var(--music-muted);
 }
 
 .scroll-spacer {

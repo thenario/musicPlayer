@@ -92,7 +92,7 @@ const handleSubmit = () => {
   justify-content: center;
   padding: 20px;
   box-sizing: border-box;
-  background: rgb(31 26 55 / 30%);
+  background: rgb(9 8 7 / 72%);
   backdrop-filter: blur(5px);
 }
 
@@ -101,9 +101,9 @@ const handleSubmit = () => {
   width: 100%;
   max-width: 480px;
   padding: 28px;
-  border: 1px solid #e4e6ed;
+  border: 1px solid var(--music-border);
   border-radius: 18px;
-  background: #fff;
+  background: var(--music-surface);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
   box-shadow: 0 24px 72px rgb(39 30 76 / 18%);
@@ -112,7 +112,7 @@ const handleSubmit = () => {
 
 .create-playlist-modal__title {
   margin: 0 0 22px;
-  color: #2d3340;
+  color: var(--music-text);
   font-size: 20px;
   font-weight: 700;
 }
@@ -127,7 +127,7 @@ const handleSubmit = () => {
 .create-playlist-modal__label--compact {
   display: block;
   margin-bottom: 7px;
-  color: #636b79;
+  color: var(--music-secondary);
   font-size: 13px;
   font-weight: 600;
 }
@@ -137,16 +137,16 @@ const handleSubmit = () => {
   width: 112px;
   height: 112px;
   overflow: hidden;
-  border: 1px dashed #c9cdd7;
+  border: 1px dashed var(--music-border);
   border-radius: 10px;
   cursor: pointer;
-  background: #f7f8fa;
+  background: var(--music-canvas);
   transition: border-color 160ms ease, background 160ms ease;
 }
 
 .create-playlist-modal__cover:hover {
-  border-color: #8176d1;
-  background: #faf9ff;
+  border-color: var(--music-primary);
+  background: var(--music-hover);
 }
 
 .create-playlist-modal__cover-img {
@@ -160,7 +160,7 @@ const handleSubmit = () => {
   height: 100%;
   align-items: center;
   justify-content: center;
-  color: #9299a7;
+  color: var(--music-muted);
   font-size: 26px;
   font-weight: 300;
 }
@@ -170,12 +170,12 @@ const handleSubmit = () => {
   box-sizing: border-box;
   width: 100%;
   padding: 10px 12px;
-  border: 1px solid #dfe2e9;
+  border: 1px solid var(--music-border);
   border-radius: 10px;
   outline: none;
-  color: #343a47;
+  color: var(--music-text);
   font: inherit;
-  background: #fff;
+  background: var(--music-surface);
   transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
@@ -185,8 +185,8 @@ const handleSubmit = () => {
 
 .create-playlist-modal__input:focus,
 .create-playlist-modal__textarea:focus {
-  border-color: #8176d1;
-  box-shadow: 0 0 0 3px rgb(98 86 197 / 12%);
+  border-color: var(--music-primary);
+  box-shadow: 0 0 0 3px rgb(var(--music-primary-rgb) / 12%);
 }
 
 .create-playlist-modal__footer {
@@ -202,22 +202,22 @@ const handleSubmit = () => {
   padding: 9px 16px;
   border: 1px solid transparent;
   border-radius: 8px;
-  color: #707887;
+  color: var(--music-secondary);
   font: inherit;
   cursor: pointer;
   background: transparent;
 }
 
 .create-playlist-modal__cancel:hover {
-  color: #343a47;
-  background: #f3f4f7;
+  color: var(--music-text);
+  background: var(--music-raised);
 }
 
 .create-playlist-modal__submit {
   padding: 9px 16px;
   border: 0;
   border-radius: 8px;
-  color: #fff;
+  color: var(--music-on-primary);
   font: inherit;
   font-weight: 600;
   cursor: pointer;
@@ -226,7 +226,7 @@ const handleSubmit = () => {
 }
 
 .create-playlist-modal__submit:hover {
-  background: #5549b7;
+  background: var(--music-primary-hover);
 }
 
 .create-playlist-modal__submit:disabled {

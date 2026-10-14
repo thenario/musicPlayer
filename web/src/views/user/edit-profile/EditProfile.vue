@@ -81,7 +81,7 @@ const goBack = () => {
     align-items: center;
     justify-content: center;
     padding: 32px 24px;
-    background: #f7f8fa;
+    background: var(--music-canvas);
 }
 
 .profile-form {
@@ -89,12 +89,12 @@ const goBack = () => {
     width: 100%;
     max-width: 440px;
     overflow: hidden;
-    border: 1px solid #e6e8ee;
+    border: 1px solid var(--music-border);
 }
 
 .profile-form__banner {
     height: 96px;
-    background: linear-gradient(125deg, #6256c5, #8176d1);
+    background: linear-gradient(125deg, var(--music-primary), var(--music-primary));
 }
 
 .profile-form__body {
@@ -115,15 +115,15 @@ const goBack = () => {
     position: relative;
     padding: 4px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--music-surface);
     box-shadow: 0 4px 12px rgb(37 42 56 / 14%);
 }
 
 .profile-form__avatar {
-    color: #6256c5;
+    color: var(--music-primary);
     font-size: 28px;
     font-weight: 700;
-    background: #f0effb;
+    background: var(--music-primary-soft);
 }
 
 .profile-form__overlay {
@@ -159,7 +159,7 @@ const goBack = () => {
 
 .profile-form__title {
     margin: 0 0 22px;
-    color: #303542;
+    color: var(--music-text);
     font-size: 20px;
     font-weight: 700;
 }
@@ -185,11 +185,11 @@ const goBack = () => {
 /* 输入框圆角优化 */
 :deep(.custom-input .el-input__wrapper) {
     border-radius: 10px;
-    box-shadow: 0 0 0 1px #e5e7eb inset;
+    box-shadow: 0 0 0 1px var(--music-border) inset;
 }
 
 :deep(.custom-input .el-input__wrapper.is-focus) {
-    box-shadow: 0 0 0 1px #6366f1 inset !important;
+    box-shadow: 0 0 0 1px var(--music-primary) inset !important;
 }
 
 /* 主保存按钮（延续渐变风格） */
@@ -197,13 +197,13 @@ const goBack = () => {
     height: 44px;
     border: 0;
     border-radius: 8px;
-    background: #6256c5;
+    background: var(--music-primary);
     font-weight: 600;
     font-size: 0.95rem;
 }
 
 .save-btn:hover {
-    background: #5549b7;
+    background: var(--music-primary-hover);
 }
 
 /* 取消按钮 */
@@ -211,13 +211,13 @@ const goBack = () => {
     height: 44px;
     border-radius: 8px;
     font-weight: 500;
-    border-color: #e5e7eb;
-    color: #6b7280;
+    border-color: var(--music-border);
+    color: var(--music-secondary);
 }
 
 .cancel-btn:hover {
-    background-color: #f7f6ff;
-    color: #6256c5;
-    border-color: #aaa2df;
+    background-color: var(--music-hover);
+    color: var(--music-primary);
+    border-color: var(--music-primary-hover);
 }
 </style>

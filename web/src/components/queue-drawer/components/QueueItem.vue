@@ -58,11 +58,11 @@ const emit = defineEmits<{
 }
 
 .queue-item:hover {
-  background: #f4f3ff;
+  background: var(--music-hover);
 }
 
 .queue-item--active {
-  background: #efedff;
+  background: var(--music-primary-soft);
 }
 
 .queue-item__icon-col {
@@ -75,7 +75,7 @@ const emit = defineEmits<{
 }
 
 .queue-item__handle {
-  color: #a0a6b2; cursor: grab; opacity: 0; transition: opacity .2s ease;
+  color: var(--music-muted); cursor: grab; opacity: 0; transition: opacity .2s ease;
 }
 
 .queue-item:hover .queue-item__handle {
@@ -83,11 +83,11 @@ const emit = defineEmits<{
 }
 
 .queue-item__handle:hover {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .queue-item__status {
-  position: absolute; color: #6256c5;
+  position: absolute; color: var(--music-primary);
 }
 
 .queue-item__title-col {
@@ -103,15 +103,15 @@ const emit = defineEmits<{
 }
 
 .queue-item__title--inactive {
-  color: #353a46;
+  color: var(--music-text);
 }
 
 .queue-item__title--active {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .queue-item__artist {
-  overflow: hidden; color: #969cab; font-size: 11px; text-overflow: ellipsis; white-space: nowrap;
+  overflow: hidden; color: var(--music-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap;
 }
 
 .queue-item__action-col {
@@ -138,14 +138,14 @@ const emit = defineEmits<{
   display: inline-block;
   width: 12px;
   height: 12px;
-  background: #6256c5;
+  background: var(--music-primary);
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect width='3' height='15' x='1' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='10.5' y='4.5'%3E%3Canimate attributeName='y' values='1;4.5;1' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='22;15;22' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3Crect width='3' height='15' x='20' y='4.5'%3E%3Canimate attributeName='y' values='4.5;1;4.5' dur='0.6s' repeatCount='indefinite'/%3E%3Canimate attributeName='height' values='15;22;15' dur='0.6s' repeatCount='indefinite'/%3E%3C/rect%3E%3C/svg%3E");
 }
 
 @media (prefers-reduced-motion: reduce) {
   .playing-bar-animation {
     mask: none;
-    background: repeating-linear-gradient(to right, #6256c5 0 3px, transparent 3px 5px);
+    background: repeating-linear-gradient(to right, var(--music-primary) 0 3px, transparent 3px 5px);
   }
 }
 </style>

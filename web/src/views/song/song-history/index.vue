@@ -92,8 +92,8 @@ onActivated(refreshHistory)
     display: flex;
     flex-direction: column;
     padding: 24px;
-    color: #20232d;
-    background: #f7f8fa;
+    color: var(--music-text);
+    background: var(--music-canvas);
 }
 
 .history-header {
@@ -113,7 +113,7 @@ onActivated(refreshHistory)
 
 .history-header-button {
     font-size: 24px;
-    color: #6256c5;
+    color: var(--music-primary);
 }
 
 .history-content {
@@ -121,9 +121,9 @@ onActivated(refreshHistory)
     min-width: 0;
     min-height: 0;
     overflow: hidden;
-    border: 1px solid #e8eaef;
+    border: 1px solid var(--music-border);
     border-radius: 12px;
-    background: #ffffff;
+    background: var(--music-surface);
 }
 
 @media (max-width: 640px) {

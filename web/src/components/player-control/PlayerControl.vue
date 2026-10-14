@@ -103,25 +103,23 @@ const runAction = async (action: () => ActionResult | Promise<ActionResult>) => 
   height: 48px;
   align-items: center;
   justify-content: center;
-  color: #fff;
+  color: var(--music-on-primary);
   background: var(--music-primary);
+  border: 0;
+  cursor: pointer;
   border-radius: 50%;
-  box-shadow: 0 5px 14px rgb(109 91 208 / 23%);
+  box-shadow: 0 5px 14px rgb(var(--music-primary-rgb) / 23%);
   transition: transform .2s ease, box-shadow .2s ease, background .2s ease;
 }
 
 .player-control__play-btn:hover {
   transform: translateY(-2px) scale(1.03);
-  background: #5c49bd;
-  box-shadow: 0 7px 18px rgb(109 91 208 / 30%);
+  background: var(--music-primary-hover);
+  box-shadow: 0 7px 18px rgb(var(--music-primary-rgb) / 30%);
 }
 
 .player-control__play-btn:active {
   transform: scale(0.96);
-}
-
-.player-control__play-btn:active {
-  transform: scale(.95);
 }
 
 .ctrl-btn--skip {
@@ -135,7 +133,7 @@ const runAction = async (action: () => ActionResult | Promise<ActionResult>) => 
 
 .ctrl-btn {
   padding: 7px;
-  color: #606266;
+  color: var(--music-secondary);
   cursor: pointer;
   background: transparent;
   border: 0;

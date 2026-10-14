@@ -146,7 +146,7 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
   display: flex;
   flex-direction: column;
   height: 100%;
-  color: #20232d;
+  color: var(--music-text);
   font-family: inherit;
   background: var(--music-canvas);
 }
@@ -159,7 +159,7 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
   justify-content: space-between;
   gap: 16px;
   padding: 0 20px;
-  background: #ffffff;
+  background: var(--music-surface);
   border-bottom: 1px solid var(--music-border);
 }
 
@@ -178,8 +178,8 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 .queue-drawer__count {
   padding: 4px 8px;
   border-radius: 6px;
-  color: #8b82a4;
-  background: #f6f3fd;
+  color: var(--music-muted);
+  background: var(--music-primary-soft);
   font-size: 12px;
   letter-spacing: -.01em;
 }
@@ -202,12 +202,12 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 
 :deep(.queue-drawer-container .el-drawer__body) {
   padding: 0;
-  background: #f7f8fa;
+  background: var(--music-canvas);
 }
 
 .drag-ghost {
   opacity: 0.5;
-  background: #e9e7ff !important;
+  background: var(--music-primary-soft) !important;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -215,15 +215,15 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cfd3dc;
+  background: var(--music-border);
   border-radius: 10px;
 }
 
 .custom-segmented {
-  --el-segmented-bg-color: #f3f0fa;
+  --el-segmented-bg-color: var(--music-primary-soft);
   --el-segmented-item-selected-bg-color: var(--music-primary);
-  --el-segmented-item-selected-color: #fff;
-  --el-segmented-item-color: #717784;
+  --el-segmented-item-selected-color: var(--music-on-primary);
+  --el-segmented-item-color: var(--music-secondary);
 }
 
 @media (max-width: 480px) {
@@ -246,6 +246,6 @@ onMounted(() => { void loadQueues().then(logBackgroundFailure) })
 }
 
 :deep(.queue-drawer-container .el-empty__description p) {
-  color: #8b91a0;
+  color: var(--music-muted);
 }
 </style>

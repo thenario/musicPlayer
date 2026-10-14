@@ -59,9 +59,9 @@ const logout = async () => {
 
 <style scoped>
 .navbar-menu {
-  background-color: #1f2937;
+  background-color: var(--music-inset);
   /* gray-800 */
-  border-bottom: 1px solid #374151;
+  border-bottom: 1px solid var(--music-border);
   /* gray-700 */
   align-items: center;
   padding: 0 20px;
@@ -110,7 +110,8 @@ const logout = async () => {
 }
 
 .navbar-avatar {
-  background: #409eff;
+  color: var(--music-on-primary);
+  background: var(--music-primary);
 }
 
 .navbar-item-label--logo {
@@ -120,7 +121,7 @@ const logout = async () => {
 }
 
 .navbar-logout {
-  color: #f56c6c;
+  color: var(--el-color-danger);
 }
 
 .navbar-register {

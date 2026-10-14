@@ -92,7 +92,7 @@ const goToMyUploadSongs = () => {
 .profile-page__banner {
   height: 128px;
   color: #fff;
-  background: linear-gradient(125deg, #6256a9, #9b8cce);
+  background: linear-gradient(110deg, #453324, #26211b);
 }
 
 .profile-page__banner-content {
@@ -141,7 +141,7 @@ const goToMyUploadSongs = () => {
 
 .profile-page__identity,
 .profile-page__section {
-  background: #fff;
+  background: var(--music-surface);
   border: 1px solid var(--music-border);
   border-radius: 16px;
   box-shadow: var(--music-shadow);
@@ -157,15 +157,15 @@ const goToMyUploadSongs = () => {
 .profile-page__avatar-ring {
   padding: 4px;
   border-radius: 50%;
-  background: #fff;
+  background: var(--music-surface);
   box-shadow: 0 4px 12px rgb(37 42 56 / 12%);
 }
 
 .profile-page__avatar {
-  color: #6256c5;
+  color: var(--music-primary);
   font-size: 28px;
   font-weight: 700;
-  background: #f0effb;
+  background: var(--music-primary-soft);
 }
 
 .profile-page__info {
@@ -175,7 +175,7 @@ const goToMyUploadSongs = () => {
 .profile-page__name {
   margin: 0;
   overflow: hidden;
-  color: #2d3340;
+  color: var(--music-text);
   font-size: 22px;
   font-weight: 700;
   letter-spacing: -0.02em;
@@ -186,7 +186,7 @@ const goToMyUploadSongs = () => {
 .profile-page__email {
   margin: 6px 0 0;
   overflow: hidden;
-  color: #9097a7;
+  color: var(--music-muted);
   font-size: 13px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -202,14 +202,14 @@ const goToMyUploadSongs = () => {
 
 .profile-page__section-title {
   margin: 0;
-  color: #303542;
+  color: var(--music-text);
   font-size: 18px;
   font-weight: 700;
 }
 
 .profile-page__section-desc {
   margin: 6px 0 0;
-  color: #858c9a;
+  color: var(--music-muted);
   font-size: 13px;
 }
 
@@ -225,18 +225,18 @@ const goToMyUploadSongs = () => {
   align-items: center;
   gap: 14px;
   padding: 16px;
-  border: 1px solid #e8eaf0;
+  border: 1px solid var(--music-border);
   border-radius: 10px;
   color: inherit;
   text-align: left;
   cursor: pointer;
-  background: #fff;
+  background: var(--music-surface);
   transition: border-color 160ms ease, background 160ms ease;
 }
 
 .profile-page__shortcut:hover {
-  border-color: #bcb5e8;
-  background: #faf9ff;
+  border-color: var(--music-primary-hover);
+  background: var(--music-hover);
 }
 
 .profile-page__shortcut-icon {
@@ -246,14 +246,14 @@ const goToMyUploadSongs = () => {
   flex: 0 0 auto;
   place-items: center;
   border-radius: 9px;
-  color: #6f7787;
-  background: #f1f3f7;
+  color: var(--music-secondary);
+  background: var(--music-raised);
   font-size: 19px;
 }
 
 .profile-page__shortcut-icon--primary {
-  color: #6256c5;
-  background: #f0effb;
+  color: var(--music-primary);
+  background: var(--music-primary-soft);
 }
 
 .profile-page__shortcut-text {
@@ -272,25 +272,25 @@ const goToMyUploadSongs = () => {
 }
 
 .profile-page__shortcut-text strong {
-  color: #3a404d;
+  color: var(--music-text);
   font-size: 14px;
   font-weight: 600;
 }
 
 .profile-page__shortcut-text small {
-  color: #9097a7;
+  color: var(--music-muted);
   font-size: 12px;
 }
 
 .profile-page__shortcut-arrow {
   flex: 0 0 auto;
-  color: #a0a6b4;
+  color: var(--music-muted);
   transition: transform 160ms ease, color 160ms ease;
 }
 
 .profile-page__shortcut:hover .profile-page__shortcut-arrow {
   transform: translateX(2px);
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 @media (max-width: 640px) {

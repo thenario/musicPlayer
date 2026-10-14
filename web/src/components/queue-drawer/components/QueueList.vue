@@ -56,12 +56,12 @@ const emit = defineEmits<{
 
 <style scoped>
 .queue-list__item {
-  display: flex; align-items: center; justify-content: space-between; padding: 14px; margin-bottom: 10px; cursor: pointer; background: #ffffff; border: 1px solid #e8eaef; border-radius: 10px; transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
+  display: flex; align-items: center; justify-content: space-between; padding: 14px; margin-bottom: 10px; cursor: pointer; background: var(--music-surface); border: 1px solid var(--music-border); border-radius: 10px; transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease;
 }
 
 .queue-list__item:hover {
-  background: #ffffff;
-  border-color: #d9d5ff;
+  background: var(--music-surface);
+  border-color: var(--music-primary-hover);
   box-shadow: 0 4px 14px rgb(38 35 78 / 7%);
 }
 
@@ -70,15 +70,15 @@ const emit = defineEmits<{
 }
 
 .queue-list__avatar {
-  display: flex; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center; background: #f1f0ff; border-radius: 8px;
+  display: flex; flex-shrink: 0; width: 40px; height: 40px; align-items: center; justify-content: center; background: var(--music-primary-soft); border-radius: 8px;
 }
 
 .queue-list__avatar-icon {
-  color: #969cab;
+  color: var(--music-muted);
 }
 
 .queue-list__avatar-icon--active {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .queue-list__meta {
@@ -90,11 +90,11 @@ const emit = defineEmits<{
 }
 
 .queue-list__name.is-active {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .queue-list__count {
-  color: #969cab; font-size: 11px;
+  color: var(--music-muted); font-size: 11px;
 }
 
 .queue-list__actions {

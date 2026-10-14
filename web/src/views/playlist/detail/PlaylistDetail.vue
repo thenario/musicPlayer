@@ -160,8 +160,8 @@ const deletePlaylistAction = async () => {
   flex-direction: column;
   height: 100%;
   min-height: 0;
-  background: #f6f8fb;
-  color: #303133;
+  background: var(--music-canvas);
+  color: var(--music-text);
 }
 
 .playlist-detail__loading {
@@ -183,18 +183,18 @@ const deletePlaylistAction = async () => {
 }
 
 :deep(.song-row:hover) {
-  background-color: #f0f7ff !important;
+  background-color: var(--music-hover) !important;
   cursor: default;
 }
 
 :deep(.playlist-table) {
   --el-table-bg-color: #fff;
   --el-table-tr-bg-color: #fff;
-  --el-table-header-bg-color: #f8fafc;
-  --el-table-border-color: #ebeef5;
-  --el-table-text-color: #303133;
-  --el-table-header-text-color: #606266;
-  border: 1px solid #ebeef5;
+  --el-table-header-bg-color: var(--music-canvas);
+  --el-table-border-color: var(--music-border);
+  --el-table-text-color: var(--music-text);
+  --el-table-header-text-color: var(--music-secondary);
+  border: 1px solid var(--music-border);
   border-radius: 12px;
   overflow: hidden;
 }

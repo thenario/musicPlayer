@@ -70,8 +70,8 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  color: #303133;
-  background: radial-gradient(ellipse at 20% 25%, #eeebf8, transparent 55%), var(--music-canvas);
+  color: var(--music-text);
+  background: radial-gradient(ellipse at 20% 45%, #30261d, transparent 60%), var(--music-canvas);
 }
 
 .detail-header {
@@ -81,7 +81,7 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   align-items: center;
   padding: 0 32px;
   flex-shrink: 0;
-  background: rgb(255 255 255 / 90%);
+  background: rgb(25 23 20 / 90%);
   border-bottom: 1px solid var(--music-border);
   backdrop-filter: blur(16px);
 }
@@ -107,7 +107,7 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   justify-content: center;
   gap: 8px;
   font-size: 13px;
-  color: #909399;
+  color: var(--music-muted);
 }
 
 .sub-artist {
@@ -117,7 +117,7 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 .detail-content {
   flex: 1;
   display: flex;
-  gap: 32px;
+  gap: 64px;
   max-width: 1120px;
   width: calc(100% - 64px);
   margin: 0 auto;
@@ -139,10 +139,8 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   align-self: stretch;
   min-height: 0;
   padding: 12px 28px;
-  background: #fff;
-  border: 1px solid var(--music-border);
-  border-radius: 24px;
-  box-shadow: var(--music-shadow);
+  background: transparent;
+  border-left: 1px solid var(--music-border);
 }
 
 .detail-footer {
@@ -151,12 +149,12 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   justify-content: center;
   padding: 14px 10%;
   flex-shrink: 0;
-  background: #fff;
-  border-top: 1px solid #e5e7eb;
+  background: var(--music-surface);
+  border-top: 1px solid var(--music-border);
 }
 
 .player-control-container :deep(.ctrl-btn) {
-  color: #606266;
+  color: var(--music-secondary);
 }
 
 .player-control-container :deep(.ctrl-btn:hover) {
@@ -164,17 +162,17 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .player-control-container :deep(.player-control__play-btn) {
-  color: #fff;
+  color: var(--music-on-primary);
   background: var(--music-primary);
-  box-shadow: 0 5px 12px rgb(109 91 208 / 25%);
+  box-shadow: 0 5px 12px rgb(var(--music-primary-rgb) / 25%);
 }
 
 .player-control-container :deep(.progress-bar__track) {
-  background: #dcdfe6;
+  background: var(--music-border);
 }
 
 .player-control-container :deep(.progress-bar__buffer) {
-  background: #c0c4cc;
+  background: var(--music-muted);
 }
 
 .player-control-container :deep(.progress-bar__played) {
@@ -182,12 +180,12 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
 }
 
 .player-control-container :deep(.progress-bar__time) {
-  color: #909399;
+  color: var(--music-muted);
 }
 
 .slide-up-enter-active,
 .slide-up-leave-active {
-  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: transform 0.25s cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 .slide-up-enter-from,
@@ -201,10 +199,10 @@ const currentSongCover = computed(() => getImageUrl(currentSong.value?.song_cove
   height: 38px;
   align-items: center;
   justify-content: center;
-  color: #606266;
+  color: var(--music-secondary);
   cursor: pointer;
-  background: #f5f7fa;
-  border: 1px solid #ebeef5;
+  background: var(--music-canvas);
+  border: 1px solid var(--music-border);
   border-radius: 10px;
   transition: color .2s ease, background-color .2s ease, transform .2s ease;
 }

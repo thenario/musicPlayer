@@ -1,5 +1,5 @@
 <template>
-  <el-table ref="tableRef" v-loading="loading" element-loading-background="rgba(255, 255, 255, 0.72)" :data="songs" style="width: 100%"
+  <el-table ref="tableRef" v-loading="loading" element-loading-background="rgba(23, 22, 21, 0.8)" :data="songs" style="width: 100%"
     height="100%" row-class-name="song-row" @row-dblclick="onRowDblClick" class="all-songs-table">
     <el-table-column label="标题" min-width="220" show-overflow-tooltip>
       <template #default="{ row }">
@@ -80,28 +80,28 @@ defineExpose({ scrollToTop })
 
 <style scoped>
 .all-songs-table {
-  --el-table-border-color: #eef0f4;
-  --el-table-header-bg-color: #fcfbff;
-  --el-table-header-text-color: #7b8190;
-  --el-table-row-hover-bg-color: #f7f5fe;
-  --el-table-text-color: #4f5563;
+  --el-table-border-color: var(--music-raised);
+  --el-table-header-bg-color: var(--music-hover);
+  --el-table-header-text-color: var(--music-muted);
+  --el-table-row-hover-bg-color: var(--music-hover);
+  --el-table-text-color: var(--music-secondary);
 }
 
 :deep(.el-table__header-wrapper th.el-table__cell) {
-  height: 46px;
+  height: 48px;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.03em;
 }
 
 :deep(.el-table__body-wrapper td.el-table__cell) {
-  height: 64px;
-  border-bottom-color: #f0f1f4;
+  height: 74px;
+  border-bottom-color: var(--music-border);
   transition: background-color 160ms ease;
 }
 
 :deep(.song-table__album) {
-  color: #8b91a0;
+  color: var(--music-muted);
 }
 
 .song-table__title-cell {
@@ -112,15 +112,15 @@ defineExpose({ scrollToTop })
 }
 
 .song-table__cover {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   display: grid;
   flex-shrink: 0;
   overflow: hidden;
   place-items: center;
-  border: 1px solid #eceef3;
-  border-radius: 11px;
-  background: #f2f3f6;
+  border: 1px solid var(--music-border);
+  border-radius: 5px;
+  background: var(--music-raised);
   box-shadow: 0 3px 8px rgb(39 35 76 / 6%);
 }
 
@@ -131,7 +131,7 @@ defineExpose({ scrollToTop })
 }
 
 .song-table__cover-icon {
-  color: #9aa0ad;
+  color: var(--music-muted);
 }
 
 .song-table__title-wrap {
@@ -140,7 +140,7 @@ defineExpose({ scrollToTop })
 
 .song-table__title {
   overflow: hidden;
-  color: #2d3340;
+  color: var(--music-text);
   font-size: 14px;
   font-weight: 600;
   text-overflow: ellipsis;
@@ -148,20 +148,20 @@ defineExpose({ scrollToTop })
 }
 
 .song-table__title.is-active {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .song-table__artist {
   overflow: hidden;
   margin-top: 3px;
-  color: #969cab;
+  color: var(--music-muted);
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .song-table__duration {
-  color: #969cab;
+  color: var(--music-muted);
   font-size: 13px;
   font-variant-numeric: tabular-nums;
 }
@@ -172,11 +172,15 @@ defineExpose({ scrollToTop })
   justify-content: flex-end;
   gap: 8px;
   padding-right: 4px;
-  opacity: 0.65;
+  opacity: 0;
   transition: opacity 160ms ease;
 }
 
 :deep(.song-row:hover .song-table__action-bar) {
+  opacity: 1;
+}
+
+.song-table__action-bar:focus-within {
   opacity: 1;
 }
 
@@ -195,19 +199,19 @@ defineExpose({ scrollToTop })
 
 .action-icon:hover {
   transform: translateY(-1px);
-  background: #eeebfb;
+  background: var(--music-primary-soft);
 }
 
 .song-table__play-icon:hover {
-  color: #6256c5;
+  color: var(--music-primary);
 }
 
 .song-table__next-icon {
-  color: #9097a7;
+  color: var(--music-muted);
 }
 
 .song-table__next-icon:hover {
-  color: #4f5563;
+  color: var(--music-secondary);
 }
 
 @media (hover: none) {

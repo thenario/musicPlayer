@@ -31,7 +31,7 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
 }
 
 .progress-bar__time {
-  width: 40px; color: #928ca5; font-family: inherit; font-size: 11px; font-variant-numeric: tabular-nums;
+  width: 40px; color: var(--music-muted); font-family: inherit; font-size: 11px; font-variant-numeric: tabular-nums;
 }
 
 .progress-bar__time--current {
@@ -43,15 +43,19 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
 }
 
 .progress-bar__track {
-  position: absolute; width: 100%; height: 4px; background: #e9e5f2; border-radius: 999px;
+  position: absolute; width: 100%; height: 3px; background: var(--music-raised); border-radius: 999px;
 }
 
 .progress-bar__buffer {
-  position: absolute; height: 4px; background: #cfc6ea; border-radius: 999px; transition: width .3s ease;
+  position: absolute; height: 3px; background: #655441; border-radius: 999px; transition: width .3s ease;
 }
 
 .progress-bar__played {
-  position: absolute; height: 4px; background: var(--music-primary); border-radius: 999px;
+  position: absolute; height: 3px; background: var(--music-primary); border-radius: 999px;
+}
+
+.progress-bar__track-wrap:hover :is(.progress-bar__track, .progress-bar__buffer, .progress-bar__played) {
+  height: 5px;
 }
 
 .custom-range {
@@ -75,7 +79,7 @@ const { sliderValue, safeDuration, bufferPercent, handleSeekInput, handleSeekCha
   background: var(--music-primary);
   cursor: pointer;
   margin-top: -4px;
-  box-shadow: 0 2px 6px rgb(109 91 208 / 25%);
+  box-shadow: 0 2px 6px rgb(var(--music-primary-rgb) / 25%);
   opacity: 0;
   transition: opacity 0.2s;
 }
