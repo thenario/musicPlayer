@@ -37,19 +37,19 @@ public class QueuesServiceImpl implements QueuesService {
     private final QueuesWorkflow queuesWorkflow;
 
     @Override
-    @Cacheable(cacheNames = "user-queues", key = "#userId + ':' +'current'")
+    @Cacheable(cacheNames = "user-queues", key = "#userId + ':' +'current'", unless = "#result == null")
     public CurrentQueueVO getCurrentQueue(Long userId) {
         return queuesWorkflow.getCurrentQueue(userId);
     }
 
     @Override
-    @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + 'all-queues'")
+    @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + 'all-queues'",unless = "#result == null")
     public MyQueuesVO getMyQueues(Long userId) {
         return queuesWorkflow.getMyQueues(userId);
     }
 
     @Override
-    @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + #queueId")
+    @Cacheable(cacheNames = "user-queues", key = "#userId + ':' + #queueId", unless = "#result == null")
     public SingleQueueVO getQueueById(Long userId, Long queueId) {
         return queuesWorkflow.getQueueById(userId, queueId);
     }

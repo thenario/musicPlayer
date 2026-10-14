@@ -68,7 +68,7 @@ public class PlaylistsServiceImpl implements PlaylistsService {
     }
 
     @Override
-    @Cacheable(cacheNames = "user-playlists", key = "#userId")
+    @Cacheable(cacheNames = "user-playlists", key = "#userId", unless = "#result == null")
     public MyPlaylistsVO getMyPlaylists(Long userId) {
         if (userId == null)
             throw new BusinessException(401, "请先登录");

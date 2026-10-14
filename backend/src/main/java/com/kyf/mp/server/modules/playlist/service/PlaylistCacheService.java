@@ -19,7 +19,7 @@ public class PlaylistCacheService {
 
     private final PlaylistsWorkflow playlistsWorkflow;
 
-    @Cacheable(cacheNames = "playlist-detail", key = "#playlistId")
+    @Cacheable(cacheNames = "playlist-detail", key = "#playlistId", unless = "#result == null")
     public PlaylistContentVO getPlaylistContent(Long playlistId) {
         return playlistsWorkflow.getPlaylistContent(playlistId);
     }
