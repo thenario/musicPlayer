@@ -16,7 +16,6 @@ interface QueueServiceContext {
   prepareAudioSource: (songId: number | string, savedProgress: number) => void
 }
 
-/** 内部组合操作显式抛出子步骤失败，对外动作统一返回 ActionResult。 */
 export function createQueueService(ctx: QueueServiceContext) {
   const updateQueueData = (queue: IQueue) => {
     ctx.currentQueue.value = [...(queue.queue_items ?? [])]

@@ -370,7 +370,6 @@ public class QueuesWorkflow {
         queueItemsRepository.insert(newItem);
         queueCustomRepository.restoreShiftedItemPositions(finalQueueId, insertPos);
 
-        // mode=true 表示立即播放；下一首播放仅调整队列顺序。
         if (mode || !hasState || context.isNewQueue()) {
             if (playState == null) {
                 playState = new PlayState();

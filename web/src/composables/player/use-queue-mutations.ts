@@ -16,17 +16,12 @@ export interface QueueMutationsContext {
   userQueues: Ref<IQueue[]>
   currentIndex: Ref<number>
   currentSong: Ref<ISong | null>
-  /** 从队列移除当前播放歌曲后，切换到下一首 / 停止 */
   playAtIndex: (index: number) => Promise<ActionResult>
   stopPlayback: () => void
 }
 
-/**
- * 队列变更：乐观增删（tempId + 回滚）、排序、乱序、删除计数。
- * 通过 context 读写共享队列状态；删除当前歌曲时回调 playAtIndex/stopPlayback。
- */
+
 export function createQueueMutations(ctx: QueueMutationsContext) {
-  /** 队列项位置使用 1 基连续序号；currentIndex 仍保持 0 基数组下标。 */
   const normalizeQueuePositions = () => {
     ctx.currentQueue.value.forEach((item, index) => {
       item.queue_item_position = index + 1
@@ -126,7 +121,6 @@ export function createQueueMutations(ctx: QueueMutationsContext) {
     }
   }
 
-  /** mode=true 为立即播放；两种模式都会插入到当前歌曲之后。 */
   const addToQueue = async (song: ISong, playImmediately = false): Promise<ActionResult<{ targetIndex: number }>> => {
     if (!song?.song_id) return { success: false, message: '歌曲信息无效' }
 

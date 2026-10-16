@@ -81,11 +81,10 @@
         #{queueId} AND q.creator_id = #{userId} ORDER BY qi.queue_item_position ASC </select>
 
     <update id="moveItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position =
-        queue_item_position + 1000000 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} </update>
+        -queue_item_position WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} </update>
 
     <update id="restoreShiftedItemPositions"> UPDATE queue_items SET queue_item_position =
-        queue_item_position - 999999 WHERE queue_id = #{queueId} AND queue_item_position >= #{pos} +
-        1000000 </update>
+        -queue_item_position + 1 WHERE queue_id = #{queueId} AND queue_item_position &lt;= -#{pos} </update>
 
     <update id="incrementSongCount"> UPDATE queues SET song_count = song_count + 1 WHERE queue_id =
         #{queueId} </update>
@@ -96,7 +95,8 @@
         q.updated_date DESC, qi.queue_item_position ASC </select>
 
     <update id="shiftPositionsDown"> UPDATE queue_items SET queue_item_position =
-        queue_item_position - 1 WHERE queue_id = #{queueId} AND queue_item_position > #{pos} </update>
+        queue_item_position - 1 WHERE queue_id = #{queueId} AND queue_item_position > #{pos}
+        ORDER BY queue_item_position ASC </update>
 
     <update id="decrementSongCount"> UPDATE queues SET song_count = GREATEST(song_count - 1, 0)
         WHERE queue_id = #{queueId} </update>
@@ -109,7 +109,7 @@
     </update>
 
     <update id="moveAllItemPositionsToTemporary"> UPDATE queue_items SET queue_item_position =
-        queue_item_position + 1000000 WHERE queue_id = #{queueId} </update>
+        -queue_item_position WHERE queue_id = #{queueId} </update>
 
     <update id="syncPlayStatePosition"> UPDATE play_state ps JOIN queue_items qi ON
         ps.current_song_id = qi.song_id AND ps.current_queue_id = qi.queue_id SET
