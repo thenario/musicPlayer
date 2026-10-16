@@ -60,7 +60,7 @@ mybatis-plus:
 song:
   page-size: ${SONG_PAGE_SIZE:15}
   scanner:
-    enabled: ${SONG_SCANNER_ENABLED:false}
+    enabled: ${SONG_SCANNER_ENABLED:true}
     uploader-id: ${SONG_SCANNER_UPLOADER_ID:0}
     remove-missing: ${SONG_SCANNER_REMOVE_MISSING:false}
 
