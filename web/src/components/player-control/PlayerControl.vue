@@ -6,6 +6,10 @@
           <path v-if="playerStore.playMode === 'repeat_one'" stroke-linecap="round" stroke-linejoin="round"
             stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          <path v-else-if="playerStore.playMode === 'shuffle'" stroke-linecap="round" stroke-linejoin="round"
+            stroke-width="2" d="M3 7h3l12 10h3m-4-4 4 4-4 4M3 17h3l12-10h3m-4-4 4 4-4 4" />
+          <path v-else-if="playerStore.playMode === 'repeat_all'" stroke-linecap="round" stroke-linejoin="round"
+            stroke-width="2" d="M17 2l4 4-4 4M3 11V8a2 2 0 0 1 2-2h16M7 22l-4-4 4-4m14-1v3a2 2 0 0 1-2 2H3" />
           <path v-else stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
         </svg>

@@ -8,8 +8,15 @@
         <p class="page__subtitle">找到喜欢的旋律，双击歌曲即可播放</p>
       </div>
       <div class="page__search">
-        <el-input v-model="searchKeyword" placeholder="搜索歌名、歌手或专辑..." :prefix-icon="Search" clearable
-          class="custom-search-input" @input="debouncedSearch" />
+        <el-input v-model="searchKeyword" placeholder="搜索歌名、歌手或专辑..." clearable
+          class="custom-search-input" @input="debouncedSearch" @keydown.enter="handleSearchKeydown">
+          <template #prefix>
+            <button type="button" class="search-button" aria-label="搜索歌曲" title="搜索歌曲"
+              @click="handleSearch" @keydown.enter.stop>
+              <el-icon><Search /></el-icon>
+            </button>
+          </template>
+        </el-input>
       </div>
     </div>
 
@@ -42,7 +49,7 @@ import { reportError } from '@/utils/feedback'
 const playerStore = usePlayerStore()
 const { currentSong } = storeToRefs(playerStore)
 
-const { songs, searchKeyword, loading, pagination, changePage, load } = useSongList()
+const { songs, searchKeyword, loading, pagination, changePage, load, search } = useSongList()
 
 const songTableRef = ref<InstanceType<typeof SongTable> | null>(null)
 
@@ -60,10 +67,24 @@ const handlePlayNext = async (song: ISong) => {
   }
 }
 
-const debouncedSearch = debounce(() => {
-  pagination.change(1)
-  void load().then((result) => { if (!result.success) reportError(result) })
-}, 500)
+const performSearch = async () => {
+  const result = await search()
+  if (!result.success) reportError(result)
+}
+
+const debouncedSearch = debounce(performSearch, 500)
+
+const handleSearch = () => {
+  debouncedSearch.cancel()
+  return performSearch()
+}
+
+const handleSearchKeydown = (event: Event | KeyboardEvent) => {
+  if (!(event instanceof KeyboardEvent)) return
+  if (event.isComposing || event.repeat) return
+  event.preventDefault()
+  void handleSearch()
+}
 
 const handlePageChange = async (page: number, pageSize: number) => {
   const result = await changePage(page, pageSize)
@@ -126,6 +147,23 @@ onBeforeUnmount(() => {
 
 .page__search {
   width: min(360px, 100%);
+}
+
+.search-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+
+.search-button:hover,
+.search-button:focus-visible {
+  color: var(--music-primary);
 }
 
 .custom-search-input :deep(.el-input__wrapper) {

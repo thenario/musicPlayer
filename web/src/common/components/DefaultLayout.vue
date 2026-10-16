@@ -120,7 +120,6 @@
             <router-view />
             <PlayerBar />
             <QueueDrawer />
-            <SongDetail />
         </el-main>
     </el-container>
 </template>
@@ -389,7 +388,6 @@ const handleCommand = async (command: string) => {
     justify-content: center;
 }
 
-/* 折叠菜单多一层 tooltip 触发容器，需要同时清除其默认的 20px 内边距。 */
 :deep(.sidebar-menu.el-menu--collapse .el-menu-tooltip__trigger) {
     padding: 0;
     justify-content: center;
