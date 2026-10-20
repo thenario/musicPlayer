@@ -64,12 +64,20 @@ describe('useEditUpload', () => {
     const edit = useEditUpload(1)
     edit.formRef.value = { validate: vi.fn().mockResolvedValue(undefined) } as never
     edit.formData.song_name = 'Updated'
+    edit.formData.artist = 'Updated artist'
+    edit.formData.album = 'Updated album'
     edit.formData.lyrics = 'lyrics'
     edit.formData.t_lyrics = 'translated'
     editUserUploadSongs.mockResolvedValue({ success: true })
 
     await expect(edit.save()).resolves.toEqual({ success: true, message: '修改成功' })
     expect(editUserUploadSongs).toHaveBeenCalledWith(expect.any(FormData), 1)
+    const submitted = editUserUploadSongs.mock.calls[0]![0] as FormData
+    expect(submitted.get('song_name')).toBe('Updated')
+    expect(submitted.get('artist')).toBe('Updated artist')
+    expect(submitted.get('album')).toBe('Updated album')
+    expect(submitted.get('lyrics')).toBe('lyrics')
+    expect(submitted.get('t_lyrics')).toBe('translated')
     expect(message.success).not.toHaveBeenCalled()
     expect(edit.submitting.value).toBe(false)
   })

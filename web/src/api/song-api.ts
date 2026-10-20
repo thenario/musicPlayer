@@ -6,7 +6,7 @@ type SongId = number | string
 type LyricsResponse = { lyrics: string; t_lyrics: string }
 export type UploadedSong = Pick<
   ISong,
-  'song_id' | 'song_title' | 'artist' | 'song_cover_url' | 'song_url'
+  'song_id' | 'song_title' | 'artist' | 'album' | 'song_cover_url' | 'song_url'
 > & {
   date_added: string
 }

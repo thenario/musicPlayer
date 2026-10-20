@@ -61,7 +61,7 @@ song:
   page-size: ${SONG_PAGE_SIZE:15}
   scanner:
     enabled: ${SONG_SCANNER_ENABLED:true}
-    uploader-id: ${SONG_SCANNER_UPLOADER_ID:0}
+    uploader-id: ${SONG_SCANNER_UPLOADER_ID:1111111111111111111}
     remove-missing: ${SONG_SCANNER_REMOVE_MISSING:false}
 
 auth:

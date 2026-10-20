@@ -3,9 +3,10 @@ package com.kyf.mp.server.modules.song.service.workflow;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.UUID;
+import java.util.Objects;
 
 import org.jaudiotagger.audio.AudioFile;
 import org.jaudiotagger.audio.AudioFileIO;
@@ -13,6 +14,7 @@ import org.jaudiotagger.audio.AudioHeader;
 import org.jaudiotagger.audio.exceptions.CannotReadException;
 import org.jaudiotagger.tag.FieldKey;
 import org.jaudiotagger.tag.Tag;
+import org.jaudiotagger.tag.images.ArtworkFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.kyf.mp.server.common.BusinessException;
+import com.kyf.mp.server.common.file.FileUpdateBatch;
+import com.kyf.mp.server.common.file.SongFileNames;
 import com.kyf.mp.server.common.file.StoragePathResolver;
 import com.kyf.mp.server.common.file.UploadFileValidator;
 import com.kyf.mp.server.modules.song.dto.EditSongDTO;
@@ -101,6 +105,10 @@ public class SongsWorkflow {
             UploadContext context = prepareUpload(audioFile, coverFile, title, artist, album);
             savedAudioFile = context.audioFile();
             savedCoverFile = context.coverFile();
+            Files.createDirectories(savedAudioFile.getParentFile().toPath());
+            Files.createDirectories(savedCoverFile.getParentFile().toPath());
+            audioFile.transferTo(savedAudioFile);
+            coverFile.transferTo(savedCoverFile);
             AudioHeader header = writeAudioMetadata(context, lyrics);
             Songs song = buildUploadedSong(context, header, coverFile, lyrics, userId);
             songsRepository.insert(song);
@@ -118,24 +126,17 @@ public class SongsWorkflow {
     }
 
     private UploadContext prepareUpload(MultipartFile audioFile, MultipartFile coverFile,
-            String title, String artist, String album) throws IOException {
+            String title, String artist, String album) {
         String audioExt = UploadFileValidator.validateAudio(audioFile);
         String coverExt = UploadFileValidator.validateImage(coverFile);
-        String finalTitle = StringUtils.hasText(title) ? title : "Unknown Title";
+        String finalTitle = StringUtils.hasText(title) ? title : "未命名";
         String finalArtist = StringUtils.hasText(artist) ? artist : "Unknown Artist";
         String finalAlbum = StringUtils.hasText(album) ? album : "Unknown Album";
-        String safeName = (finalArtist + " - " + finalTitle).replaceAll("[\\\\/:*?\"<>|]", "_");
-        String audioName = safeName + "_" + UUID.randomUUID().toString().substring(0, 8) + "." + audioExt;
-        String coverName = "cover-" + UUID.randomUUID().toString().substring(0, 8) + "." + coverExt;
+        String audioName = SongFileNames.audioName(finalTitle, audioExt);
+        String coverName = SongFileNames.coverName(audioName, coverExt);
         File audioTarget = StoragePathResolver.resolveFile(songPath, audioName);
         File coverTarget = StoragePathResolver.resolveFile(songCoverPath, coverName);
-        Files.createDirectories(audioTarget.getParentFile().toPath());
-        Files.createDirectories(coverTarget.getParentFile().toPath());
-        audioFile.transferTo(audioTarget);
-        if (coverFile != null && !coverFile.isEmpty()) {
-            coverFile.transferTo(coverTarget);
-        }
-        return new UploadContext(audioTarget, coverTarget, audioName, coverName, audioExt,
+        return new UploadContext(audioTarget, coverTarget, audioName, coverName,
                 finalTitle, finalArtist, finalAlbum);
     }
 
@@ -148,6 +149,8 @@ public class SongsWorkflow {
         if (StringUtils.hasText(lyrics)) {
             tag.setField(FieldKey.LYRICS, lyrics);
         }
+        tag.deleteArtworkField();
+        tag.setField(ArtworkFactory.createArtworkFromFile(context.coverFile()));
         audio.commit();
         return audio.getAudioHeader();
     }
@@ -168,16 +171,24 @@ public class SongsWorkflow {
         song.setFileSize(context.audioFile().length());
         song.setDuration(header.getTrackLength());
         song.setBitrate((int) header.getBitRateAsNumber());
-        song.setFileFormat(context.audioExtension());
+        song.setFileFormat(header.getFormat());
         song.setLyrics(lyrics);
-        song.setSongUrl(songUrl + context.audioName());
-        song.setSongCoverUrl(coverFile != null ? songCoverUrl + context.coverName() : null);
+        song.setSongUrl(SongFileNames.publicUrl(songUrl, context.audioName()));
+        song.setSongCoverUrl(coverFile != null ? versionedCoverUrl(context.coverName()) : null);
         song.setDateAdded(LocalDateTime.now(ZoneId.systemDefault()));
         return song;
     }
 
     private record UploadContext(File audioFile, File coverFile, String audioName, String coverName,
-            String audioExtension, String title, String artist, String album) {
+            String title, String artist, String album) {
+    }
+
+    private String versionedCoverUrl(String fileName) {
+        return versionedUrl(songCoverUrl, fileName);
+    }
+
+    private String versionedUrl(String prefix, String fileName) {
+        return SongFileNames.versionedUrl(prefix, fileName);
     }
 
     private String calculateMD5(File file) throws IOException {
@@ -205,10 +216,28 @@ public class SongsWorkflow {
     @Transactional(rollbackFor = Exception.class)
     public void editUploadSong(EditSongDTO dto, Long userId, Long songId) {
         Songs oldSong = getEditableSong(songId, userId);
-        Songs updateEntity = createSongUpdate(dto, songId);
-        boolean coverChanged = replaceCover(dto.getSong_cover(), oldSong, userId, updateEntity);
-        if (hasChanges(updateEntity) || coverChanged) {
-            songsRepository.updateById(updateEntity);
+        Songs updateEntity = createSongUpdate(dto, oldSong);
+        boolean newCover = dto.getSong_cover() != null && !dto.getSong_cover().isEmpty();
+        if (!hasChanges(updateEntity) && !newCover) {
+            return;
+        }
+        FileUpdateBatch files = new FileUpdateBatch();
+        try {
+            if (audioMetadataChanged(updateEntity) || newCover) {
+                prepareEditedFiles(dto, oldSong, updateEntity, files, newCover);
+            }
+            files.publish();
+            if (!songsRepository.updateById(updateEntity)) {
+                throw new BusinessException(409, "歌曲信息更新失败，请刷新后重试");
+            }
+            files.completeAfterTransaction();
+        } catch (BusinessException exception) {
+            files.rollback();
+            throw exception;
+        } catch (Exception exception) {
+            files.rollback();
+            log.error("更新歌曲文件及元信息失败，歌曲ID：{}", songId, exception);
+            throw new BusinessException(500, "歌曲文件更新失败");
         }
     }
 
@@ -223,53 +252,108 @@ public class SongsWorkflow {
         return song;
     }
 
-    private Songs createSongUpdate(EditSongDTO dto, Long songId) {
+    private Songs createSongUpdate(EditSongDTO dto, Songs oldSong) {
         Songs updateEntity = new Songs();
-        updateEntity.setSongId(songId);
-        if (StringUtils.hasText(dto.getSong_name())) {
+        updateEntity.setSongId(oldSong.getSongId());
+        if (StringUtils.hasText(dto.getSong_name()) && !Objects.equals(dto.getSong_name(), oldSong.getSongTitle())) {
             updateEntity.setSongTitle(dto.getSong_name());
         }
-        if (dto.getLyrics() != null) {
+        if (dto.getArtist() != null && !Objects.equals(dto.getArtist(), oldSong.getArtist())) {
+            updateEntity.setArtist(dto.getArtist());
+        }
+        if (dto.getAlbum() != null && !Objects.equals(dto.getAlbum(), oldSong.getAlbum())) {
+            updateEntity.setAlbum(dto.getAlbum());
+        }
+        if (dto.getLyrics() != null && !Objects.equals(dto.getLyrics(), oldSong.getLyrics())) {
             updateEntity.setLyrics(dto.getLyrics());
         }
-        if (dto.getT_lyrics() != null) {
+        if (dto.getT_lyrics() != null && !Objects.equals(dto.getT_lyrics(), oldSong.getTLyrics())) {
             updateEntity.setTLyrics(dto.getT_lyrics());
         }
         return updateEntity;
     }
 
-    private boolean replaceCover(MultipartFile newCover, Songs oldSong, Long userId,
-            Songs updateEntity) {
-        if (newCover == null || newCover.isEmpty()) {
-            return false;
+    private void prepareEditedFiles(EditSongDTO dto, Songs oldSong, Songs updateEntity,
+            FileUpdateBatch files, boolean newCover) throws Exception {
+        if (!StringUtils.hasText(oldSong.getSongUrl())) {
+            throw new BusinessException(404, "歌曲音频文件不存在");
         }
-        String extension = UploadFileValidator.validateImage(newCover);
-        String fileName = "cover-" + UUID.randomUUID().toString().substring(0, 8) + "." + extension;
-        File destFile = StoragePathResolver.resolveFile(songCoverPath, fileName);
-        try {
-            Files.createDirectories(destFile.getParentFile().toPath());
-            newCover.transferTo(destFile);
-            cleanupOldCover(oldSong.getSongCoverUrl(), userId);
-            updateEntity.setSongCoverUrl(songCoverUrl + fileName);
-            return true;
-        } catch (IOException exception) {
-            cleanupFile(destFile);
-            log.error("封面物理保存失败", exception);
-            throw new BusinessException(500, "文件保存失败");
+        String oldAudioName = SongFileNames.fileNameFromUrl(oldSong.getSongUrl());
+        Path originalAudio = StoragePathResolver.resolveFile(songPath, oldAudioName).toPath();
+        if (!Files.isRegularFile(originalAudio)) {
+            throw new BusinessException(404, "歌曲音频文件不存在");
+        }
+        String audioName = updateEntity.getSongTitle() == null ? oldAudioName
+                : SongFileNames.renamedAudioName(oldAudioName, updateEntity.getSongTitle());
+        Path stagedCover = prepareEditedCover(dto.getSong_cover(), oldSong, updateEntity, files,
+                newCover, !audioName.equals(oldAudioName), audioName);
+        Path targetAudio = StoragePathResolver.resolveFile(songPath, audioName).toPath();
+        Path stagedAudio = files.stage(originalAudio, targetAudio);
+        Files.copy(originalAudio, stagedAudio);
+        AudioFile audio = AudioFileIO.read(stagedAudio.toFile());
+        Tag tag = audio.getTagOrCreateAndSetDefault();
+        updateTag(tag, FieldKey.TITLE, updateEntity.getSongTitle());
+        updateTag(tag, FieldKey.ARTIST, updateEntity.getArtist());
+        updateTag(tag, FieldKey.ALBUM, updateEntity.getAlbum());
+        updateTag(tag, FieldKey.LYRICS, updateEntity.getLyrics());
+        if (newCover) {
+            tag.deleteArtworkField();
+            tag.setField(ArtworkFactory.createArtworkFromFile(stagedCover.toFile()));
+        }
+        audio.commit();
+        updateEntity.setSongUrl(versionedUrl(songUrl, audioName));
+        updateEntity.setFileMd5(calculateMD5(stagedAudio.toFile()));
+        updateEntity.setFileSize(Files.size(stagedAudio));
+        updateEntity.setFileFormat(audio.getAudioHeader().getFormat());
+        updateEntity.setDuration(audio.getAudioHeader().getTrackLength());
+        updateEntity.setBitrate(Math.toIntExact(audio.getAudioHeader().getBitRateAsNumber()));
+    }
+
+    private Path prepareEditedCover(MultipartFile cover, Songs oldSong, Songs updateEntity,
+            FileUpdateBatch files, boolean newCover, boolean renamed, String audioName) throws IOException {
+        Path original = null;
+        String oldName = null;
+        if (StringUtils.hasText(oldSong.getSongCoverUrl())) {
+            oldName = SongFileNames.fileNameFromUrl(oldSong.getSongCoverUrl());
+            original = StoragePathResolver.resolveFile(songCoverPath, oldName).toPath();
+        }
+        if (!newCover && (!renamed || original == null)) {
+            return null;
+        }
+        if (!newCover && !Files.isRegularFile(original)) {
+            throw new BusinessException(404, "歌曲封面文件不存在，请重新上传封面");
+        }
+        String extension = newCover ? UploadFileValidator.validateImage(cover)
+                : StringUtils.getFilenameExtension(oldName);
+        String coverName = SongFileNames.coverName(audioName, extension);
+        Path target = StoragePathResolver.resolveFile(songCoverPath, coverName).toPath();
+        Path staged = files.stage(original, target);
+        if (newCover) {
+            cover.transferTo(staged.toFile());
+        } else {
+            Files.copy(original, staged);
+        }
+        updateEntity.setSongCoverUrl(versionedCoverUrl(coverName));
+        return staged;
+    }
+
+    private void updateTag(Tag tag, FieldKey key, String value) throws Exception {
+        if (value != null) {
+            if (value.isBlank()) {
+                tag.deleteField(key);
+            } else {
+                tag.setField(key, value);
+            }
         }
     }
 
-    private void cleanupOldCover(String oldUrl, Long userId) {
-        if (!StringUtils.hasText(oldUrl)) {
-            return;
-        }
-        String fileName = oldUrl.substring(oldUrl.lastIndexOf("/") + 1);
-        cleanupFile(StoragePathResolver.resolveFile(songCoverPath, fileName));
-        log.info("用户ID: {} 修改歌曲，已清理旧封面: {}", userId, fileName);
+    private boolean audioMetadataChanged(Songs updateEntity) {
+        return updateEntity.getSongTitle() != null || updateEntity.getArtist() != null
+                || updateEntity.getAlbum() != null || updateEntity.getLyrics() != null;
     }
 
     private boolean hasChanges(Songs updateEntity) {
-        return updateEntity.getSongTitle() != null || updateEntity.getLyrics() != null
+        return audioMetadataChanged(updateEntity)
                 || updateEntity.getTLyrics() != null || updateEntity.getSongCoverUrl() != null;
     }
 }

@@ -21,6 +21,8 @@ export function useEditUpload(songId: number | string) {
 
   const formData = reactive({
     song_name: '',
+    artist: '',
+    album: '',
     lyrics: '',
     t_lyrics: '',
   })
@@ -69,6 +71,8 @@ export function useEditUpload(songId: number | string) {
       const finalData = new FormData()
       if (songCoverFile.value) finalData.append('song_cover', songCoverFile.value)
       finalData.append('song_name', formData.song_name)
+      finalData.append('artist', formData.artist)
+      finalData.append('album', formData.album)
       finalData.append('lyrics', formData.lyrics)
       finalData.append('t_lyrics', formData.t_lyrics)
       await songApi.editUserUploadSongs(finalData, songId)

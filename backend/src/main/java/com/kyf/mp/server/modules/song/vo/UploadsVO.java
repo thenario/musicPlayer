@@ -10,6 +10,7 @@ import lombok.Data;
 public class UploadsVO {
     private String songTitle;
     private String artist;
+    private String album;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private LocalDateTime dateAdded;
     private String songCoverUrl;

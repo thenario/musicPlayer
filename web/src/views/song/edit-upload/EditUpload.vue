@@ -60,8 +60,16 @@
                                     <el-input v-model="formData.song_name" placeholder="请输入歌名" size="large"
                                         class="custom-input" />
                                 </el-form-item>
+                                <el-form-item label="歌手" prop="artist">
+                                    <el-input v-model="formData.artist" placeholder="请输入歌手" size="large"
+                                        class="custom-input" />
+                                </el-form-item>
+                                <el-form-item label="专辑" prop="album">
+                                    <el-input v-model="formData.album" placeholder="请输入专辑" size="large"
+                                        class="custom-input" />
+                                </el-form-item>
                                 <div class="form__notice">
-                                    <p class="form__notice-text">提示：修改封面或歌名后，请点击下方保存按钮生效。</p>
+                                    <p class="form__notice-text">提示：修改歌曲信息或封面后，请点击下方保存按钮生效。</p>
                                 </div>
                             </div>
                         </div>
@@ -134,17 +142,20 @@ onMounted(async () => {
     const cached = songStore.currentEditingSong;
     if (cached && sameId(cached.song_id, song_id)) {
         formData.song_name = cached.song_title || '';
+        formData.artist = cached.artist || '';
+        formData.album = cached.album || '';
         previewUrl.value = getCoverUrl(cached.song_cover_url || '');
-    } else {
-        try {
-            const { song } = await songApi.getUserUploadSong(song_id)
-            formData.song_name = song.song_title || ''
-            previewUrl.value = getCoverUrl(song.song_cover_url || '')
-        } catch (error) {
-            reportError(error)
-            await router.replace('/user-uploads')
-            return
-        }
+    }
+    try {
+        const { song } = await songApi.getUserUploadSong(song_id)
+        formData.song_name = song.song_title || ''
+        formData.artist = song.artist || ''
+        formData.album = song.album || ''
+        previewUrl.value = getCoverUrl(song.song_cover_url || '')
+    } catch (error) {
+        reportError(error)
+        await router.replace('/user-uploads')
+        return
     }
 
     // 无论是否有缓存，都去获取歌词数据

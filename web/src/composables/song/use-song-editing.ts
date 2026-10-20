@@ -1,7 +1,8 @@
 import { ref } from 'vue'
 import type { ISong } from '@/types'
 
-export type EditableUploadSong = Pick<ISong, 'song_id' | 'song_title' | 'song_cover_url'>
+export type EditableUploadSong = Pick<ISong, 'song_id' | 'song_title' | 'song_cover_url'> &
+  Partial<Pick<ISong, 'artist' | 'album'>>
 
 /** Keeps upload-editing state independent from the Pinia facade. */
 export function createSongEditingState() {

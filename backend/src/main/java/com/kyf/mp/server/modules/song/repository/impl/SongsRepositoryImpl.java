@@ -68,4 +68,9 @@ public class SongsRepositoryImpl extends BaseRepositoryImpl<SongsMapper, Songs> 
         return baseMapper.selectList(new QueryWrapper<Songs>()
                 .select("song_id", "song_url").eq("uploader_id", uploaderId));
     }
+
+    @Override
+    public List<Songs> findAll() {
+        return baseMapper.selectList(null);
+    }
 }

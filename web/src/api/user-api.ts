@@ -23,7 +23,6 @@ type EditProfileResponse = { user_name: string; user_cover_url: string }
  * 第一泛型在 axios 语义里本是响应体类型，此处借位标注「请求体类型」（仅作可读，不约束入参）。
  */
 
-/** 登录：提交用户名与加密后的密码，成功后缓存 user 与 token 到本地。 */
 async function login(userName: string, password: string) {
   const encryptedPassword = await encryptPassword(password)
   const res = await request.post<LoginRequest, IAxiosRes<LoginResponse>>('/users/login', {

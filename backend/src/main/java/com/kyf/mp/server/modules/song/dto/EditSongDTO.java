@@ -7,6 +7,8 @@ import lombok.Data;
 @Data
 public class EditSongDTO {
     private String song_name;
+    private String artist;
+    private String album;
     private String lyrics;
     private String t_lyrics;
     private MultipartFile song_cover;
