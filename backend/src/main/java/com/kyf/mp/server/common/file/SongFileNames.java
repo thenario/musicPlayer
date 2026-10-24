@@ -42,7 +42,7 @@ public final class SongFileNames {
         if ("jpg".equals(imageExtension)) {
             imageExtension = "jpeg";
         }
-        return StringUtils.stripFilenameExtension(audioName) + "-cover-." + imageExtension;
+        return StringUtils.stripFilenameExtension(audioName) + "-cover." + imageExtension;
     }
 
     public static String fileNameFromUrl(String url) {

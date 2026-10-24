@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -11,11 +12,11 @@ import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.kyf.mp.server.common.ResultModel;
 import com.kyf.mp.server.modules.song.dto.EditSongDTO;
+import com.kyf.mp.server.modules.song.dto.UploadSongDTO;
 import com.kyf.mp.server.modules.song.vo.GetSongsVO;
 import com.kyf.mp.server.modules.song.vo.LyricsVO;
 import com.kyf.mp.server.modules.song.vo.PlayHistoryVO;
@@ -27,6 +28,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -74,21 +76,11 @@ public class SongsController {
     @Operation(summary = "上传歌曲", description = "上传音频文件、封面及可选的歌曲信息")
     @SecurityRequirement(name = "bearerAuth")
     public ResultModel<Void> upload(
-            @Parameter(description = "音频文件", required = true)
-            @RequestParam("audiofile") @NotNull(message = "请上传完整信息(包含封面与音频文件)") MultipartFile audioFile,
-            @Parameter(description = "歌曲封面图片", required = true)
-            @RequestParam("coverfile") @NotNull(message = "请上传完整信息(包含封面与音频文件)") MultipartFile coverFile,
+            @Valid @ModelAttribute UploadSongDTO dto,
             @Parameter(hidden = true)
-            @RequestAttribute("userId") Long userId,
-            @Parameter(description = "歌曲名称")
-            @RequestParam(required = false) String title,
-            @Parameter(description = "歌手名称")
-            @RequestParam(required = false) String artist,
-            @Parameter(description = "专辑名称")
-            @RequestParam(required = false) String album,
-            @Parameter(description = "歌词内容")
-            @RequestParam(required = false) String lyrics) {
-        songsService.uploadSong(audioFile, coverFile, userId, title, artist, album, lyrics);
+            @RequestAttribute("userId") Long userId) {
+        songsService.uploadSong(dto.getAudiofile(), dto.getCoverfile(), userId,
+                dto.getTitle(), dto.getArtist(), dto.getAlbum(), dto.getLyrics());
         return ResultModel.success(null);
     }
 
@@ -117,7 +109,7 @@ public class SongsController {
     @PatchMapping("/my-uploads/{song_id}")
     @Operation(summary = "编辑我的上传歌曲", description = "修改当前用户上传歌曲的名称、歌词或封面")
     @SecurityRequirement(name = "bearerAuth")
-    public ResultModel<Void> editUploadSong(EditSongDTO dto,
+    public ResultModel<Void> editUploadSong(@Valid @ModelAttribute EditSongDTO dto,
             @Parameter(hidden = true) @RequestAttribute("userId") Long userId,
             @Parameter(description = "歌曲 ID", required = true, example = "1")
             @PathVariable("song_id") @NotNull(message = "缺少歌曲ID") @Min(value = 1, message = "Song ID must be positive") Long songId) {

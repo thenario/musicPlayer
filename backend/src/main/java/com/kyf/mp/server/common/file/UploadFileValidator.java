@@ -5,12 +5,14 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 /** Validates uploaded media before it is written to public static storage. */
 public final class UploadFileValidator {
+    private static final Pattern FORBIDDEN_FILE_NAME_CHARACTERS = Pattern.compile("[\\\\/:*?\"<>|\\p{Cntrl}]");
     private static final Set<String> AUDIO_EXTENSIONS = Set.of("mp3", "flac", "wav", "m4a");
     private static final Set<String> IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png");
     private static final Set<String> AUDIO_CONTENT_TYPES = Set.of(
@@ -18,6 +20,15 @@ public final class UploadFileValidator {
     private static final Set<String> IMAGE_CONTENT_TYPES = Set.of("image/jpeg", "image/png");
 
     private UploadFileValidator() {
+    }
+
+    /** 文件是否必填、内容是否为空由其他校验负责；这里仅检查原始文件名。 */
+    public static boolean isOriginalFileNameValid(MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return true;
+        }
+        String name = file.getOriginalFilename();
+        return StringUtils.hasText(name) && !FORBIDDEN_FILE_NAME_CHARACTERS.matcher(name).find();
     }
 
     public static String validateAudio(MultipartFile file) {

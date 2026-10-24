@@ -165,25 +165,22 @@ public class SongScannerTask {
                     song.setSongCoverUrl(null);
                     none++;
                 } else {
-                    // byte[] coverByte = cover.getBinaryData();
+                    byte[] coverByte = cover.getBinaryData();
                     String postfix = cover.getMimeType().substring(6);
                     String songName = el.getKey().getFileName().toString();
                     String coverName = SongFileNames.coverName(songName, postfix);
                     String coverUrl = SongFileNames.publicUrl(songCoverUrlPrefix, coverName);
                     song.setSongCoverUrl(coverUrl);
-                    // Path path = Path.of(songCoverPath).toAbsolutePath().resolve(coverName);
+                    Path path = Path.of(songCoverPath).toAbsolutePath().resolve(coverName);
                     try {
-                        // if (Files.exists(path)) {
-                        // skip++;
-                        // continue;
-                        // }
+                        Files.write(path, coverByte);
                         songsRepository.insert(song);
                         suc++;
                     } catch (Exception e) {
                         err++;
-                        // if (Files.exists(path)) {
-                        // Files.delete(path);
-                        // }
+                        if (Files.exists(path)) {
+                            Files.delete(path);
+                        }
                         System.out.println(e);
                     }
                 }
@@ -224,6 +221,12 @@ public class SongScannerTask {
     @Async
     @EventListener(ApplicationReadyEvent.class)
     public void MaintainFilesAndSchema() {
+        try {
+            // log.info("启动写入任务");
+            // writeInSqlFromNull();
+        } catch (Exception e) {
+
+        }
     }
 
     // @Async
